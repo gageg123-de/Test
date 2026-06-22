@@ -28,7 +28,7 @@
       </button>
       <div class="nav-links" data-nav-menu>
         <a href="#how-it-works">How It Works</a>
-        <a class="nav-cta" href="#early-access">Join Early Access</a>
+        <a class="nav-cta" href="#early-access" data-scroll-to-hero>Join Early Access</a>
       </div>
     </nav>
   </header>
@@ -45,7 +45,7 @@
             <li>Automatic replacement reminders</li>
             <li>Delivery on your schedule</li>
           </ul>
-          <form class="hero-signup" action="https://formspree.io/f/mzdlpbwp" method="POST" data-early-form data-form-location="hero">
+          <form class="hero-signup" id="early-access" action="https://formspree.io/f/mzdlpbwp" method="POST" data-early-form data-form-location="hero">
             <input type="hidden" name="_subject" value="New Filter Wizard early access signup">
             <input type="hidden" name="source" value="Hero Email Form">
             <div class="hero-form-row">
@@ -57,54 +57,10 @@
             <p class="form-success" role="status" aria-live="polite" data-form-success hidden>You're on the Filter Wizard early access list. We'll contact you before the first limited batch opens.</p>
             <p class="form-error" role="alert" data-form-error hidden>Something went wrong while joining the list. Please try again in a moment.</p>
           </form>
-          <p class="founding-copy">Founding members receive launch pricing and first access when delivery begins.</p>
+          <p class="founding-copy">Founding members receive first access when delivery begins.</p>
         </div>
         <div class="hero-visual image-card reveal">
           <img class="hero-image" src="assets/images/hero-filter-wizard-homeowner.png" alt="Homeowner checking phone while replacing a clean HVAC air filter." width="1536" height="1024" fetchpriority="high">
-        </div>
-      </div>
-    </section>
-
-    <section class="section form-section" id="early-access">
-      <div class="container form-layout">
-        <div class="form-copy reveal">
-          <p class="eyebrow">Early access</p>
-          <h2>Join Filter Wizard</h2>
-          <p>Enter your email to get first access when Filter Wizard launches.</p>
-          <p class="micro-trust">No payment required. We'll contact early members before launch.</p>
-        </div>
-        <form class="signup-form reveal" action="https://formspree.io/f/mzdlpbwp" method="POST" data-early-form data-form-location="main">
-          <input type="hidden" name="_subject" value="New Filter Wizard early access signup">
-          <input type="hidden" name="source" value="Main Early Access Form">
-          <div class="form-row">
-            <label for="main-email">Email address</label>
-            <input id="main-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
-          </div>
-          <div class="form-row">
-            <label for="main-phone">Phone number <span class="optional-label">Optional</span></label>
-            <input id="main-phone" name="phone" type="tel" autocomplete="tel" placeholder="(555) 555-5555">
-          </div>
-          <button class="btn btn-primary form-submit" type="submit">Join Early Access</button>
-          <p class="form-trust">No spam. Just early access updates.</p>
-          <p class="form-success" role="status" aria-live="polite" data-form-success hidden>You're on the Filter Wizard early access list. We'll contact you before the first limited batch opens.</p>
-          <p class="form-error" role="alert" data-form-error hidden>Something went wrong while joining the list. Please try again in a moment.</p>
-        </form>
-      </div>
-    </section>
-
-    <section class="section compact-section" id="how-it-works">
-      <div class="container">
-        <div class="compact-heading reveal">
-          <p class="eyebrow">Three simple steps</p>
-          <h2>How It Works</h2>
-        </div>
-        <ol class="compact-steps reveal">
-          <li><span>1</span><strong>Tell us about your home filter</strong></li>
-          <li><span>2</span><strong>We help confirm the right size</strong></li>
-          <li><span>3</span><strong>Get replacements on schedule</strong></li>
-        </ol>
-        <div class="section-action reveal">
-          <a class="btn btn-primary" href="#early-access">Join Early Access</a>
         </div>
       </div>
     </section>
@@ -135,6 +91,48 @@
         </div>
       </div>
     </section>
+
+    <section class="section comparison-section">
+      <div class="container">
+        <div class="compact-heading reveal">
+          <p class="eyebrow">A difference you can see</p>
+          <h2>What Happens When Filters Are Forgotten?</h2>
+          <p>Most homeowners do not realize how dirty their filter gets before it is replaced.</p>
+        </div>
+        <figure class="comparison-card reveal">
+          <img src="assets/images/before-after-dirty-clean-filter.png" alt="Dirty clogged HVAC filter beside a clean replacement filter." width="1536" height="1024" loading="lazy">
+          <figcaption>A clogged filter can reduce airflow, increase HVAC strain, and make your system work harder.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section compact-section" id="how-it-works">
+      <div class="container">
+        <div class="compact-heading reveal">
+          <p class="eyebrow">Three simple steps</p>
+          <h2>How It Works</h2>
+        </div>
+        <ol class="compact-steps reveal">
+          <li><span>1</span><strong>Tell us about your home filter</strong></li>
+          <li><span>2</span><strong>We help confirm the right size</strong></li>
+          <li><span>3</span><strong>Get replacements on schedule</strong></li>
+        </ol>
+        <div class="section-action reveal">
+          <a class="btn btn-primary" href="#early-access" data-scroll-to-hero>Join Early Access</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section final-cta-block">
+      <div class="container final-cta-inner reveal">
+        <div>
+          <p class="eyebrow">One less chore to remember</p>
+          <h2>Ready to stop thinking about air filters?</h2>
+          <p>Get reminders, sizing help, and scheduled delivery when Filter Wizard launches.</p>
+        </div>
+        <a class="btn btn-primary" href="#early-access" data-scroll-to-hero>Join Early Access</a>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -149,7 +147,7 @@
       </div>
       <div class="footer-links" aria-label="Footer navigation">
         <a href="#how-it-works">How It Works</a>
-        <a href="#early-access">Early Access</a>
+        <a href="#early-access" data-scroll-to-hero>Early Access</a>
       </div>
     </div>
     <div class="container disclaimer">

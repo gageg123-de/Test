@@ -2,7 +2,8 @@ const header = document.querySelector("[data-header]");
 const navToggle = document.querySelector("[data-nav-toggle]");
 const navMenu = document.querySelector("[data-nav-menu]");
 const navLinks = document.querySelectorAll(".nav-links a, .footer-links a");
-const earlyAccessForms = document.querySelectorAll("[data-early-form]");
+const earlyAccessForm = document.querySelector("[data-early-form]");
+const ctaScrollLinks = document.querySelectorAll("[data-scroll-to-hero]");
 const storageKey = "filterWizardEarlyAccess";
 
 function trackEvent(eventName, parameters = {}) {
@@ -74,16 +75,13 @@ async function handleFormSubmit(event) {
   event.preventDefault();
 
   const form = event.currentTarget;
-  const formLocation = form.dataset.formLocation;
-  const source = formLocation === "hero" ? "Hero Email Form" : "Main Early Access Form";
-  const attemptEvent = formLocation === "hero"
-    ? "hero_form_submit_attempt"
-    : "main_form_submit_attempt";
+  const formLocation = "hero";
+  const source = "Hero Email Form";
   const successMessage = form.querySelector("[data-form-success]");
   const errorMessage = form.querySelector("[data-form-error]");
   const submitButton = form.querySelector(".form-submit");
 
-  trackEvent(attemptEvent, {
+  trackEvent("hero_form_submit_attempt", {
     form_location: formLocation,
     form_source: source
   });
@@ -153,6 +151,18 @@ async function handleFormSubmit(event) {
   }
 }
 
+function handleCtaScroll(event) {
+  event.preventDefault();
+  trackEvent("cta_scroll_to_hero_click", {
+    link_text: event.currentTarget.textContent.trim()
+  });
+
+  earlyAccessForm.scrollIntoView({
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    block: "center"
+  });
+}
+
 setHeaderState();
 setupRevealAnimations();
 window.addEventListener("scroll", setHeaderState, { passive: true });
@@ -171,10 +181,14 @@ if (navToggle && navMenu) {
   });
 }
 
-earlyAccessForms.forEach((form) => {
-  form.addEventListener("submit", handleFormSubmit);
-  form.addEventListener("input", () => {
-    form.querySelector("[data-form-success]").hidden = true;
-    form.querySelector("[data-form-error]").hidden = true;
+if (earlyAccessForm) {
+  earlyAccessForm.addEventListener("submit", handleFormSubmit);
+  earlyAccessForm.addEventListener("input", () => {
+    earlyAccessForm.querySelector("[data-form-success]").hidden = true;
+    earlyAccessForm.querySelector("[data-form-error]").hidden = true;
   });
+}
+
+ctaScrollLinks.forEach((link) => {
+  link.addEventListener("click", handleCtaScroll);
 });
