@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Filter Wizard helps homeowners find the right air filter size, remember replacement dates, and reserve automatic filter deliveries.">
+  <title>Filter Wizard | Never Forget Your Air Filter Again</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-64VWBW3NHS"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-64VWBW3NHS');
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header" data-header>
+    <nav class="nav container" aria-label="Primary navigation">
+      <a class="brand" href="#top" aria-label="Filter Wizard home">
+        <img class="site-logo" src="assets/images/filter-wizard-logo.png" alt="Filter Wizard" width="270" height="96">
+      </a>
+      <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" data-nav-toggle>
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div class="nav-links" data-nav-menu>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#pricing">Plans</a>
+        <a class="nav-cta" href="#early-access">Join Early Access</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero section">
+      <div class="container hero-grid">
+        <div class="hero-copy reveal">
+          <p class="eyebrow">Simple home filter care</p>
+          <h1>Never Forget Your Air Filter Again</h1>
+          <p class="hero-subtitle">Get the right filter delivered on schedule.</p>
+          <ul class="hero-benefits">
+            <li>We help identify your filter size</li>
+            <li>Automatic replacement reminders</li>
+            <li>Delivery on your schedule</li>
+          </ul>
+          <a class="btn btn-primary hero-cta" href="#early-access">Join Early Access</a>
+          <p class="trust-copy">No payment required to join.</p>
+        </div>
+        <div class="hero-visual image-card reveal">
+          <img class="hero-image" src="assets/images/hero-filter-wizard-homeowner.png" alt="Homeowner checking phone while replacing a clean HVAC air filter." width="1536" height="1024" fetchpriority="high">
+        </div>
+      </div>
+    </section>
+
+    <section class="section form-section" id="early-access">
+      <div class="container form-layout">
+        <div class="form-copy reveal">
+          <p class="eyebrow">Early access</p>
+          <h2>Join Filter Wizard</h2>
+          <p>No payment required. We'll contact early members before launch.</p>
+        </div>
+        <form class="signup-form reveal" action="https://formspree.io/f/mzdlpbwp" method="POST" enctype="multipart/form-data" data-early-form>
+          <input type="hidden" name="_subject" value="New Filter Wizard early access signup">
+          <div class="form-row">
+            <label for="name">Name</label>
+            <input id="name" name="name" type="text" autocomplete="name" required>
+          </div>
+          <div class="form-row">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required>
+          </div>
+          <div class="form-row">
+            <label for="phone">Phone number</label>
+            <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="Optional">
+          </div>
+          <div class="form-row">
+            <label for="selectedPlan">Interested plan</label>
+            <select id="selectedPlan" name="selectedPlan">
+              <option value="Not Sure Yet">Not sure yet</option>
+              <option value="Basic Plan">Basic Plan</option>
+              <option value="Multi-Filter Plan">Multi-Filter Plan</option>
+              <option value="Property Plan">Property Plan</option>
+            </select>
+          </div>
+          <button class="btn btn-primary form-submit" type="submit">Join Early Access</button>
+          <p class="form-trust">No spam. Just early access updates.</p>
+          <p class="form-success" role="status" aria-live="polite" data-form-success hidden>You're on the Filter Wizard early access list. We'll contact you before the first limited batch opens.</p>
+          <p class="form-error" role="alert" data-form-error hidden>Something went wrong while joining the list. Please try again in a moment.</p>
+        </form>
+      </div>
+    </section>
+
+    <section class="section compact-section" id="how-it-works">
+      <div class="container">
+        <div class="compact-heading reveal">
+          <p class="eyebrow">Three simple steps</p>
+          <h2>How It Works</h2>
+        </div>
+        <ol class="compact-steps reveal">
+          <li><span>1</span><strong>Tell us about your home filter</strong></li>
+          <li><span>2</span><strong>We help confirm the right size</strong></li>
+          <li><span>3</span><strong>Get replacements on schedule</strong></li>
+        </ol>
+        <div class="section-action reveal">
+          <a class="btn btn-primary" href="#early-access">Join Early Access</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section pricing-section compact-section" id="pricing">
+      <div class="container">
+        <div class="compact-heading reveal">
+          <p class="eyebrow">Plans for different homes</p>
+          <h2>Simple Filter Plans</h2>
+        </div>
+        <div class="pricing-grid compact-pricing">
+          <article class="pricing-card reveal">
+            <h3>Basic Plan</h3>
+            <p>For one main home filter.</p>
+            <a class="btn btn-secondary" href="#early-access" data-plan="Basic Plan">Choose Basic</a>
+          </article>
+          <article class="pricing-card popular reveal">
+            <div class="popular-badge">Most Popular</div>
+            <h3>Multi-Filter Plan</h3>
+            <p>For homes with multiple filters.</p>
+            <a class="btn btn-primary" href="#early-access" data-plan="Multi-Filter Plan">Choose Multi-Filter</a>
+          </article>
+          <article class="pricing-card reveal">
+            <h3>Property Plan</h3>
+            <p>For landlords or managers.</p>
+            <a class="btn btn-secondary" href="#early-access" data-plan="Property Plan">Choose Property</a>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <a class="brand footer-brand" href="#top">
+          <span class="footer-logo-wrap">
+            <img class="site-logo footer-logo" src="assets/images/filter-wizard-logo.png" alt="Filter Wizard" width="270" height="96" loading="lazy">
+          </span>
+        </a>
+        <p>Simple filter sizing, reminders, and scheduled delivery.</p>
+      </div>
+      <div class="footer-links" aria-label="Footer navigation">
+        <a href="#how-it-works">How It Works</a>
+        <a href="#pricing">Plans</a>
+        <a href="#early-access">Early Access</a>
+      </div>
+    </div>
+    <div class="container disclaimer">
+      Filter Wizard is currently validating early demand. Joining early access does not guarantee immediate shipment.
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
