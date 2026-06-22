@@ -1,15 +1,20 @@
 const header = document.querySelector("[data-header]");
 const navToggle = document.querySelector("[data-nav-toggle]");
 const navMenu = document.querySelector("[data-nav-menu]");
-const navLinks = document.querySelectorAll(".nav-links a, .footer-links a, .hero-actions a, .final-cta a, .pricing-card a");
-const planButtons = document.querySelectorAll("[data-plan]");
-const form = document.querySelector("[data-early-form]");
-const successMessage = document.querySelector("[data-form-success]");
-const errorMessage = document.querySelector("[data-form-error]");
+const navLinks = document.querySelectorAll(".nav-links a, .footer-links a");
+const earlyAccessForms = document.querySelectorAll("[data-early-form]");
 const storageKey = "filterWizardEarlyAccess";
 
+function trackEvent(eventName, parameters = {}) {
+  if (typeof window.gtag === "function") {
+    window.gtag("event", eventName, parameters);
+  }
+}
+
 function setHeaderState() {
-  header.classList.toggle("scrolled", window.scrollY > 8);
+  if (header) {
+    header.classList.toggle("scrolled", window.scrollY > 8);
+  }
 }
 
 function closeNav() {
@@ -44,7 +49,7 @@ function setupRevealAnimations() {
         }
       });
     },
-    { threshold: 0.14 }
+    { threshold: 0.12 }
   );
 
   revealItems.forEach((item) => observer.observe(item));
@@ -65,31 +70,23 @@ function saveSubmission(submission) {
   localStorage.setItem(storageKey, JSON.stringify(submissions));
 }
 
-function handlePlanSelection(event) {
-  event.preventDefault();
-
-  const selectedPlan = event.currentTarget.dataset.plan;
-  const planSelect = form.querySelector("#selectedPlan");
-  const matchingOption = Array.from(planSelect.options)
-    .some((option) => option.value === selectedPlan);
-  const formSection = document.querySelector("#early-access");
-
-  if (matchingOption) {
-    planSelect.value = selectedPlan;
-  }
-
-  formSection.scrollIntoView({
-    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-    block: "start"
-  });
-
-  window.setTimeout(() => {
-    form.querySelector("#name").focus({ preventScroll: true });
-  }, 450);
-}
-
 async function handleFormSubmit(event) {
   event.preventDefault();
+
+  const form = event.currentTarget;
+  const formLocation = form.dataset.formLocation;
+  const source = formLocation === "hero" ? "Hero Email Form" : "Main Early Access Form";
+  const attemptEvent = formLocation === "hero"
+    ? "hero_form_submit_attempt"
+    : "main_form_submit_attempt";
+  const successMessage = form.querySelector("[data-form-success]");
+  const errorMessage = form.querySelector("[data-form-error]");
+  const submitButton = form.querySelector(".form-submit");
+
+  trackEvent(attemptEvent, {
+    form_location: formLocation,
+    form_source: source
+  });
 
   if (!form.checkValidity()) {
     form.reportValidity();
@@ -97,15 +94,14 @@ async function handleFormSubmit(event) {
   }
 
   const formData = new FormData(form);
-  const selectedPlan = formData.get("selectedPlan") || "Not specified";
-  formData.set("selectedPlan", selectedPlan);
-  const submitButton = form.querySelector(".form-submit");
+  const submittedAt = new Date().toISOString();
+  formData.set("submittedAt", submittedAt);
+
   const submission = {
-    name: formData.get("name"),
     email: formData.get("email"),
-    phone: formData.get("phone"),
-    selectedPlan,
-    submittedAt: new Date().toISOString()
+    phone: formData.get("phone") || "",
+    source,
+    submittedAt
   };
 
   successMessage.hidden = true;
@@ -128,38 +124,44 @@ async function handleFormSubmit(event) {
 
     saveSubmission(submission);
     console.log("Filter Wizard early access submission:", submission);
+    trackEvent("early_access_signup_success", {
+      form_location: formLocation,
+      form_source: source
+    });
 
-    successMessage.hidden = false;
     form.reset();
-    successMessage.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    successMessage.hidden = false;
+    successMessage.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "nearest"
+    });
   } catch (error) {
     console.error("Filter Wizard Formspree submission error:", error);
+    trackEvent("early_access_signup_error", {
+      form_location: formLocation,
+      form_source: source
+    });
+
     errorMessage.hidden = false;
-    errorMessage.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    errorMessage.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "nearest"
+    });
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "Join Early Access";
   }
 }
 
-if (header && navToggle && navMenu && form && successMessage && errorMessage) {
-  setHeaderState();
-  setupRevealAnimations();
+setHeaderState();
+setupRevealAnimations();
+window.addEventListener("scroll", setHeaderState, { passive: true });
 
-  window.addEventListener("scroll", setHeaderState, { passive: true });
-
+if (navToggle && navMenu) {
   navToggle.addEventListener("click", toggleNav);
 
   navLinks.forEach((link) => {
-    link.addEventListener("click", () => {
-      if (navMenu.classList.contains("open")) {
-        closeNav();
-      }
-    });
-  });
-
-  planButtons.forEach((button) => {
-    button.addEventListener("click", handlePlanSelection);
+    link.addEventListener("click", closeNav);
   });
 
   document.addEventListener("keydown", (event) => {
@@ -167,11 +169,12 @@ if (header && navToggle && navMenu && form && successMessage && errorMessage) {
       closeNav();
     }
   });
-
-  form.addEventListener("submit", handleFormSubmit);
-
-  form.addEventListener("input", () => {
-    successMessage.hidden = true;
-    errorMessage.hidden = true;
-  });
 }
+
+earlyAccessForms.forEach((form) => {
+  form.addEventListener("submit", handleFormSubmit);
+  form.addEventListener("input", () => {
+    form.querySelector("[data-form-success]").hidden = true;
+    form.querySelector("[data-form-error]").hidden = true;
+  });
+});
