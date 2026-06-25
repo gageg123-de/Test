@@ -34,7 +34,8 @@ body {
 }
 
 body.nav-open,
-body.modal-open {
+body.modal-open,
+html.modal-open {
   overflow: hidden;
 }
 
@@ -716,7 +717,8 @@ input:focus-visible {
   position: absolute;
   top: 14px;
   right: 14px;
-  z-index: 2;
+  z-index: 9999;
+  pointer-events: auto;
   width: 38px;
   height: 38px;
   border: 1px solid var(--line);

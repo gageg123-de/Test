@@ -21,7 +21,6 @@ const fallbackPlan = {
 };
 let selectedPlan = { ...fallbackPlan };
 let countdownViewed = false;
-let modalCloseTimer = null;
 
 function trackEvent(eventName, parameters = {}) {
   if (typeof window.gtag === "function") {
@@ -165,36 +164,38 @@ function setSelectedPlan(plan) {
 
 function openReservation(plan = fallbackPlan) {
   setSelectedPlan(plan);
-  if (modalCloseTimer) {
-    window.clearTimeout(modalCloseTimer);
-    modalCloseTimer = null;
-  }
+
   modalBackdrop.hidden = false;
+  modalBackdrop.style.display = "grid";
   modalBackdrop.classList.remove("closing");
+
   reservationSuccess.hidden = true;
   reservationForm.hidden = false;
+
   setFormMessage(reservationForm, "clear");
   document.body.classList.add("modal-open");
-  reservationForm?.querySelector("input[name='email']")?.focus();
+  document.documentElement.classList.add("modal-open");
+
+  setTimeout(() => {
+    reservationForm?.querySelector("input[name='email']")?.focus();
+  }, 50);
+
   trackEvent("reservation_started", {
     plan_name: plan.plan
   });
 }
 
 function closeReservation() {
-  if (modalBackdrop.hidden || modalBackdrop.classList.contains("closing")) return;
-  if (modalCloseTimer) {
-    window.clearTimeout(modalCloseTimer);
-    modalCloseTimer = null;
-  }
+  if (!modalBackdrop) return;
+
+  modalBackdrop.classList.remove("closing");
+  modalBackdrop.hidden = true;
+  modalBackdrop.style.display = "none";
   document.body.classList.remove("modal-open");
-  modalBackdrop.classList.add("closing");
-  modalCloseTimer = window.setTimeout(() => {
-    modalBackdrop.hidden = true;
-    modalBackdrop.classList.remove("closing");
-    modalCloseTimer = null;
-  }, 180);
+  document.documentElement.classList.remove("modal-open");
 }
+
+window.closeReservation = closeReservation;
 
 function setFormMessage(form, type, message = "") {
   const successMessage = form.querySelector("[data-form-success]");
@@ -297,13 +298,6 @@ if (navToggle && navMenu) {
   navLinks.forEach((link) => {
     link.addEventListener("click", closeNav);
   });
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      if (navMenu.classList.contains("open")) closeNav();
-      if (!modalBackdrop.hidden) closeReservation();
-    }
-  });
 }
 
 subscriptionCtas.forEach((cta) => {
@@ -338,8 +332,15 @@ closeModalButton?.addEventListener("click", closeReservation);
 
 continueBrowsingButton?.addEventListener("click", closeReservation);
 
-modalBackdrop?.addEventListener("click", (event) => {
+modalBackdrop.addEventListener("click", function(event) {
   if (event.target === modalBackdrop) {
+    closeReservation();
+  }
+});
+
+document.addEventListener("keydown", function(event) {
+  if (event.key === "Escape") {
+    if (navMenu?.classList.contains("open")) closeNav();
     closeReservation();
   }
 });
