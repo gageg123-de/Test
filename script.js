@@ -126,6 +126,10 @@ async function handleFormSubmit(event) {
       form_location: formLocation,
       form_source: source
     });
+    trackEvent("generate_lead", {
+      form_location: formLocation,
+      form_source: source
+    });
 
     form.reset();
     successMessage.hidden = false;
@@ -147,7 +151,7 @@ async function handleFormSubmit(event) {
     });
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = "Join Early Access";
+    submitButton.textContent = "Join Free Early Access";
   }
 }
 
