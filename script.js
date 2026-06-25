@@ -2,9 +2,15 @@ const header = document.querySelector("[data-header]");
 const navToggle = document.querySelector("[data-nav-toggle]");
 const navMenu = document.querySelector("[data-nav-menu]");
 const navLinks = document.querySelectorAll(".nav-links a, .footer-links a");
-const earlyAccessForm = document.querySelector("[data-early-form]");
-const ctaScrollLinks = document.querySelectorAll("[data-scroll-to-hero]");
+const startToolLinks = document.querySelectorAll("[data-start-tool]");
+const toolForm = document.querySelector("[data-tool-form]");
+const finalForm = document.querySelector("[data-final-form]");
+const resultCard = document.querySelector("[data-result-card]");
+const resultCta = document.querySelector("[data-result-cta]");
+const finalConfirmation = document.querySelector("[data-final-confirmation]");
 const storageKey = "filterWizardEarlyAccess";
+let hasTrackedToolStart = false;
+let latestToolEmail = "";
 
 function trackEvent(eventName, parameters = {}) {
   if (typeof window.gtag === "function") {
@@ -20,9 +26,9 @@ function setHeaderState() {
 
 function closeNav() {
   document.body.classList.remove("nav-open");
-  navMenu.classList.remove("open");
-  navToggle.setAttribute("aria-expanded", "false");
-  navToggle.setAttribute("aria-label", "Open navigation menu");
+  navMenu?.classList.remove("open");
+  navToggle?.setAttribute("aria-expanded", "false");
+  navToggle?.setAttribute("aria-label", "Open navigation menu");
 }
 
 function toggleNav() {
@@ -71,108 +77,275 @@ function saveSubmission(submission) {
   localStorage.setItem(storageKey, JSON.stringify(submissions));
 }
 
-async function handleFormSubmit(event) {
-  event.preventDefault();
+function markToolStarted(source = "interaction") {
+  if (hasTrackedToolStart) return;
+  hasTrackedToolStart = true;
+  trackEvent("filter_tool_started", { source });
+}
 
-  const form = event.currentTarget;
-  const formLocation = "hero";
-  const source = "Hero Email Form";
-  const successMessage = form.querySelector("[data-form-success]");
-  const errorMessage = form.querySelector("[data-form-error]");
-  const submitButton = form.querySelector(".form-submit");
+function updateSizeFields() {
+  if (!toolForm) return;
 
-  trackEvent("hero_form_submit_attempt", {
-    form_location: formLocation,
-    form_source: source
-  });
+  const selected = toolForm.querySelector("input[name='sizeKnowledge']:checked")?.value;
+  const knownSize = toolForm.querySelector("[data-known-size]");
+  const guidance = toolForm.querySelector("[data-size-guidance]");
 
-  if (!form.checkValidity()) {
-    form.reportValidity();
+  if (knownSize) {
+    knownSize.hidden = selected !== "known";
+  }
+
+  if (guidance) {
+    guidance.hidden = !(selected === "unsure" || selected === "help");
+  }
+}
+
+function updateNoneOption(changedInput) {
+  if (!toolForm || changedInput?.name !== "homeConditions") return;
+
+  const noneOption = toolForm.querySelector("[data-none-option]");
+  const conditionInputs = [...toolForm.querySelectorAll("input[name='homeConditions']")];
+
+  if (changedInput === noneOption && noneOption.checked) {
+    conditionInputs.forEach((input) => {
+      if (input !== noneOption) input.checked = false;
+    });
     return;
   }
 
-  const formData = new FormData(form);
+  if (changedInput !== noneOption && changedInput.checked && noneOption) {
+    noneOption.checked = false;
+  }
+}
+
+function updateProgress() {
+  if (!toolForm) return;
+
+  const progressItems = [...toolForm.querySelectorAll(".tool-progress span")];
+  const formData = new FormData(toolForm);
+  const completed = [
+    Boolean(formData.get("sizeKnowledge")),
+    formData.getAll("homeConditions").length > 0,
+    Boolean(formData.get("replacementTiming")),
+    Boolean(formData.get("email"))
+  ];
+
+  progressItems.forEach((item, index) => {
+    item.classList.toggle("active", completed[index] || index === 0);
+  });
+}
+
+function getRecommendation(formData) {
+  const knownSize = String(formData.get("knownFilterSize") || "").trim();
+  const visibleSize = String(formData.get("visibleFilterSize") || "").trim();
+  const filterSize = knownSize || visibleSize || "Check the printed size on your current filter before ordering.";
+  const conditions = formData.getAll("homeConditions");
+  const timing = String(formData.get("replacementTiming") || "");
+  const hasPetsAllergiesDust = conditions.some((condition) =>
+    ["Pets", "Allergies", "Dust buildup"].includes(condition)
+  );
+  const hasKidsOnly = conditions.includes("Kids at home") && !hasPetsAllergiesDust;
+
+  let schedule = "Every 90 days";
+  if (hasPetsAllergiesDust) {
+    schedule = "Every 30-60 days";
+  } else if (hasKidsOnly) {
+    schedule = "Every 60-90 days";
+  }
+
+  const warning = timing === "Once a year or less" || timing === "I forget";
+
+  return {
+    filterSize,
+    schedule,
+    warning,
+    conditions: conditions.length ? conditions.join(", ") : "Not specified",
+    timing: timing || "Not specified"
+  };
+}
+
+function renderResult(recommendation) {
+  if (!resultCard) return;
+
+  resultCard.querySelector("[data-result-size]").textContent = recommendation.filterSize;
+  resultCard.querySelector("[data-result-schedule]").textContent = recommendation.schedule;
+  resultCard.querySelector("[data-result-warning]").hidden = !recommendation.warning;
+  resultCard.hidden = false;
+  resultCard.classList.add("visible");
+
+  trackEvent("filter_result_viewed", {
+    recommended_schedule: recommendation.schedule,
+    has_warning: recommendation.warning
+  });
+}
+
+function setFormMessage(form, type, message = "") {
+  const successMessage = form.querySelector("[data-form-success]");
+  const errorMessage = form.querySelector("[data-form-error]");
+
+  if (type === "success") {
+    if (successMessage) successMessage.hidden = false;
+    if (errorMessage) errorMessage.hidden = true;
+    return;
+  }
+
+  if (type === "error") {
+    if (message && errorMessage) errorMessage.textContent = message;
+    if (errorMessage) errorMessage.hidden = false;
+    if (successMessage) successMessage.hidden = true;
+    return;
+  }
+
+  if (successMessage) successMessage.hidden = true;
+  if (errorMessage) errorMessage.hidden = true;
+}
+
+async function postToFormspree(form, formData) {
+  const response = await fetch(form.action, {
+    method: "POST",
+    body: formData,
+    headers: {
+      Accept: "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Formspree submission failed with status ${response.status}`);
+  }
+}
+
+function syncFinalOffer(email) {
+  if (!email || !finalForm) return;
+
+  latestToolEmail = email;
+  const finalEmail = finalForm.querySelector("input[name='email']");
+  if (finalEmail) finalEmail.value = email;
+
+  finalForm.hidden = true;
+  if (finalConfirmation) finalConfirmation.hidden = false;
+}
+
+async function handleToolSubmit(event) {
+  event.preventDefault();
+  markToolStarted("submit");
+
+  if (!toolForm.checkValidity()) {
+    toolForm.reportValidity();
+    return;
+  }
+
+  const formData = new FormData(toolForm);
+  const conditions = formData.getAll("homeConditions");
+
+  if (!conditions.length) {
+    setFormMessage(toolForm, "error", "Choose at least one home condition, or select None of these.");
+    return;
+  }
+
+  const submitButton = toolForm.querySelector(".form-submit");
   const submittedAt = new Date().toISOString();
+  const recommendation = getRecommendation(formData);
+  const email = String(formData.get("email") || "").trim();
+  const source = "Filter Wizard Finder";
+
   formData.set("submittedAt", submittedAt);
+  formData.set("filterRecommendation", JSON.stringify(recommendation));
 
   const submission = {
-    email: formData.get("email"),
-    phone: formData.get("phone") || "",
+    email,
     source,
-    submittedAt
+    submittedAt,
+    filterSize: recommendation.filterSize,
+    recommendedSchedule: recommendation.schedule,
+    homeConditions: recommendation.conditions,
+    replacementTiming: recommendation.timing,
+    warning: recommendation.warning
   };
 
-  successMessage.hidden = true;
-  errorMessage.hidden = true;
+  setFormMessage(toolForm, "clear");
   submitButton.disabled = true;
-  submitButton.textContent = "Joining...";
+  submitButton.textContent = "Sending...";
 
   try {
-    const response = await fetch(form.action, {
-      method: "POST",
-      body: formData,
-      headers: {
-        Accept: "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Formspree submission failed with status ${response.status}`);
-    }
-
+    await postToFormspree(toolForm, formData);
     saveSubmission(submission);
-    console.log("Filter Wizard early access submission:", submission);
-    trackEvent("early_access_signup_success", {
-      form_location: formLocation,
-      form_source: source
-    });
+    console.log("Filter Wizard finder submission:", submission);
     trackEvent("generate_lead", {
-      form_location: formLocation,
-      form_source: source
+      form_location: "filter_finder",
+      recommended_schedule: recommendation.schedule
     });
-
-    form.reset();
-    successMessage.hidden = false;
-    successMessage.scrollIntoView({
+    renderResult(recommendation);
+    syncFinalOffer(email);
+    setFormMessage(toolForm, "success");
+    resultCard?.scrollIntoView({
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
       block: "nearest"
     });
   } catch (error) {
-    console.error("Filter Wizard Formspree submission error:", error);
-    trackEvent("early_access_signup_error", {
-      form_location: formLocation,
-      form_source: source
-    });
+    console.error("Filter Wizard finder submission error:", error);
+    setFormMessage(toolForm, "error", "Something went wrong while sending your result. Please try again in a moment.");
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "Email My Results";
+  }
+}
 
-    errorMessage.hidden = false;
-    errorMessage.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      block: "nearest"
-    });
+async function handleFinalSubmit(event) {
+  event.preventDefault();
+
+  if (!finalForm.checkValidity()) {
+    finalForm.reportValidity();
+    return;
+  }
+
+  const formData = new FormData(finalForm);
+  const submitButton = finalForm.querySelector(".form-submit");
+  const submittedAt = new Date().toISOString();
+  const email = String(formData.get("email") || "").trim();
+  const source = "Founding Member Offer";
+
+  formData.set("submittedAt", submittedAt);
+  setFormMessage(finalForm, "clear");
+  submitButton.disabled = true;
+  submitButton.textContent = "Joining...";
+
+  try {
+    await postToFormspree(finalForm, formData);
+    const submission = { email, source, submittedAt };
+    saveSubmission(submission);
+    console.log("Filter Wizard waitlist submission:", submission);
+    trackEvent("generate_lead", { form_location: "founding_member_offer" });
+    latestToolEmail = email;
+    setFormMessage(finalForm, "success");
+    finalForm.reset();
+  } catch (error) {
+    console.error("Filter Wizard waitlist submission error:", error);
+    setFormMessage(finalForm, "error", "Something went wrong while joining the list. Please try again in a moment.");
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "Get My 50% Off";
   }
 }
 
-function handleCtaScroll(event) {
+function handleStartTool(event) {
   event.preventDefault();
-  trackEvent("cta_scroll_to_hero_click", {
-    link_text: event.currentTarget.textContent.trim()
-  });
+  markToolStarted("cta_click");
 
-  earlyAccessForm.scrollIntoView({
+  const tool = document.querySelector("#free-tool");
+  tool?.scrollIntoView({
     behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-    block: "center"
+    block: "start"
   });
 
   window.setTimeout(() => {
-    earlyAccessForm.querySelector("input[type='email']")?.focus({ preventScroll: true });
+    toolForm?.querySelector("input[name='sizeKnowledge']")?.focus({ preventScroll: true });
   }, 350);
+
+  closeNav();
 }
 
 setHeaderState();
 setupRevealAnimations();
+updateProgress();
 window.addEventListener("scroll", setHeaderState, { passive: true });
 
 if (navToggle && navMenu) {
@@ -189,14 +362,39 @@ if (navToggle && navMenu) {
   });
 }
 
-if (earlyAccessForm) {
-  earlyAccessForm.addEventListener("submit", handleFormSubmit);
-  earlyAccessForm.addEventListener("input", () => {
-    earlyAccessForm.querySelector("[data-form-success]").hidden = true;
-    earlyAccessForm.querySelector("[data-form-error]").hidden = true;
+startToolLinks.forEach((link) => {
+  link.addEventListener("click", handleStartTool);
+});
+
+if (toolForm) {
+  toolForm.addEventListener("change", (event) => {
+    markToolStarted("field_change");
+    updateNoneOption(event.target);
+    updateSizeFields();
+    updateProgress();
+    setFormMessage(toolForm, "clear");
   });
+
+  toolForm.addEventListener("input", () => {
+    markToolStarted("field_input");
+    updateProgress();
+    setFormMessage(toolForm, "clear");
+  });
+
+  toolForm.addEventListener("submit", handleToolSubmit);
 }
 
-ctaScrollLinks.forEach((link) => {
-  link.addEventListener("click", handleCtaScroll);
-});
+if (finalForm) {
+  finalForm.addEventListener("input", () => setFormMessage(finalForm, "clear"));
+  finalForm.addEventListener("submit", handleFinalSubmit);
+}
+
+if (resultCta) {
+  resultCta.addEventListener("click", () => {
+    const target = latestToolEmail ? finalConfirmation : finalForm;
+    target?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "center"
+    });
+  });
+}

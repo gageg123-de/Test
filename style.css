@@ -70,6 +70,11 @@ select {
   scroll-margin-top: calc(var(--header-height) + 18px);
 }
 
+#free-tool,
+#how-it-works {
+  scroll-margin-top: calc(var(--header-height) + 18px);
+}
+
 .site-header {
   position: sticky;
   top: 0;
@@ -171,7 +176,7 @@ p {
 
 h1 {
   max-width: 650px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   font-size: clamp(2.45rem, 5vw, 4.7rem);
   line-height: 1;
   letter-spacing: 0;
@@ -191,7 +196,7 @@ h3 {
 }
 
 .eyebrow {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   color: var(--green-dark);
   font-size: 0.76rem;
   font-weight: 850;
@@ -238,7 +243,7 @@ a:focus-visible {
 }
 
 .hero {
-  padding: 64px 0 58px;
+  padding: 52px 0 48px;
   background:
     radial-gradient(circle at 14% 15%, rgba(47, 179, 109, 0.11), transparent 26%),
     radial-gradient(circle at 88% 18%, rgba(36, 119, 212, 0.12), transparent 30%),
@@ -249,17 +254,16 @@ a:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
   align-items: center;
-  gap: 20px 52px;
+  gap: 42px;
 }
 
-.hero-intro,
-.hero-signup-panel {
+.hero-intro {
   grid-column: 1;
 }
 
 .hero-visual {
   grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-row: 1;
 }
 
 .hero-subtitle {
@@ -269,10 +273,16 @@ a:focus-visible {
 }
 
 .hero-benefit-line {
-  margin: 0 0 12px;
+  margin: 0 0 9px;
   color: #334351;
   font-size: 1rem;
   font-weight: 850;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
 }
 
 .hero-cta {
@@ -315,19 +325,24 @@ a:focus-visible {
 
 .hero-form-pain {
   max-width: 560px;
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   color: #334351;
   font-size: 0.92rem;
   font-weight: 700;
   line-height: 1.45;
 }
 
+.hero-form-pain strong {
+  color: var(--green-dark);
+  font-weight: 900;
+}
+
 .offer-badge {
   display: inline-flex;
   align-items: center;
   min-height: 30px;
-  margin: 0 0 8px;
-  padding: 6px 10px;
+  margin: 0 0 6px;
+  padding: 5px 9px;
   border: 1px solid rgba(47, 179, 109, 0.28);
   border-radius: 999px;
   color: var(--green-dark);
@@ -336,28 +351,6 @@ a:focus-visible {
   font-weight: 850;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-}
-
-.service-indicators {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin: -8px 0 22px;
-}
-
-.service-indicators span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 34px;
-  padding: 7px 10px;
-  border: 1px solid rgba(217, 231, 238, 0.9);
-  border-radius: 999px;
-  color: #334351;
-  background: rgba(255, 255, 255, 0.72);
-  font-size: 0.82rem;
-  font-weight: 800;
 }
 
 .hero-form-trust,
@@ -525,6 +518,214 @@ select:user-invalid {
   background: #fff0f0;
 }
 
+.tool-section {
+  padding: 64px 0;
+  background:
+    linear-gradient(135deg, rgba(36, 119, 212, 0.08), rgba(47, 179, 109, 0.06)),
+    var(--surface);
+}
+
+.tool-shell {
+  display: grid;
+  gap: 22px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow);
+}
+
+.tool-intro {
+  max-width: 680px;
+}
+
+.tool-intro h2 {
+  margin-bottom: 8px;
+}
+
+.tool-intro p:not(.eyebrow) {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.finder-form {
+  display: grid;
+  gap: 16px;
+}
+
+.tool-progress {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.tool-progress span {
+  min-height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  color: transparent;
+  background: var(--blue-soft);
+}
+
+.tool-progress span.active {
+  background: linear-gradient(135deg, var(--blue), var(--green));
+}
+
+.tool-step {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--white);
+  box-shadow: var(--shadow-soft);
+}
+
+.tool-step legend {
+  padding: 0;
+  margin-bottom: 4px;
+  color: var(--text);
+  font-size: 1.03rem;
+  font-weight: 850;
+}
+
+.tool-step legend span {
+  color: var(--green-dark);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.choice-grid label {
+  cursor: pointer;
+}
+
+.choice-grid input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.choice-grid span {
+  display: grid;
+  min-height: 48px;
+  place-items: center;
+  padding: 10px 12px;
+  border: 1px solid #cddde7;
+  border-radius: 12px;
+  background: #fbfdff;
+  color: var(--text);
+  font-weight: 800;
+  text-align: center;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.choice-grid input:checked + span {
+  color: var(--blue-dark);
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  box-shadow: 0 0 0 4px rgba(36, 119, 212, 0.1);
+}
+
+.multi-choice {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.conditional-field {
+  display: grid;
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.guidance-card {
+  padding: 14px;
+  border: 1px solid rgba(36, 119, 212, 0.16);
+  border-radius: 14px;
+  background: #f5fbff;
+}
+
+.guidance-card p {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.tool-email-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.tool-email-row .form-submit {
+  width: auto;
+  min-width: 170px;
+  margin: 0;
+}
+
+.result-card {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid rgba(47, 179, 109, 0.3);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #f6fff9, #ffffff);
+  box-shadow: var(--shadow-soft);
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.result-grid div {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+}
+
+.result-grid span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.result-grid strong {
+  display: block;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.result-card p {
+  margin-bottom: 0;
+}
+
+.warning-note {
+  padding: 11px 12px;
+  border: 1px solid #f1d79a;
+  border-radius: 12px;
+  color: #76520c;
+  background: #fff8e6;
+  font-weight: 800;
+}
+
+.offer-line {
+  color: var(--green-dark);
+  font-weight: 850;
+}
+
 .compact-section {
   padding: 64px 0;
 }
@@ -620,6 +821,12 @@ select:user-invalid {
   margin-bottom: 0;
 }
 
+.benefit-card p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
 .comparison-section {
   padding: 68px 0;
   background:
@@ -688,6 +895,46 @@ select:user-invalid {
   color: var(--blue-dark);
   background: var(--white);
   box-shadow: 0 16px 34px rgba(6, 34, 54, 0.2);
+}
+
+.final-signup {
+  display: grid;
+  gap: 10px;
+  min-width: min(100%, 360px);
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 34px rgba(6, 34, 54, 0.16);
+}
+
+.final-signup input {
+  border-color: rgba(255, 255, 255, 0.68);
+  background: var(--white);
+}
+
+.final-signup .form-submit {
+  margin: 0;
+}
+
+.final-signup .form-trust {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.final-signup .form-success,
+.final-signup .form-error {
+  text-align: left;
+}
+
+.final-confirmation {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 12px;
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.14);
+  font-weight: 800;
 }
 
 .site-footer {
@@ -810,11 +1057,10 @@ select:user-invalid {
   }
 
   .hero-grid {
-    gap: 28px;
+    gap: 20px;
   }
 
   .hero-intro,
-  .hero-signup-panel,
   .hero-visual {
     grid-column: 1;
   }
@@ -825,10 +1071,6 @@ select:user-invalid {
 
   .hero-visual {
     grid-row: 2;
-  }
-
-  .hero-signup-panel {
-    grid-row: 3;
   }
 
   .form-layout {
@@ -842,6 +1084,11 @@ select:user-invalid {
   .compact-steps,
   .benefit-grid {
     grid-template-columns: 1fr;
+  }
+
+  .choice-grid,
+  .multi-choice {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .final-cta-inner {
@@ -874,48 +1121,36 @@ select:user-invalid {
   }
 
   .hero {
-    padding: 22px 0 32px;
+    padding: 16px 0 28px;
   }
 
   .hero-grid {
-    gap: 16px;
+    gap: 14px;
   }
 
   h1 {
-    font-size: 2.18rem;
+    font-size: 2.06rem;
   }
 
   .hero-subtitle {
     margin-bottom: 0;
-    font-size: 1.02rem;
+    font-size: 0.98rem;
+    line-height: 1.42;
   }
 
-  .hero-benefit-line {
-    margin-bottom: 10px;
-    font-size: 0.95rem;
+  .hero-actions {
+    margin-top: 16px;
   }
 
-  .hero-form-pain {
-    margin-bottom: 9px;
-    font-size: 0.88rem;
+  .hero-actions .btn {
+    width: 100%;
   }
 
   .offer-badge {
-    min-height: 28px;
-    margin-bottom: 7px;
-    padding: 5px 9px;
-    font-size: 0.7rem;
-  }
-
-  .service-indicators {
-    gap: 7px;
-    margin: -4px 0 18px;
-  }
-
-  .service-indicators span {
-    min-height: 32px;
-    padding: 6px 9px;
-    font-size: 0.78rem;
+    min-height: 26px;
+    margin-bottom: 6px;
+    padding: 4px 8px;
+    font-size: 0.68rem;
   }
 
   .btn {
@@ -925,7 +1160,7 @@ select:user-invalid {
 
   .hero-form-row {
     grid-template-columns: 1fr;
-    gap: 9px;
+    gap: 8px;
   }
 
   .hero-signup .form-submit {
@@ -942,9 +1177,57 @@ select:user-invalid {
   }
 
   .hero-image {
-    height: clamp(220px, 54vw, 260px);
+    height: clamp(205px, 52vw, 245px);
     aspect-ratio: auto;
     object-position: 57% center;
+  }
+
+  .tool-section {
+    padding: 44px 0;
+  }
+
+  .tool-shell {
+    gap: 18px;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .tool-step {
+    gap: 10px;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .tool-step legend {
+    font-size: 0.98rem;
+  }
+
+  .choice-grid,
+  .multi-choice {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .choice-grid span {
+    min-height: 44px;
+  }
+
+  .tool-email-row {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .tool-email-row .form-submit {
+    width: 100%;
+  }
+
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .final-signup {
+    min-width: 0;
+    padding: 14px;
   }
 
   .form-section {

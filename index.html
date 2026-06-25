@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Filter Wizard helps homeowners find the right air filter size, remember replacement dates, and reserve automatic filter deliveries.">
-  <title>Filter Wizard | Never Forget Your Air Filter Again</title>
+  <meta name="description" content="Use Filter Wizard Finder to identify your air filter size, get a replacement schedule, and reserve 50% off your first filter order at launch.">
+  <title>Filter Wizard Finder | Find Your Air Filter in Under 60 Seconds</title>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-64VWBW3NHS"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -34,8 +34,10 @@
         <span></span>
       </button>
       <div class="nav-links" data-nav-menu>
+        <a href="#free-tool">Free Tool</a>
         <a href="#how-it-works">How It Works</a>
-        <a class="nav-cta" href="#early-access" data-scroll-to-hero>Get 50% Off</a>
+        <a href="#early-access">Early Access</a>
+        <a class="nav-cta" href="#free-tool" data-start-tool>Start Free Tool</a>
       </div>
     </nav>
   </header>
@@ -44,9 +46,13 @@
     <section class="hero section">
       <div class="container hero-grid">
         <div class="hero-intro reveal">
-          <p class="eyebrow">SIMPLE HOME FILTER CARE</p>
-          <h1>Never Forget Your Air Filter Again</h1>
-          <p class="hero-subtitle">Find your filter size, get timely replacement reminders, and schedule deliveries before your old filter costs you money.</p>
+          <p class="eyebrow">FREE HOMEOWNER TOOL</p>
+          <h1>Find Your Air Filter in Under 60 Seconds</h1>
+          <p class="hero-subtitle">Answer a few quick questions and get your filter size, replacement schedule, and early access discount.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#free-tool" data-start-tool>Start Free Tool</a>
+          </div>
+          <p class="hero-form-trust">No payment required. Results sent by email.</p>
         </div>
         <div class="hero-visual image-card reveal">
           <picture>
@@ -57,49 +63,125 @@
             <img class="hero-image" src="assets/images/filter-wizard-hero-dirty-clean.webp" alt="Homeowner comparing a dirty air filter with a clean replacement filter" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
           </picture>
         </div>
-        <div class="hero-signup-panel reveal">
-          <p class="hero-benefit-line">We'll identify your filter and help deliver replacements on schedule.</p>
-          <form class="hero-signup" id="early-access" action="https://formspree.io/f/mzdlpbwp" method="POST" data-early-form data-form-location="hero">
-            <input type="hidden" name="_subject" value="New Filter Wizard early access signup">
-            <input type="hidden" name="source" value="Hero Email Form">
-            <p class="offer-badge" aria-label="Founding Member Offer">&#127881; FOUNDING MEMBER OFFER</p>
-            <p class="hero-form-pain">Join the waitlist today and get 50% off your first filter order when we launch.</p>
-            <div class="hero-form-row">
-              <label class="sr-only" for="hero-email">Email address</label>
-              <input id="hero-email" name="email" type="email" autocomplete="email" placeholder="Email address" required>
-              <button class="btn btn-primary form-submit" type="submit">Get My 50% Off</button>
+      </div>
+    </section>
+
+    <section class="section tool-section" id="free-tool">
+      <div class="container">
+        <div class="tool-shell reveal">
+          <div class="tool-intro">
+            <p class="eyebrow">Free Homeowner Tool</p>
+            <h2>Filter Wizard Finder</h2>
+            <p>Not sure what filter you need? We'll help you narrow it down.</p>
+          </div>
+
+          <form class="finder-form" id="filter-finder" action="https://formspree.io/f/mzdlpbwp" method="POST" data-tool-form>
+            <input type="hidden" name="_subject" value="New Filter Wizard finder result">
+            <input type="hidden" name="source" value="Filter Wizard Finder">
+            <input type="hidden" name="filterRecommendation" data-recommendation-field>
+
+            <div class="tool-progress" aria-label="Filter Wizard Finder steps">
+              <span>1</span>
+              <span>2</span>
+              <span>3</span>
+              <span>4</span>
             </div>
-            <p class="hero-form-trust">No payment today. No spam. You're simply reserving your launch discount.</p>
-            <p class="form-success" role="status" aria-live="polite" data-form-success hidden>You're on the list. We'll email your launch discount and early access details soon.</p>
-            <p class="form-error" role="alert" data-form-error hidden>Something went wrong while joining the list. Please try again in a moment.</p>
+
+            <fieldset class="tool-step" data-step="1">
+              <legend><span>Step 1</span> Do you know your current filter size?</legend>
+              <div class="choice-grid">
+                <label><input type="radio" name="sizeKnowledge" value="known" required><span>Yes, I know it</span></label>
+                <label><input type="radio" name="sizeKnowledge" value="unsure"><span>Not sure</span></label>
+                <label><input type="radio" name="sizeKnowledge" value="help"><span>I need help finding it</span></label>
+              </div>
+              <div class="conditional-field" data-known-size hidden>
+                <label for="known-filter-size">Enter filter size</label>
+                <input id="known-filter-size" name="knownFilterSize" type="text" placeholder="20x25x1, 16x20x1, etc.">
+              </div>
+              <div class="conditional-field guidance-card" data-size-guidance hidden>
+                <p>Check the printed size on the edge of your current filter, usually written like 20x25x1.</p>
+                <label for="visible-filter-size">What size do you see?</label>
+                <input id="visible-filter-size" name="visibleFilterSize" type="text" placeholder="Example: 20x25x1">
+              </div>
+            </fieldset>
+
+            <fieldset class="tool-step" data-step="2">
+              <legend><span>Step 2</span> What applies to your home?</legend>
+              <div class="choice-grid multi-choice">
+                <label><input type="checkbox" name="homeConditions" value="Pets"><span>Pets</span></label>
+                <label><input type="checkbox" name="homeConditions" value="Allergies"><span>Allergies</span></label>
+                <label><input type="checkbox" name="homeConditions" value="Kids at home"><span>Kids at home</span></label>
+                <label><input type="checkbox" name="homeConditions" value="Dust buildup"><span>Dust buildup</span></label>
+                <label><input type="checkbox" name="homeConditions" value="None of these" data-none-option><span>None of these</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset class="tool-step" data-step="3">
+              <legend><span>Step 3</span> How often do you usually replace your air filter?</legend>
+              <div class="choice-grid">
+                <label><input type="radio" name="replacementTiming" value="Every 1 month" required><span>Every 1 month</span></label>
+                <label><input type="radio" name="replacementTiming" value="Every 2-3 months"><span>Every 2-3 months</span></label>
+                <label><input type="radio" name="replacementTiming" value="Every 6 months"><span>Every 6 months</span></label>
+                <label><input type="radio" name="replacementTiming" value="Once a year or less"><span>Once a year or less</span></label>
+                <label><input type="radio" name="replacementTiming" value="I forget"><span>I forget</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset class="tool-step" data-step="4">
+              <legend><span>Step 4</span> Where should we send your filter recommendation and launch discount?</legend>
+              <div class="tool-email-row">
+                <label class="sr-only" for="tool-email">Email address</label>
+                <input id="tool-email" name="email" type="email" autocomplete="email" placeholder="Email address" required>
+                <button class="btn btn-primary form-submit" type="submit">Email My Results</button>
+              </div>
+              <p class="form-trust">No payment. No spam. Unsubscribe anytime.</p>
+              <p class="form-success" role="status" aria-live="polite" data-form-success hidden>You're on the list. We'll email your filter recommendation, launch discount, and early access details soon.</p>
+              <p class="form-error" role="alert" data-form-error hidden>Something went wrong while sending your result. Please try again in a moment.</p>
+            </fieldset>
           </form>
+
+          <article class="result-card" data-result-card hidden>
+            <p class="eyebrow">Your Filter Wizard Recommendation</p>
+            <div class="result-grid">
+              <div>
+                <span>Filter size</span>
+                <strong data-result-size>Check the printed size on your current filter before ordering.</strong>
+              </div>
+              <div>
+                <span>Recommended schedule</span>
+                <strong data-result-schedule>Every 90 days</strong>
+              </div>
+            </div>
+            <p class="warning-note" data-result-warning hidden>You may be replacing your filter too late.</p>
+            <p>Filter Wizard can remind you before your filter is overdue and help schedule replacements on time.</p>
+            <p class="offer-line">Founding members get 50% off their first filter order when Filter Wizard launches.</p>
+            <button class="btn btn-primary" type="button" data-result-cta>Join Waitlist & Save 50%</button>
+          </article>
         </div>
       </div>
     </section>
 
-    <section class="section benefits-section compact-section" id="benefits">
+    <section class="section benefits-section compact-section" id="how-it-works">
       <div class="container">
         <div class="compact-heading reveal">
-          <p class="eyebrow">Less guesswork, better timing</p>
-          <h2>Why Homeowners Use Filter Wizard</h2>
-        </div>
-        <div class="service-indicators reveal" aria-label="Filter Wizard service highlights">
-          <span><span aria-hidden="true">01</span> Find Your Filter</span>
-          <span><span aria-hidden="true">02</span> Automatic Reminders</span>
-          <span><span aria-hidden="true">03</span> Scheduled Delivery</span>
+          <p class="eyebrow">How Filter Wizard Helps</p>
+          <h2>How Filter Wizard Helps</h2>
         </div>
         <div class="benefit-grid">
           <article class="benefit-card reveal">
             <span aria-hidden="true">01</span>
-            <h3>Find the right filter</h3>
+            <h3>Find the Right Filter</h3>
+            <p>We help you identify your filter size so you do not have to guess.</p>
           </article>
           <article class="benefit-card reveal">
             <span aria-hidden="true">02</span>
-            <h3>Never miss a replacement</h3>
+            <h3>Replace It On Time</h3>
+            <p>Get reminders based on your home, pets, allergies, and usage.</p>
           </article>
           <article class="benefit-card reveal">
             <span aria-hidden="true">03</span>
-            <h3>Scheduled delivery made simple</h3>
+            <h3>Schedule Deliveries</h3>
+            <p>When we launch, you'll be able to subscribe and get filters delivered before you need them.</p>
           </article>
         </div>
       </div>
@@ -108,9 +190,9 @@
     <section class="section comparison-section">
       <div class="container">
         <div class="compact-heading reveal">
-          <p class="eyebrow">A difference you can see</p>
-          <h2>What Happens When Filters Are Forgotten?</h2>
-          <p>Most homeowners do not realize how dirty their filter gets before it is replaced.</p>
+          <p class="eyebrow">Why It Matters</p>
+          <h2>A Dirty Filter Costs More Than You Think</h2>
+          <p>A clogged filter can reduce airflow, strain your HVAC system, and make your home harder to keep comfortable.</p>
         </div>
         <figure class="comparison-card reveal">
           <picture>
@@ -120,36 +202,29 @@
               sizes="(max-width: 920px) calc(100vw - 48px), 848px">
             <img src="assets/images/before-after-dirty-clean-filter.png" alt="Dirty clogged HVAC filter beside a clean replacement filter." width="1536" height="1024" loading="lazy" decoding="async">
           </picture>
-          <figcaption>A clogged filter can reduce airflow, increase HVAC strain, and make your system work harder.</figcaption>
+          <figcaption>The difference between an overdue filter and a clean replacement is easy to miss until airflow drops.</figcaption>
         </figure>
       </div>
     </section>
 
-    <section class="section compact-section" id="how-it-works">
-      <div class="container">
-        <div class="compact-heading reveal">
-          <p class="eyebrow">Three simple steps</p>
-          <h2>How It Works</h2>
-        </div>
-        <ol class="compact-steps reveal">
-          <li><span>1</span><strong>Tell us about your home filter</strong></li>
-          <li><span>2</span><strong>We help confirm the right size</strong></li>
-          <li><span>3</span><strong>Get replacements on schedule</strong></li>
-        </ol>
-        <div class="section-action reveal">
-          <a class="btn btn-primary" href="#early-access" data-scroll-to-hero>Join Early Access</a>
-        </div>
-      </div>
-    </section>
-
-    <section class="section final-cta-block">
+    <section class="section final-cta-block" id="early-access">
       <div class="container final-cta-inner reveal">
         <div>
-          <p class="eyebrow">One less chore to remember</p>
-          <h2>Ready to stop thinking about air filters?</h2>
-          <p>Get reminders, sizing help, and scheduled delivery when Filter Wizard launches.</p>
+          <p class="eyebrow">Founding Member Offer</p>
+          <h2>Join the Waitlist. Get 50% Off Your First Order.</h2>
+          <p>Filter Wizard is currently validating early demand. Join now to reserve your launch discount and get early access before public release.</p>
+          <p class="final-confirmation" data-final-confirmation hidden>You're already on the list. We'll send your recommendation and launch discount by email.</p>
         </div>
-        <a class="btn btn-primary" href="#early-access" data-scroll-to-hero>Join Early Access</a>
+        <form class="final-signup" action="https://formspree.io/f/mzdlpbwp" method="POST" data-final-form>
+          <input type="hidden" name="_subject" value="New Filter Wizard early access signup">
+          <input type="hidden" name="source" value="Founding Member Offer">
+          <label class="sr-only" for="final-email">Email address</label>
+          <input id="final-email" name="email" type="email" autocomplete="email" placeholder="Email address" required>
+          <button class="btn btn-primary form-submit" type="submit">Get My 50% Off</button>
+          <p class="form-trust">No payment today. No spam.</p>
+          <p class="form-success" role="status" aria-live="polite" data-form-success hidden>You're on the list. We'll email your filter recommendation, launch discount, and early access details soon.</p>
+          <p class="form-error" role="alert" data-form-error hidden>Something went wrong while joining the list. Please try again in a moment.</p>
+        </form>
       </div>
     </section>
   </main>
@@ -165,8 +240,9 @@
         <p>Simple filter sizing, reminders, and scheduled delivery.</p>
       </div>
       <div class="footer-links" aria-label="Footer navigation">
+        <a href="#free-tool">Free Tool</a>
         <a href="#how-it-works">How It Works</a>
-        <a href="#early-access" data-scroll-to-hero>Early Access</a>
+        <a href="#early-access">Early Access</a>
       </div>
     </div>
     <div class="container disclaimer">
