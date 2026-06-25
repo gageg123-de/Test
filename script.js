@@ -2,21 +2,23 @@ const header = document.querySelector("[data-header]");
 const navToggle = document.querySelector("[data-nav-toggle]");
 const navMenu = document.querySelector("[data-nav-menu]");
 const navLinks = document.querySelectorAll(".nav-links a, .footer-links a");
-const startToolLinks = document.querySelectorAll("[data-start-tool]");
-const toolForm = document.querySelector("[data-tool-form]");
-const finalForm = document.querySelector("[data-final-form]");
-const resultCard = document.querySelector("[data-result-card]");
-const resultCta = document.querySelector("[data-result-cta]");
-const finalConfirmation = document.querySelector("[data-final-confirmation]");
-const quizSteps = toolForm ? [...toolForm.querySelectorAll("[data-step]")] : [];
-const quizBackButton = document.querySelector("[data-quiz-back]");
-const quizNextButton = document.querySelector("[data-quiz-next]");
-const progressLabel = document.querySelector("[data-progress-label]");
-const stepError = document.querySelector("[data-step-error]");
-const storageKey = "filterWizardEarlyAccess";
-let hasTrackedToolStart = false;
-let latestToolEmail = "";
-let currentStep = 1;
+const subscriptionCtas = document.querySelectorAll("[data-subscription-cta]");
+const planButtons = document.querySelectorAll("[data-plan-button]");
+const modalBackdrop = document.querySelector("[data-modal-backdrop]");
+const closeModalButton = document.querySelector("[data-close-modal]");
+const openReservationButtons = document.querySelectorAll("[data-open-reservation]");
+const reservationForm = document.querySelector("[data-reservation-form]");
+const countdownEls = document.querySelectorAll("[data-countdown]");
+const countdownView = document.querySelector("[data-countdown-view]");
+const storageKey = "filterWizardReservations";
+const countdownKey = "filterWizardFounderOfferEndsAt";
+const fallbackPlan = {
+  plan: "Plus",
+  regular: "$29.99 / month",
+  founder: "$14.99 / month"
+};
+let selectedPlan = { ...fallbackPlan };
+let countdownViewed = false;
 
 function trackEvent(eventName, parameters = {}) {
   if (typeof window.gtag === "function") {
@@ -68,192 +70,109 @@ function setupRevealAnimations() {
   revealItems.forEach((item) => observer.observe(item));
 }
 
-function getStoredSubmissions() {
+function getStoredReservations() {
   try {
     return JSON.parse(localStorage.getItem(storageKey)) || [];
   } catch (error) {
-    console.warn("Filter Wizard submissions could not be read from localStorage.", error);
+    console.warn("Filter Wizard reservations could not be read from localStorage.", error);
     return [];
   }
 }
 
-function saveSubmission(submission) {
-  const submissions = getStoredSubmissions();
-  submissions.push(submission);
-  localStorage.setItem(storageKey, JSON.stringify(submissions));
-}
-
-function markToolStarted(source = "interaction") {
-  if (hasTrackedToolStart) return;
-  hasTrackedToolStart = true;
-  trackEvent("filter_tool_started", { source });
-}
-
-function updateSizeFields() {
-  if (!toolForm) return;
-
-  const selected = toolForm.querySelector("input[name='sizeKnowledge']:checked")?.value;
-  const knownSize = toolForm.querySelector("[data-known-size]");
-  const guidance = toolForm.querySelector("[data-size-guidance]");
-
-  if (knownSize) {
-    knownSize.hidden = selected !== "known";
-  }
-
-  if (guidance) {
-    guidance.hidden = !(selected === "unsure" || selected === "help");
+function saveReservation(reservation) {
+  try {
+    const reservations = getStoredReservations();
+    reservations.push(reservation);
+    localStorage.setItem(storageKey, JSON.stringify(reservations));
+  } catch (error) {
+    console.warn("Filter Wizard reservation could not be saved to localStorage.", error);
   }
 }
 
-function updateNoneOption(changedInput) {
-  if (!toolForm || changedInput?.name !== "homeConditions") return;
+function getCountdownEnd() {
+  const fortyEightHours = 48 * 60 * 60 * 1000;
+  const now = Date.now();
 
-  const noneOption = toolForm.querySelector("[data-none-option]");
-  const conditionInputs = [...toolForm.querySelectorAll("input[name='homeConditions']")];
+  try {
+    const stored = Number(localStorage.getItem(countdownKey));
+    if (stored && stored > now) return stored;
 
-  if (changedInput === noneOption && noneOption.checked) {
-    conditionInputs.forEach((input) => {
-      if (input !== noneOption) input.checked = false;
-    });
+    const end = now + fortyEightHours;
+    localStorage.setItem(countdownKey, String(end));
+    return end;
+  } catch (error) {
+    return now + fortyEightHours;
+  }
+}
+
+const countdownEnd = getCountdownEnd();
+
+function formatTime(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  return `${hours}:${minutes}:${seconds}`;
+}
+
+function updateCountdown() {
+  const remaining = countdownEnd - Date.now();
+  const display = remaining > 0 ? formatTime(remaining) : "Founder spots still open";
+  countdownEls.forEach((el) => {
+    el.textContent = display;
+  });
+}
+
+function setupCountdownTracking() {
+  if (!countdownView || !("IntersectionObserver" in window)) {
+    trackCountdownViewed();
     return;
   }
 
-  if (changedInput !== noneOption && changedInput.checked && noneOption) {
-    noneOption.checked = false;
-  }
-}
-
-function updateProgress() {
-  if (!toolForm) return;
-
-  const progressItems = [...toolForm.querySelectorAll(".tool-progress span")];
-  progressItems.forEach((item, index) => {
-    item.classList.toggle("active", index < currentStep);
-  });
-
-  if (progressLabel) {
-    progressLabel.textContent = `Step ${currentStep} of 4`;
-  }
-}
-
-function setStepError(message = "") {
-  if (!stepError) return;
-  stepError.textContent = message || "Please choose an option to continue.";
-  stepError.hidden = !message;
-}
-
-function showStep(stepNumber) {
-  currentStep = Math.min(Math.max(stepNumber, 1), 4);
-  setStepError("");
-
-  quizSteps.forEach((step) => {
-    step.classList.toggle("active", Number(step.dataset.step) === currentStep);
-  });
-
-  if (quizBackButton) {
-    quizBackButton.hidden = currentStep === 1;
-  }
-
-  if (quizNextButton) {
-    quizNextButton.hidden = currentStep === 4;
-  }
-
-  updateProgress();
-}
-
-function validateStep(stepNumber) {
-  if (!toolForm) return false;
-
-  if (stepNumber === 1) {
-    const selectedSize = toolForm.querySelector("input[name='sizeKnowledge']:checked");
-    if (!selectedSize) {
-      setStepError("Choose whether you know your current air filter size.");
-      return false;
-    }
-  }
-
-  if (stepNumber === 2) {
-    const conditions = [...toolForm.querySelectorAll("input[name='homeConditions']:checked")];
-    if (!conditions.length) {
-      setStepError("Choose at least one home condition, or select None of these.");
-      return false;
-    }
-  }
-
-  if (stepNumber === 3) {
-    const selectedTiming = toolForm.querySelector("input[name='replacementTiming']:checked");
-    if (!selectedTiming) {
-      setStepError("Choose how often you usually replace your filter.");
-      return false;
-    }
-  }
-
-  setStepError("");
-  setFormMessage(toolForm, "clear");
-  return true;
-}
-
-function goToNextStep() {
-  markToolStarted("next_click");
-  if (!validateStep(currentStep)) return;
-  showStep(currentStep + 1);
-  toolForm?.scrollIntoView({
-    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-    block: "start"
-  });
-}
-
-function goToPreviousStep() {
-  showStep(currentStep - 1);
-  toolForm?.scrollIntoView({
-    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-    block: "start"
-  });
-}
-
-function getRecommendation(formData) {
-  const knownSize = String(formData.get("knownFilterSize") || "").trim();
-  const visibleSize = String(formData.get("visibleFilterSize") || "").trim();
-  const filterSize = knownSize || visibleSize || "Check the printed size on your current filter before ordering.";
-  const conditions = formData.getAll("homeConditions");
-  const timing = String(formData.get("replacementTiming") || "");
-  const hasPetsAllergiesDust = conditions.some((condition) =>
-    ["Pets", "Allergies", "Dust buildup"].includes(condition)
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          trackCountdownViewed();
+          observer.disconnect();
+        }
+      });
+    },
+    { threshold: 0.35 }
   );
-  const hasKidsOnly = conditions.includes("Kids at home") && !hasPetsAllergiesDust;
 
-  let schedule = "Every 90 days";
-  if (hasPetsAllergiesDust) {
-    schedule = "Every 30-60 days";
-  } else if (hasKidsOnly) {
-    schedule = "Every 60-90 days";
-  }
-
-  const warning = timing === "Once a year or less" || timing === "I forget";
-
-  return {
-    filterSize,
-    schedule,
-    warning,
-    conditions: conditions.length ? conditions.join(", ") : "Not specified",
-    timing: timing || "Not specified"
-  };
+  observer.observe(countdownView);
 }
 
-function renderResult(recommendation) {
-  if (!resultCard) return;
+function trackCountdownViewed() {
+  if (countdownViewed) return;
+  countdownViewed = true;
+  trackEvent("founder_countdown_viewed");
+}
 
-  resultCard.querySelector("[data-result-size]").textContent = recommendation.filterSize;
-  resultCard.querySelector("[data-result-schedule]").textContent = recommendation.schedule;
-  resultCard.querySelector("[data-result-warning]").hidden = !recommendation.warning;
-  resultCard.hidden = false;
-  resultCard.classList.add("visible");
-  toolForm.hidden = true;
+function setSelectedPlan(plan) {
+  selectedPlan = plan;
+  document.querySelector("[data-selected-plan]").textContent = plan.plan;
+  document.querySelector("[data-selected-regular]").textContent = plan.regular;
+  document.querySelector("[data-selected-founder]").textContent = plan.founder;
+  document.querySelector("[data-plan-field]").value = plan.plan;
+  document.querySelector("[data-regular-field]").value = plan.regular;
+  document.querySelector("[data-founder-field]").value = plan.founder;
+}
 
-  trackEvent("filter_result_viewed", {
-    recommended_schedule: recommendation.schedule,
-    has_warning: recommendation.warning
+function openReservation(plan = fallbackPlan) {
+  setSelectedPlan(plan);
+  modalBackdrop.hidden = false;
+  document.body.classList.add("modal-open");
+  reservationForm?.querySelector("input[name='email']")?.focus();
+  trackEvent("reservation_started", {
+    plan_name: plan.plan
   });
+}
+
+function closeReservation() {
+  modalBackdrop.hidden = true;
+  document.body.classList.remove("modal-open");
 }
 
 function setFormMessage(form, type, message = "") {
@@ -291,140 +210,63 @@ async function postToFormspree(form, formData) {
   }
 }
 
-function syncFinalOffer(email) {
-  if (!email || !finalForm) return;
-
-  latestToolEmail = email;
-  const finalEmail = finalForm.querySelector("input[name='email']");
-  if (finalEmail) finalEmail.value = email;
-
-  finalForm.hidden = true;
-  if (finalConfirmation) finalConfirmation.hidden = false;
-}
-
-async function handleToolSubmit(event) {
+async function handleReservationSubmit(event) {
   event.preventDefault();
-  markToolStarted("submit");
 
-  if (!toolForm.checkValidity()) {
-    toolForm.reportValidity();
+  if (!reservationForm.checkValidity()) {
+    reservationForm.reportValidity();
     return;
   }
 
-  const formData = new FormData(toolForm);
-  const conditions = formData.getAll("homeConditions");
-
-  if (!conditions.length) {
-    setFormMessage(toolForm, "error", "Choose at least one home condition, or select None of these.");
-    return;
-  }
-
-  const submitButton = toolForm.querySelector(".form-submit");
+  const formData = new FormData(reservationForm);
+  const submitButton = reservationForm.querySelector(".form-submit");
   const submittedAt = new Date().toISOString();
-  const recommendation = getRecommendation(formData);
   const email = String(formData.get("email") || "").trim();
-  const source = "Filter Wizard Finder";
 
   formData.set("submittedAt", submittedAt);
-  formData.set("filterRecommendation", JSON.stringify(recommendation));
+  formData.set("selectedPlan", selectedPlan.plan);
+  formData.set("plannedRegularPrice", selectedPlan.regular);
+  formData.set("founderPrice", selectedPlan.founder);
 
-  const submission = {
-    email,
-    source,
-    submittedAt,
-    filterSize: recommendation.filterSize,
-    recommendedSchedule: recommendation.schedule,
-    homeConditions: recommendation.conditions,
-    replacementTiming: recommendation.timing,
-    warning: recommendation.warning
-  };
-
-  setFormMessage(toolForm, "clear");
+  setFormMessage(reservationForm, "clear");
   submitButton.disabled = true;
-  submitButton.textContent = "Sending...";
+  submitButton.textContent = "Reserving...";
 
   try {
-    await postToFormspree(toolForm, formData);
-    saveSubmission(submission);
-    console.log("Filter Wizard finder submission:", submission);
+    await postToFormspree(reservationForm, formData);
+    const reservation = {
+      email,
+      selectedPlan: selectedPlan.plan,
+      plannedRegularPrice: selectedPlan.regular,
+      founderPrice: selectedPlan.founder,
+      freeShipping: true,
+      submittedAt
+    };
+    saveReservation(reservation);
+    console.log("Filter Wizard subscription interest:", reservation);
     trackEvent("generate_lead", {
-      form_location: "filter_finder",
-      recommended_schedule: recommendation.schedule
+      form_location: "reservation_modal",
+      plan_name: selectedPlan.plan
     });
-    renderResult(recommendation);
-    syncFinalOffer(email);
-    setFormMessage(toolForm, "success");
-    resultCard?.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      block: "nearest"
+    trackEvent("subscription_interest_confirmed", {
+      plan_name: selectedPlan.plan
     });
+    setFormMessage(reservationForm, "success");
+    reservationForm.reset();
   } catch (error) {
-    console.error("Filter Wizard finder submission error:", error);
-    setFormMessage(toolForm, "error", "Something went wrong while sending your result. Please try again in a moment.");
+    console.error("Filter Wizard reservation submission error:", error);
+    setFormMessage(reservationForm, "error", "Something went wrong while reserving your plan. Please try again in a moment.");
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = "Get My Results";
+    submitButton.textContent = "Reserve My Plan";
   }
-}
-
-async function handleFinalSubmit(event) {
-  event.preventDefault();
-
-  if (!finalForm.checkValidity()) {
-    finalForm.reportValidity();
-    return;
-  }
-
-  const formData = new FormData(finalForm);
-  const submitButton = finalForm.querySelector(".form-submit");
-  const submittedAt = new Date().toISOString();
-  const email = String(formData.get("email") || "").trim();
-  const source = "Founding Member Offer";
-
-  formData.set("submittedAt", submittedAt);
-  setFormMessage(finalForm, "clear");
-  submitButton.disabled = true;
-  submitButton.textContent = "Joining...";
-
-  try {
-    await postToFormspree(finalForm, formData);
-    const submission = { email, source, submittedAt };
-    saveSubmission(submission);
-    console.log("Filter Wizard waitlist submission:", submission);
-    trackEvent("generate_lead", { form_location: "founding_member_offer" });
-    latestToolEmail = email;
-    setFormMessage(finalForm, "success");
-    finalForm.reset();
-  } catch (error) {
-    console.error("Filter Wizard waitlist submission error:", error);
-    setFormMessage(finalForm, "error", "Something went wrong while joining the list. Please try again in a moment.");
-  } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = "Get My 50% Off";
-  }
-}
-
-function handleStartTool(event) {
-  event.preventDefault();
-  markToolStarted("cta_click");
-
-  const tool = document.querySelector("#free-tool");
-  tool?.scrollIntoView({
-    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-    block: "start"
-  });
-
-  window.setTimeout(() => {
-    showStep(1);
-    toolForm?.querySelector("input[name='sizeKnowledge']")?.focus({ preventScroll: true });
-  }, 350);
-
-  closeNav();
 }
 
 setHeaderState();
 setupRevealAnimations();
-showStep(1);
+setupCountdownTracking();
+updateCountdown();
+window.setInterval(updateCountdown, 1000);
 window.addEventListener("scroll", setHeaderState, { passive: true });
 
 if (navToggle && navMenu) {
@@ -435,55 +277,51 @@ if (navToggle && navMenu) {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && navMenu.classList.contains("open")) {
-      closeNav();
+    if (event.key === "Escape") {
+      if (navMenu.classList.contains("open")) closeNav();
+      if (!modalBackdrop.hidden) closeReservation();
     }
   });
 }
 
-startToolLinks.forEach((link) => {
-  link.addEventListener("click", handleStartTool);
-});
-
-if (toolForm) {
-  toolForm.addEventListener("change", (event) => {
-    markToolStarted("field_change");
-    updateNoneOption(event.target);
-    updateSizeFields();
-    updateProgress();
-    setStepError("");
-    setFormMessage(toolForm, "clear");
-  });
-
-  toolForm.addEventListener("input", () => {
-    markToolStarted("field_input");
-    updateProgress();
-    setStepError("");
-    setFormMessage(toolForm, "clear");
-  });
-
-  toolForm.addEventListener("submit", handleToolSubmit);
-}
-
-if (quizNextButton) {
-  quizNextButton.addEventListener("click", goToNextStep);
-}
-
-if (quizBackButton) {
-  quizBackButton.addEventListener("click", goToPreviousStep);
-}
-
-if (finalForm) {
-  finalForm.addEventListener("input", () => setFormMessage(finalForm, "clear"));
-  finalForm.addEventListener("submit", handleFinalSubmit);
-}
-
-if (resultCta) {
-  resultCta.addEventListener("click", () => {
-    const target = latestToolEmail ? finalConfirmation : finalForm;
-    target?.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      block: "center"
+subscriptionCtas.forEach((cta) => {
+  cta.addEventListener("click", () => {
+    trackEvent("subscription_cta_clicked", {
+      link_text: cta.textContent.trim()
     });
   });
-}
+});
+
+planButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const plan = {
+      plan: button.dataset.plan,
+      regular: button.dataset.regular,
+      founder: button.dataset.founder
+    };
+    trackEvent("plan_selected", {
+      plan_name: plan.plan
+    });
+    openReservation(plan);
+  });
+});
+
+openReservationButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    openReservation(selectedPlan);
+  });
+});
+
+closeModalButton?.addEventListener("click", closeReservation);
+
+modalBackdrop?.addEventListener("click", (event) => {
+  if (event.target === modalBackdrop) {
+    closeReservation();
+  }
+});
+
+reservationForm?.addEventListener("input", () => {
+  setFormMessage(reservationForm, "clear");
+});
+
+reservationForm?.addEventListener("submit", handleReservationSubmit);
