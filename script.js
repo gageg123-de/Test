@@ -151,7 +151,7 @@ async function handleFormSubmit(event) {
     });
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = "Join Free Early Access";
+    submitButton.textContent = "Claim My 50% Discount";
   }
 }
 
