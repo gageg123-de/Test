@@ -16,8 +16,8 @@ const storageKey = "filterWizardReservations";
 const countdownKey = "filterWizardFounderOfferEndsAt";
 const fallbackPlan = {
   plan: "Plus",
-  regular: "$29.99 / month",
-  founder: "$14.99 / month"
+  regular: "$39.99 / month",
+  founder: "$19.99 / month"
 };
 let selectedPlan = { ...fallbackPlan };
 let countdownViewed = false;
