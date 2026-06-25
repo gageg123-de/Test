@@ -21,6 +21,7 @@ const fallbackPlan = {
 };
 let selectedPlan = { ...fallbackPlan };
 let countdownViewed = false;
+let modalCloseTimer = null;
 
 function trackEvent(eventName, parameters = {}) {
   if (typeof window.gtag === "function") {
@@ -164,6 +165,10 @@ function setSelectedPlan(plan) {
 
 function openReservation(plan = fallbackPlan) {
   setSelectedPlan(plan);
+  if (modalCloseTimer) {
+    window.clearTimeout(modalCloseTimer);
+    modalCloseTimer = null;
+  }
   modalBackdrop.hidden = false;
   modalBackdrop.classList.remove("closing");
   reservationSuccess.hidden = true;
@@ -178,11 +183,16 @@ function openReservation(plan = fallbackPlan) {
 
 function closeReservation() {
   if (modalBackdrop.hidden || modalBackdrop.classList.contains("closing")) return;
+  if (modalCloseTimer) {
+    window.clearTimeout(modalCloseTimer);
+    modalCloseTimer = null;
+  }
+  document.body.classList.remove("modal-open");
   modalBackdrop.classList.add("closing");
-  window.setTimeout(() => {
+  modalCloseTimer = window.setTimeout(() => {
     modalBackdrop.hidden = true;
     modalBackdrop.classList.remove("closing");
-    document.body.classList.remove("modal-open");
+    modalCloseTimer = null;
   }, 180);
 }
 
