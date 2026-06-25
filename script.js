@@ -8,6 +8,8 @@ const modalBackdrop = document.querySelector("[data-modal-backdrop]");
 const closeModalButton = document.querySelector("[data-close-modal]");
 const openReservationButtons = document.querySelectorAll("[data-open-reservation]");
 const reservationForm = document.querySelector("[data-reservation-form]");
+const reservationSuccess = document.querySelector("[data-reservation-success]");
+const continueBrowsingButton = document.querySelector("[data-continue-browsing]");
 const countdownEls = document.querySelectorAll("[data-countdown]");
 const countdownView = document.querySelector("[data-countdown-view]");
 const storageKey = "filterWizardReservations";
@@ -163,6 +165,10 @@ function setSelectedPlan(plan) {
 function openReservation(plan = fallbackPlan) {
   setSelectedPlan(plan);
   modalBackdrop.hidden = false;
+  modalBackdrop.classList.remove("closing");
+  reservationSuccess.hidden = true;
+  reservationForm.hidden = false;
+  setFormMessage(reservationForm, "clear");
   document.body.classList.add("modal-open");
   reservationForm?.querySelector("input[name='email']")?.focus();
   trackEvent("reservation_started", {
@@ -171,8 +177,13 @@ function openReservation(plan = fallbackPlan) {
 }
 
 function closeReservation() {
-  modalBackdrop.hidden = true;
-  document.body.classList.remove("modal-open");
+  if (modalBackdrop.hidden || modalBackdrop.classList.contains("closing")) return;
+  modalBackdrop.classList.add("closing");
+  window.setTimeout(() => {
+    modalBackdrop.hidden = true;
+    modalBackdrop.classList.remove("closing");
+    document.body.classList.remove("modal-open");
+  }, 180);
 }
 
 function setFormMessage(form, type, message = "") {
@@ -251,7 +262,8 @@ async function handleReservationSubmit(event) {
     trackEvent("subscription_interest_confirmed", {
       plan_name: selectedPlan.plan
     });
-    setFormMessage(reservationForm, "success");
+    reservationForm.hidden = true;
+    reservationSuccess.hidden = false;
     reservationForm.reset();
   } catch (error) {
     console.error("Filter Wizard reservation submission error:", error);
@@ -313,6 +325,8 @@ openReservationButtons.forEach((button) => {
 });
 
 closeModalButton?.addEventListener("click", closeReservation);
+
+continueBrowsingButton?.addEventListener("click", closeReservation);
 
 modalBackdrop?.addEventListener("click", (event) => {
   if (event.target === modalBackdrop) {

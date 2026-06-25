@@ -241,13 +241,14 @@
     <section class="reservation-modal" role="dialog" aria-modal="true" aria-labelledby="reservation-title">
       <button class="modal-close" type="button" aria-label="Close reservation form" data-close-modal>&times;</button>
       <p class="eyebrow">Founding Member Access</p>
-      <h2 id="reservation-title">You're Early</h2>
+      <h2 id="reservation-title">Reserve Your Founding Member Pricing</h2>
       <p>Filter Wizard is launching soon. Reserve your plan today and get 50% off your first order as a Founding Member.</p>
       <div class="selected-plan-card">
         <p>Selected plan: <strong data-selected-plan>Essential</strong></p>
-        <p>Planned regular price: <del data-selected-regular>$19.99 / month</del></p>
-        <p>Founder price: <strong data-selected-founder>$9.99 / month</strong></p>
-        <p class="shipping-note">Free shipping included</p>
+        <del data-selected-regular>$19.99/month</del>
+        <span>Founder Price</span>
+        <strong data-selected-founder>$9.99/month</strong>
+        <p class="shipping-note">Free Shipping Included</p>
       </div>
       <form class="reservation-form" action="https://formspree.io/f/mzdlpbwp" method="POST" data-reservation-form>
         <input type="hidden" name="_subject" value="New Filter Wizard subscription interest">
@@ -257,11 +258,26 @@
         <input type="hidden" name="founderPrice" data-founder-field>
         <label class="sr-only" for="reservation-email">Email address</label>
         <input id="reservation-email" name="email" type="email" autocomplete="email" placeholder="Email address" required>
+        <p class="scarcity-note">Founder pricing ends when Filter Wizard officially launches.</p>
         <button class="btn btn-primary form-submit" type="submit">Reserve My Plan</button>
+        <div class="modal-trust-list" aria-label="Reservation benefits">
+          <span>✓ Free shipping included</span>
+          <span>✓ Cancel anytime</span>
+          <span>✓ No payment today</span>
+        </div>
         <p class="form-trust">No payment today. No spam. We'll email you when your plan is ready.</p>
-        <p class="form-success" role="status" aria-live="polite" data-form-success hidden>You're on the list. We'll email your launch discount and selected plan details soon.</p>
         <p class="form-error" role="alert" data-form-error hidden>Something went wrong while reserving your plan. Please try again in a moment.</p>
       </form>
+      <div class="reservation-success" role="status" aria-live="polite" data-reservation-success hidden>
+        <h3>You're officially on the Founding Member list.</h3>
+        <p>We'll email your launch date, selected subscription plan, and your 50% founder discount.</p>
+        <ul>
+          <li>✓ 50% off your first order</li>
+          <li>✓ Free shipping included</li>
+          <li>✓ Priority launch access</li>
+        </ul>
+        <button class="btn btn-primary" type="button" data-continue-browsing>Continue Browsing</button>
+      </div>
     </section>
   </div>
 
