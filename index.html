@@ -43,29 +43,10 @@
   <main id="top">
     <section class="hero section">
       <div class="container hero-grid">
-        <div class="hero-copy reveal">
+        <div class="hero-intro reveal">
           <p class="eyebrow">SIMPLE HOME FILTER CARE</p>
           <h1>Never Forget Your Air Filter Again</h1>
-          <p class="hero-subtitle">Get the right filter reminders before your old filter starts costing you money.</p>
-          <ul class="hero-benefits">
-            <li>Find your correct filter size</li>
-            <li>Get replacement reminders on time</li>
-            <li>Unlock early delivery discounts</li>
-          </ul>
-          <form class="hero-signup" id="early-access" action="https://formspree.io/f/mzdlpbwp" method="POST" data-early-form data-form-location="hero">
-            <input type="hidden" name="_subject" value="New Filter Wizard early access signup">
-            <input type="hidden" name="source" value="Hero Email Form">
-            <p class="hero-form-pain">Most homeowners replace their filters months too late.</p>
-            <p class="hero-form-urgency">Join early access for free reminders and launch discounts.</p>
-            <div class="hero-form-row">
-              <label class="sr-only" for="hero-email">Email address</label>
-              <input id="hero-email" name="email" type="email" autocomplete="email" placeholder="Email address" required>
-              <button class="btn btn-primary form-submit" type="submit">Join Free Early Access</button>
-            </div>
-            <p class="hero-form-trust">No payment required. No spam. Just helpful filter reminders.</p>
-            <p class="form-success" role="status" aria-live="polite" data-form-success hidden>You're on the list. We'll send filter reminders and early launch updates soon.</p>
-            <p class="form-error" role="alert" data-form-error hidden>Something went wrong while joining the list. Please try again in a moment.</p>
-          </form>
+          <p class="hero-subtitle">Get timely filter reminders before dirty filters start costing you money.</p>
         </div>
         <div class="hero-visual image-card reveal">
           <picture>
@@ -75,6 +56,22 @@
               sizes="(max-width: 820px) calc(100vw - 28px), 465px">
             <img class="hero-image" src="assets/images/filter-wizard-hero-dirty-clean.webp" alt="Homeowner comparing a dirty air filter with a clean replacement filter" width="1536" height="1024" loading="eager" fetchpriority="high" decoding="async">
           </picture>
+        </div>
+        <div class="hero-signup-panel reveal">
+          <p class="hero-benefit-line">Find your size. Get reminders. Save money.</p>
+          <form class="hero-signup" id="early-access" action="https://formspree.io/f/mzdlpbwp" method="POST" data-early-form data-form-location="hero">
+            <input type="hidden" name="_subject" value="New Filter Wizard early access signup">
+            <input type="hidden" name="source" value="Hero Email Form">
+            <p class="hero-form-pain">Most homeowners replace filters too late.</p>
+            <div class="hero-form-row">
+              <label class="sr-only" for="hero-email">Email address</label>
+              <input id="hero-email" name="email" type="email" autocomplete="email" placeholder="Email address" required>
+              <button class="btn btn-primary form-submit" type="submit">Join Free Early Access</button>
+            </div>
+            <p class="hero-form-trust">No payment required. No spam.</p>
+            <p class="form-success" role="status" aria-live="polite" data-form-success hidden>You're on the list. We'll send filter reminders and early launch updates soon.</p>
+            <p class="form-error" role="alert" data-form-error hidden>Something went wrong while joining the list. Please try again in a moment.</p>
+          </form>
         </div>
       </div>
     </section>

@@ -165,6 +165,10 @@ function handleCtaScroll(event) {
     behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
     block: "center"
   });
+
+  window.setTimeout(() => {
+    earlyAccessForm.querySelector("input[type='email']")?.focus({ preventScroll: true });
+  }, 350);
 }
 
 setHeaderState();

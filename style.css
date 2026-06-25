@@ -249,40 +249,30 @@ a:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
   align-items: center;
-  gap: 52px;
+  gap: 20px 52px;
+}
+
+.hero-intro,
+.hero-signup-panel {
+  grid-column: 1;
+}
+
+.hero-visual {
+  grid-column: 2;
+  grid-row: 1 / span 2;
 }
 
 .hero-subtitle {
-  margin-bottom: 20px;
+  margin-bottom: 0;
   color: #40505e;
   font-size: clamp(1.08rem, 2vw, 1.28rem);
 }
 
-.hero-benefits {
-  display: grid;
-  gap: 10px;
-  padding: 0;
-  margin: 0 0 24px;
-  list-style: none;
-}
-
-.hero-benefits li {
-  position: relative;
-  padding-left: 28px;
+.hero-benefit-line {
+  margin: 0 0 12px;
   color: #334351;
-  font-weight: 720;
-}
-
-.hero-benefits li::before {
-  content: "";
-  position: absolute;
-  left: 2px;
-  top: 0.48em;
-  width: 12px;
-  height: 7px;
-  border-left: 2px solid var(--green);
-  border-bottom: 2px solid var(--green);
-  transform: rotate(-45deg);
+  font-size: 1rem;
+  font-weight: 850;
 }
 
 .hero-cta {
@@ -330,13 +320,6 @@ a:focus-visible {
   font-weight: 800;
 }
 
-.hero-form-urgency {
-  margin: 0 0 10px;
-  color: var(--green-dark);
-  font-size: 0.92rem;
-  font-weight: 800;
-}
-
 .hero-form-trust,
 .founding-copy {
   color: var(--muted);
@@ -375,7 +358,7 @@ a:focus-visible {
   width: 100%;
   aspect-ratio: 3 / 2;
   object-fit: cover;
-  object-position: center;
+  object-position: center center;
 }
 
 .form-section {
@@ -790,6 +773,24 @@ select:user-invalid {
     gap: 28px;
   }
 
+  .hero-intro,
+  .hero-signup-panel,
+  .hero-visual {
+    grid-column: 1;
+  }
+
+  .hero-intro {
+    grid-row: 1;
+  }
+
+  .hero-visual {
+    grid-row: 2;
+  }
+
+  .hero-signup-panel {
+    grid-row: 3;
+  }
+
   .form-layout {
     gap: 22px;
   }
@@ -833,21 +834,25 @@ select:user-invalid {
   }
 
   .hero {
-    padding: 28px 0 36px;
+    padding: 22px 0 32px;
+  }
+
+  .hero-grid {
+    gap: 16px;
   }
 
   h1 {
-    font-size: 2.35rem;
+    font-size: 2.18rem;
   }
 
   .hero-subtitle {
-    margin-bottom: 16px;
+    margin-bottom: 0;
+    font-size: 1.02rem;
   }
 
-  .hero-benefits {
-    gap: 7px;
-    margin-bottom: 16px;
-    font-size: 0.92rem;
+  .hero-benefit-line {
+    margin-bottom: 10px;
+    font-size: 0.95rem;
   }
 
   .btn {
@@ -870,12 +875,13 @@ select:user-invalid {
   }
 
   .hero-visual {
-    max-height: 180px;
+    max-height: none;
   }
 
   .hero-image {
-    height: 180px;
+    height: clamp(220px, 54vw, 260px);
     aspect-ratio: auto;
+    object-position: center center;
   }
 
   .form-section {
