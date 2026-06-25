@@ -72,7 +72,7 @@
           <div class="tool-intro">
             <p class="eyebrow">Free Homeowner Tool</p>
             <h2>Filter Wizard Finder</h2>
-            <p>Not sure what filter you need? We'll help you narrow it down.</p>
+            <p>Answer a few quick questions and get a personalized filter recommendation.</p>
           </div>
 
           <form class="finder-form" id="filter-finder" action="https://formspree.io/f/mzdlpbwp" method="POST" data-tool-form>
@@ -80,26 +80,29 @@
             <input type="hidden" name="source" value="Filter Wizard Finder">
             <input type="hidden" name="filterRecommendation" data-recommendation-field>
 
-            <div class="tool-progress" aria-label="Filter Wizard Finder steps">
-              <span>1</span>
-              <span>2</span>
-              <span>3</span>
-              <span>4</span>
+            <div class="tool-status">
+              <p class="tool-progress-label" data-progress-label>Step 1 of 4</p>
+              <div class="tool-progress" aria-label="Filter Wizard Finder progress">
+                <span>1</span>
+                <span>2</span>
+                <span>3</span>
+                <span>4</span>
+              </div>
             </div>
 
-            <fieldset class="tool-step" data-step="1">
-              <legend><span>Step 1</span> Do you know your current filter size?</legend>
+            <fieldset class="tool-step active" data-step="1">
+              <legend><span>Step 1</span> Do you know your current air filter size?</legend>
               <div class="choice-grid">
                 <label><input type="radio" name="sizeKnowledge" value="known" required><span>Yes, I know it</span></label>
                 <label><input type="radio" name="sizeKnowledge" value="unsure"><span>Not sure</span></label>
-                <label><input type="radio" name="sizeKnowledge" value="help"><span>I need help finding it</span></label>
+                <label><input type="radio" name="sizeKnowledge" value="help"><span>Help me find it</span></label>
               </div>
               <div class="conditional-field" data-known-size hidden>
                 <label for="known-filter-size">Enter filter size</label>
                 <input id="known-filter-size" name="knownFilterSize" type="text" placeholder="20x25x1, 16x20x1, etc.">
               </div>
               <div class="conditional-field guidance-card" data-size-guidance hidden>
-                <p>Check the printed size on the edge of your current filter, usually written like 20x25x1.</p>
+                <p>Check the printed size on the edge of your current filter. It usually looks like 20x25x1.</p>
                 <label for="visible-filter-size">What size do you see?</label>
                 <input id="visible-filter-size" name="visibleFilterSize" type="text" placeholder="Example: 20x25x1">
               </div>
@@ -132,29 +135,41 @@
               <div class="tool-email-row">
                 <label class="sr-only" for="tool-email">Email address</label>
                 <input id="tool-email" name="email" type="email" autocomplete="email" placeholder="Email address" required>
-                <button class="btn btn-primary form-submit" type="submit">Email My Results</button>
+                <button class="btn btn-primary form-submit" type="submit">Get My Results</button>
               </div>
               <p class="form-trust">No payment. No spam. Unsubscribe anytime.</p>
               <p class="form-success" role="status" aria-live="polite" data-form-success hidden>You're on the list. We'll email your filter recommendation, launch discount, and early access details soon.</p>
               <p class="form-error" role="alert" data-form-error hidden>Something went wrong while sending your result. Please try again in a moment.</p>
             </fieldset>
+
+            <div class="quiz-actions">
+              <button class="btn btn-secondary" type="button" data-quiz-back hidden>Back</button>
+              <button class="btn btn-primary" type="button" data-quiz-next>Next</button>
+            </div>
+            <p class="form-error step-error" role="alert" data-step-error hidden>Please choose an option to continue.</p>
           </form>
 
           <article class="result-card" data-result-card hidden>
             <p class="eyebrow">Your Filter Wizard Recommendation</p>
             <div class="result-grid">
               <div>
-                <span>Filter size</span>
+                <span>Filter Size</span>
                 <strong data-result-size>Check the printed size on your current filter before ordering.</strong>
               </div>
               <div>
-                <span>Recommended schedule</span>
+                <span>Recommended Schedule</span>
                 <strong data-result-schedule>Every 90 days</strong>
+                <p class="warning-note" data-result-warning hidden>You may be replacing your filter too late.</p>
+              </div>
+              <div>
+                <span>Scheduled Delivery Recommendation</span>
+                <strong>Filter Wizard can remind you before your filter is overdue and help schedule replacements automatically.</strong>
+              </div>
+              <div>
+                <span>Founding Member Offer</span>
+                <strong>Get 50% off your first filter order when Filter Wizard launches.</strong>
               </div>
             </div>
-            <p class="warning-note" data-result-warning hidden>You may be replacing your filter too late.</p>
-            <p>Filter Wizard can remind you before your filter is overdue and help schedule replacements on time.</p>
-            <p class="offer-line">Founding members get 50% off their first filter order when Filter Wizard launches.</p>
             <button class="btn btn-primary" type="button" data-result-cta>Join Waitlist & Save 50%</button>
           </article>
         </div>

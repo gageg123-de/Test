@@ -8,9 +8,15 @@ const finalForm = document.querySelector("[data-final-form]");
 const resultCard = document.querySelector("[data-result-card]");
 const resultCta = document.querySelector("[data-result-cta]");
 const finalConfirmation = document.querySelector("[data-final-confirmation]");
+const quizSteps = toolForm ? [...toolForm.querySelectorAll("[data-step]")] : [];
+const quizBackButton = document.querySelector("[data-quiz-back]");
+const quizNextButton = document.querySelector("[data-quiz-next]");
+const progressLabel = document.querySelector("[data-progress-label]");
+const stepError = document.querySelector("[data-step-error]");
 const storageKey = "filterWizardEarlyAccess";
 let hasTrackedToolStart = false;
 let latestToolEmail = "";
+let currentStep = 1;
 
 function trackEvent(eventName, parameters = {}) {
   if (typeof window.gtag === "function") {
@@ -121,16 +127,87 @@ function updateProgress() {
   if (!toolForm) return;
 
   const progressItems = [...toolForm.querySelectorAll(".tool-progress span")];
-  const formData = new FormData(toolForm);
-  const completed = [
-    Boolean(formData.get("sizeKnowledge")),
-    formData.getAll("homeConditions").length > 0,
-    Boolean(formData.get("replacementTiming")),
-    Boolean(formData.get("email"))
-  ];
-
   progressItems.forEach((item, index) => {
-    item.classList.toggle("active", completed[index] || index === 0);
+    item.classList.toggle("active", index < currentStep);
+  });
+
+  if (progressLabel) {
+    progressLabel.textContent = `Step ${currentStep} of 4`;
+  }
+}
+
+function setStepError(message = "") {
+  if (!stepError) return;
+  stepError.textContent = message || "Please choose an option to continue.";
+  stepError.hidden = !message;
+}
+
+function showStep(stepNumber) {
+  currentStep = Math.min(Math.max(stepNumber, 1), 4);
+  setStepError("");
+
+  quizSteps.forEach((step) => {
+    step.classList.toggle("active", Number(step.dataset.step) === currentStep);
+  });
+
+  if (quizBackButton) {
+    quizBackButton.hidden = currentStep === 1;
+  }
+
+  if (quizNextButton) {
+    quizNextButton.hidden = currentStep === 4;
+  }
+
+  updateProgress();
+}
+
+function validateStep(stepNumber) {
+  if (!toolForm) return false;
+
+  if (stepNumber === 1) {
+    const selectedSize = toolForm.querySelector("input[name='sizeKnowledge']:checked");
+    if (!selectedSize) {
+      setStepError("Choose whether you know your current air filter size.");
+      return false;
+    }
+  }
+
+  if (stepNumber === 2) {
+    const conditions = [...toolForm.querySelectorAll("input[name='homeConditions']:checked")];
+    if (!conditions.length) {
+      setStepError("Choose at least one home condition, or select None of these.");
+      return false;
+    }
+  }
+
+  if (stepNumber === 3) {
+    const selectedTiming = toolForm.querySelector("input[name='replacementTiming']:checked");
+    if (!selectedTiming) {
+      setStepError("Choose how often you usually replace your filter.");
+      return false;
+    }
+  }
+
+  setStepError("");
+  setFormMessage(toolForm, "clear");
+  return true;
+}
+
+function goToNextStep() {
+  markToolStarted("next_click");
+  if (!validateStep(currentStep)) return;
+  showStep(currentStep + 1);
+  toolForm?.scrollIntoView({
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    block: "start"
+  });
+}
+
+function goToPreviousStep() {
+  showStep(currentStep - 1);
+  toolForm?.scrollIntoView({
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    block: "start"
   });
 }
 
@@ -171,6 +248,7 @@ function renderResult(recommendation) {
   resultCard.querySelector("[data-result-warning]").hidden = !recommendation.warning;
   resultCard.hidden = false;
   resultCard.classList.add("visible");
+  toolForm.hidden = true;
 
   trackEvent("filter_result_viewed", {
     recommended_schedule: recommendation.schedule,
@@ -285,7 +363,7 @@ async function handleToolSubmit(event) {
     setFormMessage(toolForm, "error", "Something went wrong while sending your result. Please try again in a moment.");
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = "Email My Results";
+    submitButton.textContent = "Get My Results";
   }
 }
 
@@ -337,6 +415,7 @@ function handleStartTool(event) {
   });
 
   window.setTimeout(() => {
+    showStep(1);
     toolForm?.querySelector("input[name='sizeKnowledge']")?.focus({ preventScroll: true });
   }, 350);
 
@@ -345,7 +424,7 @@ function handleStartTool(event) {
 
 setHeaderState();
 setupRevealAnimations();
-updateProgress();
+showStep(1);
 window.addEventListener("scroll", setHeaderState, { passive: true });
 
 if (navToggle && navMenu) {
@@ -372,16 +451,26 @@ if (toolForm) {
     updateNoneOption(event.target);
     updateSizeFields();
     updateProgress();
+    setStepError("");
     setFormMessage(toolForm, "clear");
   });
 
   toolForm.addEventListener("input", () => {
     markToolStarted("field_input");
     updateProgress();
+    setStepError("");
     setFormMessage(toolForm, "clear");
   });
 
   toolForm.addEventListener("submit", handleToolSubmit);
+}
+
+if (quizNextButton) {
+  quizNextButton.addEventListener("click", goToNextStep);
+}
+
+if (quizBackButton) {
+  quizBackButton.addEventListener("click", goToPreviousStep);
 }
 
 if (finalForm) {
