@@ -151,7 +151,7 @@ async function handleFormSubmit(event) {
     });
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = "Claim My 50% Discount";
+    submitButton.textContent = "Get My 50% Off";
   }
 }
 

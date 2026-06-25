@@ -338,14 +338,15 @@ a:focus-visible {
   text-transform: uppercase;
 }
 
-.hero-service-indicators {
+.service-indicators {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
-  margin: 0 0 12px;
+  margin: -8px 0 22px;
 }
 
-.hero-service-indicators span {
+.service-indicators span {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -397,7 +398,7 @@ a:focus-visible {
   width: 100%;
   aspect-ratio: 3 / 2;
   object-fit: cover;
-  object-position: center center;
+  object-position: 58% center;
 }
 
 .form-section {
@@ -582,7 +583,7 @@ select:user-invalid {
 
 .benefit-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -906,12 +907,12 @@ select:user-invalid {
     font-size: 0.7rem;
   }
 
-  .hero-service-indicators {
+  .service-indicators {
     gap: 7px;
-    margin-bottom: 10px;
+    margin: -4px 0 18px;
   }
 
-  .hero-service-indicators span {
+  .service-indicators span {
     min-height: 32px;
     padding: 6px 9px;
     font-size: 0.78rem;
@@ -943,7 +944,7 @@ select:user-invalid {
   .hero-image {
     height: clamp(220px, 54vw, 260px);
     aspect-ratio: auto;
-    object-position: center center;
+    object-position: 57% center;
   }
 
   .form-section {
@@ -985,7 +986,12 @@ select:user-invalid {
   }
 
   .final-cta-block {
-    padding: 44px 0;
+    padding: 38px 0;
+    background: linear-gradient(135deg, var(--blue), var(--green-dark));
+  }
+
+  .final-cta-inner {
+    gap: 16px;
   }
 
   .final-cta-inner .btn {
@@ -999,6 +1005,15 @@ select:user-invalid {
   .footer-links {
     display: grid;
     gap: 10px;
+  }
+
+  .site-footer {
+    padding: 28px 0 18px;
+  }
+
+  .disclaimer {
+    margin-top: 18px;
+    padding-top: 14px;
   }
 }
 
