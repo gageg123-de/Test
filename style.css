@@ -242,7 +242,7 @@ input:focus-visible {
 }
 
 .hero {
-  padding: 58px 0 54px;
+  padding: 44px 0 42px;
   background:
     radial-gradient(circle at 10% 10%, rgba(47, 179, 109, 0.12), transparent 28%),
     radial-gradient(circle at 90% 18%, rgba(36, 119, 212, 0.13), transparent 32%),
@@ -253,12 +253,12 @@ input:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
   align-items: center;
-  gap: 42px;
+  gap: 32px;
 }
 
 .hero-subtitle {
   max-width: 620px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   color: #40505e;
   font-size: clamp(1.08rem, 2vw, 1.28rem);
   line-height: 1.48;
@@ -268,28 +268,28 @@ input:focus-visible {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .hero-value-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 9px;
+  gap: 7px;
   padding: 0;
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   list-style: none;
 }
 
 .hero-value-pills li {
   display: inline-flex;
   align-items: center;
-  min-height: 34px;
-  padding: 7px 10px;
+  min-height: 28px;
+  padding: 5px 9px;
   border: 1px solid rgba(47, 179, 109, 0.22);
   border-radius: 999px;
   color: #263a4c;
   background: rgba(232, 248, 239, 0.72);
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   font-weight: 850;
 }
 
@@ -298,7 +298,7 @@ input:focus-visible {
   flex-wrap: wrap;
   gap: 10px;
   padding: 0;
-  margin: 16px 0 0;
+  margin: 12px 0 0;
   list-style: none;
 }
 
@@ -338,7 +338,7 @@ input:focus-visible {
 .countdown-badge {
   display: inline-grid;
   gap: 2px;
-  padding: 10px 13px;
+  padding: 9px 12px;
   border: 1px solid rgba(242, 139, 46, 0.34);
   border-radius: 14px;
   background: #fff8ed;
@@ -359,6 +359,12 @@ input:focus-visible {
   line-height: 1;
 }
 
+.countdown-badge small {
+  color: #8a5c18;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
 .compact-section {
   padding: 68px 0;
 }
@@ -372,6 +378,10 @@ input:focus-visible {
 .compact-heading > p:not(.eyebrow) {
   margin-bottom: 0;
   color: var(--muted);
+}
+
+.compact-heading > p:not(.eyebrow) + p {
+  margin-top: 6px;
 }
 
 .benefit-grid {
@@ -418,6 +428,64 @@ input:focus-visible {
   line-height: 1.55;
 }
 
+.switch-section {
+  padding: 44px 0;
+  background: var(--white);
+}
+
+.switch-section .compact-heading {
+  margin-bottom: 18px;
+}
+
+.switch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.switch-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 78px;
+  padding: 18px;
+  border: 1px solid rgba(217, 231, 238, 0.9);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff, #f9fcff);
+  box-shadow: 0 12px 32px rgba(11, 31, 53, 0.07);
+}
+
+.switch-card span {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  color: #b33625;
+  background: #fff0ed;
+  font-weight: 900;
+}
+
+.switch-card p {
+  margin: 0;
+  color: #253746;
+  font-weight: 850;
+}
+
+.switch-solution {
+  width: max-content;
+  max-width: 100%;
+  margin: 18px auto 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(47, 179, 109, 0.22);
+  border-radius: 999px;
+  color: var(--green-dark);
+  background: rgba(232, 248, 239, 0.78);
+  font-weight: 900;
+  text-align: center;
+}
+
 .pricing-section {
   background:
     linear-gradient(180deg, #ffffff 0%, var(--surface) 14%, var(--surface) 100%);
@@ -445,11 +513,20 @@ input:focus-visible {
   border-radius: 22px;
   background: var(--white);
   box-shadow: 0 18px 48px rgba(11, 31, 53, 0.1);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.pricing-card:hover,
+.pricing-card:active,
+.pricing-card:focus-within {
+  transform: scale(1.02);
+  border-color: rgba(36, 119, 212, 0.52);
+  box-shadow: 0 26px 70px rgba(36, 119, 212, 0.18);
 }
 
 .pricing-card.featured {
-  border-color: rgba(36, 119, 212, 0.38);
-  box-shadow: 0 24px 60px rgba(36, 119, 212, 0.16);
+  border-color: rgba(36, 119, 212, 0.52);
+  box-shadow: 0 26px 70px rgba(36, 119, 212, 0.18);
 }
 
 .popular-badge,
@@ -471,9 +548,12 @@ input:focus-visible {
 }
 
 .popular-badge {
-  color: var(--blue-dark);
-  border-color: rgba(36, 119, 212, 0.25);
-  background: var(--blue-soft);
+  min-height: 34px;
+  padding: 6px 12px;
+  color: var(--white);
+  border-color: rgba(36, 119, 212, 0.18);
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  box-shadow: 0 12px 24px rgba(36, 119, 212, 0.18);
 }
 
 .plan-head p {
@@ -483,7 +563,7 @@ input:focus-visible {
 
 .price-stack {
   display: grid;
-  gap: 4px;
+  gap: 5px;
   padding: 16px;
   border-radius: 16px;
   background: #f8fbfe;
@@ -499,12 +579,13 @@ input:focus-visible {
 
 .price-stack del {
   color: #8b99a6;
-  font-weight: 800;
+  font-size: 0.94rem;
+  font-weight: 750;
 }
 
 .price-stack strong {
   color: var(--green-dark);
-  font-size: clamp(2.05rem, 3.7vw, 2.75rem);
+  font-size: clamp(2.25rem, 4vw, 3rem);
   line-height: 1.05;
 }
 
@@ -640,7 +721,7 @@ input:focus-visible {
 }
 
 .site-footer {
-  padding: 36px 0 22px;
+  padding: 30px 0 18px;
   color: rgba(255, 255, 255, 0.8);
   background: #102130;
 }
@@ -649,7 +730,7 @@ input:focus-visible {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: start;
-  gap: 28px;
+  gap: 22px;
 }
 
 .footer-brand {
@@ -689,8 +770,8 @@ input:focus-visible {
 }
 
 .disclaimer {
-  margin-top: 24px;
-  padding-top: 18px;
+  margin-top: 18px;
+  padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.58);
   font-size: 0.86rem;
@@ -984,7 +1065,7 @@ input:focus {
   }
 
   .hero-grid {
-    gap: 24px;
+    gap: 20px;
   }
 
   .final-cta-inner {
@@ -1004,7 +1085,7 @@ input:focus {
   }
 
   .hero {
-    padding: 28px 0 38px;
+    padding: 22px 0 30px;
   }
 
   h1 {
@@ -1014,22 +1095,24 @@ input:focus {
 
   .hero-subtitle {
     font-size: 1rem;
+    margin-bottom: 10px;
   }
 
   .hero-actions {
     display: grid;
-    gap: 10px;
+    gap: 9px;
+    margin-top: 12px;
   }
 
   .hero-value-pills {
-    display: grid;
-    gap: 8px;
-    margin-bottom: 14px;
+    display: flex;
+    gap: 7px;
+    margin-bottom: 10px;
   }
 
   .hero-value-pills li {
-    min-height: 32px;
-    font-size: 0.8rem;
+    min-height: 28px;
+    font-size: 0.76rem;
   }
 
   .btn {
@@ -1038,32 +1121,53 @@ input:focus {
   }
 
   .trust-row {
-    display: grid;
-    gap: 8px;
+    gap: 7px;
+    margin-top: 10px;
   }
 
   .hero-image {
-    height: clamp(215px, 54vw, 255px);
+    height: clamp(190px, 49vw, 230px);
     aspect-ratio: auto;
     object-position: 57% center;
   }
 
   .countdown-badge {
     width: 100%;
+    padding: 8px 11px;
   }
 
   .countdown-badge strong {
-    font-size: 1.18rem;
+    font-size: 1.12rem;
+  }
+
+  .switch-section {
+    padding: 40px 0;
+  }
+
+  .switch-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .switch-card {
+    min-height: 66px;
+    padding: 15px;
+  }
+
+  .switch-solution {
+    width: 100%;
+    border-radius: 14px;
   }
 
   .pricing-card,
   .benefit-card,
+  .switch-card,
   .finder-lite-card {
     padding: 20px;
   }
 
   .price-stack strong {
-    font-size: 2.05rem;
+    font-size: 2.25rem;
   }
 
   .final-cta-block {
