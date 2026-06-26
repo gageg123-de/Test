@@ -262,9 +262,9 @@ input:focus-visible {
 
 .hero::before {
   z-index: -2;
-  background-image: url("assets/images/filter-wizard-hero-dirty-clean.webp");
+  background-image: url("assets/images/filter-wizard-hero-delivery.webp");
   background-size: cover;
-  background-position: 58% center;
+  background-position: 66% center;
   opacity: 0.16;
   filter: blur(10px);
   transform: scale(1.05);
@@ -371,7 +371,7 @@ input:focus-visible {
 }
 
 .hero-visual picture,
-.comparison-card picture {
+.proof-image-card picture {
   display: block;
 }
 
@@ -379,7 +379,7 @@ input:focus-visible {
   width: 100%;
   aspect-ratio: 3 / 2;
   object-fit: cover;
-  object-position: 58% center;
+  object-position: 66% center;
 }
 
 .countdown-badge {
@@ -473,6 +473,63 @@ input:focus-visible {
   color: var(--muted);
   font-size: 0.94rem;
   line-height: 1.55;
+}
+
+.proof-section {
+  padding: 66px 0;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(47, 179, 109, 0.09), transparent 28%),
+    linear-gradient(180deg, #ffffff, #f8fcff);
+}
+
+.proof-image-card {
+  width: min(100%, 880px);
+  margin: 0 auto 18px;
+}
+
+.proof-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.proof-benefits {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  width: min(100%, 880px);
+  margin: 0 auto;
+}
+
+.proof-benefit-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 15px 16px;
+  border: 1px solid rgba(217, 231, 238, 0.9);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 12px 30px rgba(11, 31, 53, 0.07);
+}
+
+.proof-benefit-card span {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  color: var(--green-dark);
+  background: #e8f8ef;
+  font-weight: 900;
+}
+
+.proof-benefit-card p {
+  margin: 0;
+  color: #253746;
+  font-weight: 850;
 }
 
 .switch-section {
@@ -1137,7 +1194,7 @@ input:focus {
 
   .hero::before {
     opacity: 0.13;
-    background-position: 62% center;
+    background-position: 70% center;
     filter: blur(12px);
   }
 
@@ -1186,7 +1243,7 @@ input:focus {
   .hero-image {
     height: clamp(190px, 49vw, 230px);
     aspect-ratio: auto;
-    object-position: 57% center;
+    object-position: 70% center;
   }
 
   .countdown-badge {
@@ -1215,6 +1272,25 @@ input:focus {
   .switch-solution {
     width: 100%;
     border-radius: 14px;
+  }
+
+  .proof-section {
+    padding: 46px 0;
+  }
+
+  .proof-image {
+    height: clamp(190px, 52vw, 245px);
+    aspect-ratio: auto;
+  }
+
+  .proof-benefits {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .proof-benefit-card {
+    min-height: 58px;
+    padding: 14px 15px;
   }
 
   .pricing-card,
