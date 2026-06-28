@@ -10,9 +10,27 @@ const openReservationButtons = document.querySelectorAll("[data-open-reservation
 const reservationForm = document.querySelector("[data-reservation-form]");
 const reservationSuccess = document.querySelector("[data-reservation-success]");
 const continueBrowsingButton = document.querySelector("[data-continue-browsing]");
+const filterFinder = document.querySelector("[data-filter-finder]");
+const finderStartButton = document.querySelector("[data-finder-start]");
+const finderQuiz = document.querySelector("[data-finder-quiz]");
+const finderSteps = document.querySelectorAll("[data-finder-step]");
+const finderBackButton = document.querySelector("[data-finder-back]");
+const finderNextButton = document.querySelector("[data-finder-next]");
+const finderCompleteButton = document.querySelector("[data-finder-complete]");
+const finderProgressLabel = document.querySelector("[data-finder-progress-label]");
+const finderProgressBar = document.querySelector("[data-finder-progress-bar]");
+const knownSizeField = document.querySelector("[data-known-size-field]");
+const finderKnownSizeInput = document.querySelector("[data-finder-size-known]");
+const finderFinalSizeInput = document.querySelector("[data-finder-size-final]");
+const finderEmailInput = document.querySelector("[data-finder-email]");
+const finderResult = document.querySelector("[data-finder-result]");
+const finderResultSize = document.querySelector("[data-finder-result-size]");
+const finderToPlansButton = document.querySelector("[data-finder-to-plans]");
+const finderToReservationButton = document.querySelector("[data-finder-to-reservation]");
 const countdownEls = document.querySelectorAll("[data-countdown]");
 const countdownView = document.querySelector("[data-countdown-view]");
 const storageKey = "filterWizardReservations";
+const finderStorageKey = "filterWizardFinderResults";
 const countdownKey = "filterWizardFounderOfferEndsAt";
 const fallbackPlan = {
   plan: "Plus",
@@ -21,6 +39,14 @@ const fallbackPlan = {
 };
 let selectedPlan = { ...fallbackPlan };
 let countdownViewed = false;
+let finderCurrentStep = 1;
+const finderState = {
+  knowsSize: "",
+  location: "",
+  knownSize: "",
+  finalSize: "",
+  email: ""
+};
 
 function trackEvent(eventName, parameters = {}) {
   if (typeof window.gtag === "function") {
@@ -89,6 +115,111 @@ function saveReservation(reservation) {
   } catch (error) {
     console.warn("Filter Wizard reservation could not be saved to localStorage.", error);
   }
+}
+
+function saveFinderResult(result) {
+  try {
+    const results = JSON.parse(localStorage.getItem(finderStorageKey)) || [];
+    results.push(result);
+    localStorage.setItem(finderStorageKey, JSON.stringify(results));
+  } catch (error) {
+    console.warn("Filter Wizard finder result could not be saved to localStorage.", error);
+  }
+}
+
+function scrollToElement(element) {
+  element?.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
+
+function updateFinderProgress() {
+  if (!finderProgressLabel || !finderProgressBar) return;
+  finderProgressLabel.textContent = `Step ${finderCurrentStep} of 3`;
+  finderProgressBar.style.width = `${(finderCurrentStep / 3) * 100}%`;
+}
+
+function showFinderStep(step) {
+  finderCurrentStep = Math.min(3, Math.max(1, step));
+
+  finderSteps.forEach((stepEl) => {
+    const isActive = Number(stepEl.dataset.finderStep) === finderCurrentStep;
+    stepEl.hidden = !isActive;
+    stepEl.classList.toggle("is-active", isActive);
+  });
+
+  if (finderBackButton) finderBackButton.hidden = finderCurrentStep === 1;
+  if (finderNextButton) finderNextButton.hidden = finderCurrentStep === 3;
+  if (finderCompleteButton) finderCompleteButton.hidden = finderCurrentStep !== 3;
+  updateFinderProgress();
+}
+
+function startFilterFinder() {
+  if (!finderQuiz || !filterFinder) return;
+
+  finderQuiz.hidden = false;
+  finderResult.hidden = true;
+  if (finderStartButton) finderStartButton.hidden = true;
+  showFinderStep(1);
+  scrollToElement(filterFinder);
+  trackEvent("filter_finder_started");
+}
+
+function setFinderOption(button) {
+  const group = button.dataset.finderOption;
+  const value = button.dataset.value;
+
+  finderState[group] = value;
+  document.querySelectorAll(`[data-finder-option="${group}"]`).forEach((option) => {
+    option.classList.toggle("selected", option === button);
+    option.setAttribute("aria-pressed", String(option === button));
+  });
+
+  if (group === "knowsSize" && knownSizeField) {
+    knownSizeField.hidden = value !== "Yes, I know it";
+    if (value === "Yes, I know it") {
+      setTimeout(() => finderKnownSizeInput?.focus(), 40);
+    }
+  }
+}
+
+function getFinderSize() {
+  finderState.knownSize = finderKnownSizeInput?.value.trim() || "";
+  finderState.finalSize = finderFinalSizeInput?.value.trim() || "";
+  return finderState.finalSize || finderState.knownSize;
+}
+
+function completeFilterFinder() {
+  const foundSize = getFinderSize();
+  finderState.email = finderEmailInput?.value.trim() || "";
+
+  if (finderResultSize) {
+    finderResultSize.textContent = foundSize
+      ? `Likely filter size: ${foundSize}`
+      : "We recommend checking the printed size on your current filter's cardboard edge before ordering.";
+  }
+
+  const result = {
+    knowsSize: finderState.knowsSize || "Not answered",
+    location: finderState.location || "Not answered",
+    filterSize: foundSize || "Not specified",
+    email: finderState.email || "",
+    submittedAt: new Date().toISOString()
+  };
+
+  saveFinderResult(result);
+
+  if (finderState.email) {
+    trackEvent("filter_finder_email_entered");
+  }
+
+  trackEvent("filter_finder_completed");
+  trackEvent("filter_finder_result_viewed");
+
+  if (finderQuiz) finderQuiz.hidden = true;
+  if (finderResult) finderResult.hidden = false;
+  scrollToElement(finderResult || filterFinder);
 }
 
 function getCountdownEnd() {
@@ -326,6 +457,32 @@ openReservationButtons.forEach((button) => {
   button.addEventListener("click", () => {
     openReservation(selectedPlan);
   });
+});
+
+finderStartButton?.addEventListener("click", startFilterFinder);
+
+document.querySelectorAll("[data-finder-option]").forEach((button) => {
+  button.setAttribute("aria-pressed", "false");
+  button.addEventListener("click", () => setFinderOption(button));
+});
+
+finderNextButton?.addEventListener("click", () => {
+  showFinderStep(finderCurrentStep + 1);
+});
+
+finderBackButton?.addEventListener("click", () => {
+  showFinderStep(finderCurrentStep - 1);
+});
+
+finderCompleteButton?.addEventListener("click", completeFilterFinder);
+
+finderToPlansButton?.addEventListener("click", () => {
+  trackEvent("filter_finder_to_plans_clicked");
+});
+
+finderToReservationButton?.addEventListener("click", () => {
+  trackEvent("filter_finder_to_reservation_clicked");
+  openReservation(selectedPlan);
 });
 
 closeModalButton?.addEventListener("click", closeReservation);

@@ -229,13 +229,91 @@
     </section>
 
     <section class="section finder-lite-section" id="filter-finder">
-      <div class="container finder-lite-card reveal">
-        <div>
+      <span class="anchor-target" id="finder" aria-hidden="true"></span>
+      <div class="container finder-tool-card reveal" data-filter-finder>
+        <div class="finder-tool-intro">
           <p class="eyebrow">Filter Finder</p>
           <h2>Not Sure What Filter You Need?</h2>
-          <p>Use our quick Filter Finder to help identify your size before your first delivery.</p>
+          <p>Use this free tool to help find your air filter size before choosing a delivery plan.</p>
+          <button class="btn btn-secondary" type="button" data-finder-start>Start Filter Finder</button>
         </div>
-        <button class="btn btn-secondary" type="button" data-open-reservation>Find My Filter</button>
+
+        <div class="finder-quiz" data-finder-quiz hidden>
+          <div class="finder-progress" aria-live="polite">
+            <span data-finder-progress-label>Step 1 of 3</span>
+            <div class="finder-progress-track" aria-hidden="true">
+              <span data-finder-progress-bar></span>
+            </div>
+          </div>
+
+          <div class="finder-step is-active" data-finder-step="1">
+            <h3>Do you already know your filter size?</h3>
+            <div class="finder-options" role="group" aria-label="Known filter size">
+              <button class="finder-option" type="button" data-finder-option="knowsSize" data-value="Yes, I know it">Yes, I know it</button>
+              <button class="finder-option" type="button" data-finder-option="knowsSize" data-value="Not sure">Not sure</button>
+              <button class="finder-option" type="button" data-finder-option="knowsSize" data-value="Help me find it">Help me find it</button>
+            </div>
+            <label class="finder-field" data-known-size-field hidden>
+              <span>Enter your filter size</span>
+              <input type="text" data-finder-size-known placeholder="20x25x1, 16x20x1, etc." inputmode="text">
+            </label>
+          </div>
+
+          <div class="finder-step" data-finder-step="2" hidden>
+            <h3>Where is your filter located?</h3>
+            <div class="finder-options" role="group" aria-label="Filter location">
+              <button class="finder-option" type="button" data-finder-option="location" data-value="Ceiling return vent">Ceiling return vent</button>
+              <button class="finder-option" type="button" data-finder-option="location" data-value="Wall return vent">Wall return vent</button>
+              <button class="finder-option" type="button" data-finder-option="location" data-value="Furnace or air handler">Furnace or air handler</button>
+              <button class="finder-option" type="button" data-finder-option="location" data-value="I'm not sure">I'm not sure</button>
+            </div>
+            <p class="finder-helper">Most filters have the size printed on the cardboard edge. Look for numbers like 20x25x1.</p>
+          </div>
+
+          <div class="finder-step" data-finder-step="3" hidden>
+            <h3>What did you find?</h3>
+            <label class="finder-field">
+              <span>Filter size, optional</span>
+              <input type="text" data-finder-size-final placeholder="Example: 20x25x1" inputmode="text">
+            </label>
+            <label class="finder-field">
+              <span>Email, optional</span>
+              <input type="email" data-finder-email placeholder="Email address" autocomplete="email">
+            </label>
+          </div>
+
+          <div class="finder-actions">
+            <button class="btn btn-secondary" type="button" data-finder-back hidden>Back</button>
+            <button class="btn btn-primary" type="button" data-finder-next>Next</button>
+            <button class="btn btn-primary" type="button" data-finder-complete hidden>Show My Recommendation</button>
+          </div>
+        </div>
+
+        <div class="finder-result" data-finder-result hidden>
+          <p class="eyebrow">Your Filter Finder Result</p>
+          <h3>Your Filter Finder Result</h3>
+          <div class="finder-result-block">
+            <span data-finder-result-size>We recommend checking the printed size on your current filter's cardboard edge before ordering.</span>
+          </div>
+          <div class="finder-result-block">
+            <strong>Recommended next step:</strong>
+            <p>Choose a delivery plan and we'll help keep replacements on schedule.</p>
+          </div>
+          <div class="finder-schedule-grid">
+            <div>
+              <strong>Standard homes</strong>
+              <span>Every 90 days</span>
+            </div>
+            <div>
+              <strong>Pets, allergies, or heavy dust</strong>
+              <span>Every 30-60 days</span>
+            </div>
+          </div>
+          <div class="finder-result-actions">
+            <a class="btn btn-primary" href="#plans" data-finder-to-plans>View Delivery Plans</a>
+            <button class="btn btn-secondary" type="button" data-finder-to-reservation>Reserve Founder Pricing</button>
+          </div>
+        </div>
       </div>
     </section>
 
