@@ -176,6 +176,7 @@ function startFilterFinder() {
 
   finderQuiz.hidden = false;
   finderResult.hidden = true;
+  finderResult?.classList.remove("report-visible");
   if (finderStartButton) finderStartButton.hidden = true;
   showFinderStep(1);
   scrollToElement(filterFinder);
@@ -381,7 +382,7 @@ function renderFinderPills(result) {
 
 function renderFinderReport(result) {
   const hasSize = result.filterSize !== "Check before ordering";
-  const statusText = hasSize ? "Likely Match" : "Size Confirmation Needed";
+  const statusText = hasSize ? "✓ Likely Match" : "Size Confirmation Needed";
   const locationVisual = getLocationVisual(result.location);
 
   if (finderResultSize) finderResultSize.textContent = result.filterSize;
@@ -498,7 +499,12 @@ async function completeFilterFinder() {
   });
 
   if (finderQuiz) finderQuiz.hidden = true;
-  if (finderResult) finderResult.hidden = false;
+  if (finderResult) {
+    finderResult.hidden = false;
+    window.requestAnimationFrame(() => {
+      finderResult.classList.add("report-visible");
+    });
+  }
   scrollToElement(finderResult || filterFinder);
 
   if (shouldSubmitEmail) {

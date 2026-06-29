@@ -294,6 +294,14 @@ input:focus-visible {
   line-height: 1.48;
 }
 
+.hero-proof-line {
+  max-width: 590px;
+  margin: -4px 0 12px;
+  color: #647585;
+  font-size: 0.93rem;
+  font-weight: 750;
+}
+
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -855,14 +863,15 @@ input:focus-visible {
 
 .finder-status-badge {
   flex: 0 0 auto;
-  padding: 7px 10px;
+  padding: 9px 12px;
   border: 1px solid rgba(47, 179, 109, 0.24);
   border-radius: 999px;
   color: var(--green-dark);
   background: #e8f8ef;
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   font-weight: 900;
   text-transform: uppercase;
+  box-shadow: 0 10px 24px rgba(47, 179, 109, 0.12);
 }
 
 .finder-status-badge.needs-confirmation {
@@ -965,6 +974,22 @@ input:focus-visible {
   background: #f8fbfe;
 }
 
+.finder-result-size {
+  border-color: rgba(36, 119, 212, 0.2);
+  background: linear-gradient(180deg, #f3f9ff, #ffffff);
+}
+
+.finder-result-schedule,
+.finder-convenience-plan {
+  border-color: rgba(47, 179, 109, 0.22);
+  background: linear-gradient(180deg, #f2fff7, #ffffff);
+}
+
+.finder-result-next {
+  border-color: rgba(36, 119, 212, 0.24);
+  background: linear-gradient(180deg, #edf6ff, #ffffff);
+}
+
 .finder-result-block p {
   margin: 5px 0 0;
   color: var(--muted);
@@ -1046,7 +1071,8 @@ input:focus-visible {
   list-style: none;
 }
 
-.finder-next-step li {
+.finder-next-step li,
+.finder-convenience-plan li {
   padding: 6px 9px;
   border-radius: 999px;
   color: var(--green-dark);
@@ -1055,8 +1081,58 @@ input:focus-visible {
   font-weight: 900;
 }
 
-.finder-next-step li::before {
+.finder-convenience-plan ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  margin: 12px 0 0;
+  list-style: none;
+}
+
+.finder-next-step li::before,
+.finder-convenience-plan li::before {
   content: "✓ ";
+}
+
+.finder-result.report-visible .finder-result-block {
+  animation: reportBlockIn 420ms ease both;
+}
+
+.finder-result.report-visible .finder-result-block:nth-of-type(2) {
+  animation-delay: 80ms;
+}
+
+.finder-result.report-visible .finder-result-block:nth-of-type(3) {
+  animation-delay: 180ms;
+}
+
+.finder-result.report-visible .finder-result-block:nth-of-type(4) {
+  animation-delay: 280ms;
+}
+
+.finder-result.report-visible .finder-result-block:nth-of-type(5) {
+  animation-delay: 380ms;
+}
+
+.finder-result.report-visible .finder-result-block:nth-of-type(6) {
+  animation-delay: 480ms;
+}
+
+.finder-result.report-visible .finder-result-block:nth-of-type(7) {
+  animation-delay: 580ms;
+}
+
+@keyframes reportBlockIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .finder-copy-row {
@@ -1559,6 +1635,11 @@ input:focus {
     margin-bottom: 10px;
   }
 
+  .hero-proof-line {
+    margin: -2px 0 10px;
+    font-size: 0.86rem;
+  }
+
   .hero-actions {
     display: grid;
     gap: 9px;
@@ -1727,5 +1808,9 @@ input:focus {
   .reveal {
     opacity: 1;
     transform: none;
+  }
+
+  .finder-result.report-visible .finder-result-block {
+    animation: none;
   }
 }
