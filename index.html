@@ -110,7 +110,8 @@
             </div>
             <label class="finder-field" data-known-size-field hidden>
               <span>Enter your filter size</span>
-              <input type="text" data-finder-size-known placeholder="20x25x1, 16x20x1, etc." inputmode="text">
+              <input type="text" data-finder-size-known data-size-autocomplete placeholder="20x25x1, 16x20x1, etc." inputmode="text" autocomplete="off">
+              <div class="size-suggestions" data-size-suggestions hidden></div>
             </label>
             <p class="finder-error" data-finder-error hidden></p>
           </div>
@@ -143,7 +144,8 @@
             <h3>What did you find?</h3>
             <label class="finder-field">
               <span>Filter size, optional</span>
-              <input type="text" data-finder-size-final placeholder="Example: 20x25x1" inputmode="text">
+              <input type="text" data-finder-size-final data-size-autocomplete placeholder="Example: 20x25x1" inputmode="text" autocomplete="off">
+              <div class="size-suggestions" data-size-suggestions hidden></div>
             </label>
             <label class="finder-field">
               <span>Email, optional</span>
@@ -169,6 +171,14 @@
             <span class="finder-status-badge" data-finder-status-badge>Size Confirmation Needed</span>
           </div>
           <p class="finder-email-note" data-finder-email-note hidden>We could not email your result, but your recommendation is shown below.</p>
+          <div class="finder-result-block finder-match-score">
+            <strong>Filter Match Score</strong>
+            <span data-finder-match-score>72%</span>
+            <div class="finder-score-track" aria-label="Estimated filter match score">
+              <span data-finder-match-bar></span>
+            </div>
+            <p>Estimated match based on the details you provided.</p>
+          </div>
           <div class="finder-result-block finder-result-primary finder-result-size">
             <strong>Estimated Filter Size</strong>
             <span data-finder-result-size>Check before ordering</span>
@@ -183,6 +193,16 @@
             <strong>Recommended Replacement Schedule</strong>
             <span data-finder-result-schedule>Every 60-90 days</span>
             <p>Based on common residential HVAC systems, this schedule can help maintain airflow and reduce forgotten replacements.</p>
+          </div>
+          <div class="finder-result-block finder-filter-type">
+            <strong>Recommended Filter Type</strong>
+            <span data-finder-merv>MERV 8</span>
+            <p data-finder-merv-copy>MERV 8: Best for most standard homes.</p>
+          </div>
+          <div class="finder-result-block finder-reminder-schedule">
+            <strong>Estimated Yearly Reminder Schedule</strong>
+            <div class="finder-months" data-finder-months></div>
+            <p><span data-finder-reminder-count>4</span> reminders/year. Never remember this again.</p>
           </div>
           <div class="finder-result-block finder-convenience-plan">
             <strong>Convenience Plan</strong>
@@ -207,7 +227,7 @@
             </ul>
           </div>
           <div class="finder-result-actions">
-            <a class="btn btn-primary" href="#plans" data-finder-to-plans>See Plans For My Filter</a>
+            <a class="btn btn-primary" href="#plans" data-finder-to-plans>See My Recommended Plan</a>
             <button class="btn btn-secondary" type="button" data-finder-to-reservation>Reserve Founder Pricing</button>
           </div>
           <div class="finder-copy-row">
@@ -277,6 +297,7 @@
               <strong>$14.99 <small>/ month</small></strong>
             </div>
             <p class="shipping-note">Free shipping included</p>
+            <p class="savings-note">You save $15</p>
             <ul>
               <li>1 standard filter delivery</li>
               <li>Choose 30, 60, or 90 day schedule</li>
@@ -284,7 +305,7 @@
               <li>Skip or reschedule anytime</li>
               <li>Free shipping included</li>
             </ul>
-            <button class="btn btn-primary" type="button" data-plan-button data-plan="Essential" data-regular="$29.99 / month" data-founder="$14.99 / month">Start My Subscription</button>
+            <button class="btn btn-primary" type="button" data-plan-button data-plan="Essential" data-regular="$29.99 / month" data-founder="$14.99 / month" data-savings="You save $15">Start My Subscription</button>
           </article>
 
           <article class="pricing-card featured reveal">
@@ -300,6 +321,7 @@
               <strong>$19.99 <small>/ month</small></strong>
             </div>
             <p class="shipping-note">Free shipping included</p>
+            <p class="savings-note">You save $20</p>
             <ul>
               <li>1 premium filter delivery</li>
               <li>Choose 30, 60, or 90 day schedule</li>
@@ -308,7 +330,7 @@
               <li>Skip or reschedule anytime</li>
               <li>Free shipping included</li>
             </ul>
-            <button class="btn btn-primary" type="button" data-plan-button data-plan="Plus" data-regular="$39.99 / month" data-founder="$19.99 / month">Start My Subscription</button>
+            <button class="btn btn-primary" type="button" data-plan-button data-plan="Plus" data-regular="$39.99 / month" data-founder="$19.99 / month" data-savings="You save $20">Start My Subscription</button>
           </article>
 
           <article class="pricing-card reveal">
@@ -323,6 +345,7 @@
               <strong>Starting at $29.99 <small>/ month</small></strong>
             </div>
             <p class="shipping-note">Free shipping included</p>
+            <p class="savings-note">You save $30+</p>
             <ul>
               <li>Multiple filter support</li>
               <li>Custom delivery schedule</li>
@@ -331,10 +354,29 @@
               <li>Skip or reschedule anytime</li>
               <li>Free shipping included</li>
             </ul>
-            <button class="btn btn-primary" type="button" data-plan-button data-plan="Home+" data-regular="$59.99 / month" data-founder="Starting at $29.99 / month">Start My Subscription</button>
+            <button class="btn btn-primary" type="button" data-plan-button data-plan="Home+" data-regular="$59.99 / month" data-founder="Starting at $29.99 / month" data-savings="You save $30+">Start My Subscription</button>
           </article>
         </div>
         <p class="pricing-disclaimer reveal">Founder pricing reflects the first-order launch offer. Final subscription pricing may vary by filter size, filter type, and number of filters. No payment is collected today.</p>
+        <div class="pricing-faq reveal" data-faq>
+          <h3>Subscription Questions</h3>
+          <details data-faq-item>
+            <summary>Do I pay today?</summary>
+            <p>No. Reserving a plan does not create a paid subscription.</p>
+          </details>
+          <details data-faq-item>
+            <summary>Can I cancel or change my plan?</summary>
+            <p>Yes. Filter Wizard plans are designed to be flexible.</p>
+          </details>
+          <details data-faq-item>
+            <summary>How do I know my filter size?</summary>
+            <p>Use the free Filter Finder or check the printed size on your current filter's cardboard edge.</p>
+          </details>
+          <details data-faq-item>
+            <summary>Is shipping included?</summary>
+            <p>Yes. Free shipping is included on every subscription.</p>
+          </details>
+        </div>
       </div>
     </section>
 
@@ -415,6 +457,7 @@
         <del data-selected-regular>$39.99 / month</del>
         <span>Founder Price</span>
         <strong data-selected-founder>$19.99 / month</strong>
+        <p class="savings-note" data-selected-savings>You save $20</p>
         <p class="shipping-note">Free Shipping Included</p>
       </div>
       <div class="modal-trust-list" aria-label="Reservation benefits">
@@ -448,6 +491,12 @@
     </section>
   </div>
 
-  <script src="script.js?v=modal-fix-2"></script>
+  <div class="exit-assist" data-exit-assist hidden>
+    <button class="exit-assist-close" type="button" aria-label="Dismiss" data-exit-assist-close>&times;</button>
+    <p data-exit-assist-text>Still not sure what filter you need?</p>
+    <button class="btn btn-primary" type="button" data-exit-assist-action>Try Free Filter Finder</button>
+  </div>
+
+  <script src="script.js?v=mvp-upgrades-1"></script>
 </body>
 </html>

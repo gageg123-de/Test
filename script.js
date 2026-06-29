@@ -37,6 +37,20 @@ const finderCopyButton = document.querySelector("[data-finder-copy]");
 const finderCopyStatus = document.querySelector("[data-finder-copy-status]");
 const finderToPlansButton = document.querySelector("[data-finder-to-plans]");
 const finderToReservationButton = document.querySelector("[data-finder-to-reservation]");
+const finderMatchScore = document.querySelector("[data-finder-match-score]");
+const finderMatchBar = document.querySelector("[data-finder-match-bar]");
+const finderMerv = document.querySelector("[data-finder-merv]");
+const finderMervCopy = document.querySelector("[data-finder-merv-copy]");
+const finderMonths = document.querySelector("[data-finder-months]");
+const finderReminderCount = document.querySelector("[data-finder-reminder-count]");
+const faqItems = document.querySelectorAll("[data-faq-item]");
+const pricingSection = document.querySelector("#plans");
+const pricingCards = document.querySelectorAll(".pricing-card");
+const sizeAutocompleteInputs = document.querySelectorAll("[data-size-autocomplete]");
+const exitAssist = document.querySelector("[data-exit-assist]");
+const exitAssistText = document.querySelector("[data-exit-assist-text]");
+const exitAssistAction = document.querySelector("[data-exit-assist-action]");
+const exitAssistClose = document.querySelector("[data-exit-assist-close]");
 const countdownEls = document.querySelectorAll("[data-countdown]");
 const countdownView = document.querySelector("[data-countdown-view]");
 const storageKey = "filterWizardReservations";
@@ -45,7 +59,8 @@ const countdownKey = "filterWizardFounderOfferEndsAt";
 const fallbackPlan = {
   plan: "Plus",
   regular: "$39.99 / month",
-  founder: "$19.99 / month"
+  founder: "$19.99 / month",
+  savings: "You save $20"
 };
 let selectedPlan = { ...fallbackPlan };
 let countdownViewed = false;
@@ -59,9 +74,44 @@ const finderState = {
   finalSize: "",
   email: "",
   recommendedSchedule: "",
-  normalizedSize: ""
+  normalizedSize: "",
+  recommendedFilterType: "",
+  matchScore: 60,
+  reminderMonths: []
 };
 let latestFinderReport = null;
+let finderStarted = false;
+let finderCompleted = false;
+let finderAbandonedTracked = false;
+let reservationModalOpened = false;
+let reservationSubmitted = false;
+let pricingViewedTracked = false;
+let exitAssistShown = false;
+
+const commonFilterSizes = [
+  "10x20x1",
+  "12x12x1",
+  "12x20x1",
+  "14x14x1",
+  "14x20x1",
+  "14x24x1",
+  "14x25x1",
+  "16x16x1",
+  "16x20x1",
+  "16x24x1",
+  "16x25x1",
+  "18x18x1",
+  "18x20x1",
+  "18x24x1",
+  "18x25x1",
+  "20x20x1",
+  "20x24x1",
+  "20x25x1",
+  "20x30x1",
+  "24x24x1",
+  "24x30x1",
+  "25x25x1"
+];
 
 function trackEvent(eventName, parameters = {}) {
   if (typeof window.gtag === "function") {
@@ -151,7 +201,7 @@ function scrollToElement(element) {
 
 function updateFinderProgress() {
   if (!finderProgressLabel || !finderProgressBar) return;
-  finderProgressLabel.textContent = `Step ${finderCurrentStep} of ${finderTotalSteps} · ${getFinderStepLabel(finderCurrentStep)}`;
+  finderProgressLabel.textContent = `Step ${finderCurrentStep} of ${finderTotalSteps} - ${getFinderStepLabel(finderCurrentStep)}`;
   finderProgressBar.style.width = `${(finderCurrentStep / finderTotalSteps) * 100}%`;
 }
 
@@ -174,6 +224,7 @@ function showFinderStep(step) {
 function startFilterFinder() {
   if (!finderQuiz || !filterFinder) return;
 
+  finderStarted = true;
   finderQuiz.hidden = false;
   finderResult.hidden = true;
   finderResult?.classList.remove("report-visible");
@@ -393,6 +444,19 @@ function renderFinderReport(result) {
   if (finderSizeStatus) finderSizeStatus.textContent = hasSize ? "Likely Match" : "Size confirmation needed";
   if (finderLocationGuidance) finderLocationGuidance.textContent = getLocationGuidance(result.location);
   if (finderResultSchedule) finderResultSchedule.textContent = result.recommendedSchedule;
+  if (finderMatchScore) finderMatchScore.textContent = `${result.matchScore}%`;
+  if (finderMatchBar) finderMatchBar.style.width = `${result.matchScore}%`;
+  if (finderMerv) finderMerv.textContent = result.recommendedFilterType;
+  if (finderMervCopy) finderMervCopy.textContent = result.recommendedFilterCopy;
+  if (finderMonths) {
+    finderMonths.innerHTML = "";
+    result.reminderMonths.forEach((month) => {
+      const item = document.createElement("span");
+      item.textContent = month;
+      finderMonths.appendChild(item);
+    });
+  }
+  if (finderReminderCount) finderReminderCount.textContent = String(result.reminderMonths.length);
   if (finderGuidanceLabel) finderGuidanceLabel.textContent = locationVisual.label;
   if (finderGuidanceShort) finderGuidanceShort.textContent = locationVisual.text;
   renderFinderPills(result);
@@ -404,7 +468,9 @@ function getFinderCopyText(result) {
     `Filter size: ${result.filterSize}`,
     `Location: ${result.location}`,
     `Home conditions: ${result.homeConditions.length ? result.homeConditions.join(", ") : "Standard home conditions"}`,
-    `Recommended schedule: ${result.recommendedSchedule}`
+    `Recommended schedule: ${result.recommendedSchedule}`,
+    `Recommended filter type: ${result.recommendedFilterType}`,
+    `Estimated reminders: ${result.reminderMonths.join(", ")}`
   ].join("\n");
 }
 
@@ -428,6 +494,42 @@ function getRecommendedSchedule() {
   return "Every 60-90 days";
 }
 
+function getRecommendedFilterType() {
+  const conditions = finderState.conditions;
+  if (conditions.includes("Allergies")) {
+    return {
+      type: "MERV 13",
+      copy: "MERV 13: Best for allergy-sensitive homes."
+    };
+  }
+  if (conditions.some((condition) => ["Pets", "Heavy dust"].includes(condition))) {
+    return {
+      type: "MERV 11",
+      copy: "MERV 11: Better for pets, dust, and higher filtration needs."
+    };
+  }
+  return {
+    type: "MERV 8",
+    copy: "MERV 8: Best for most standard homes."
+  };
+}
+
+function getReminderMonths(schedule) {
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const count = schedule === "Every 30-60 days" ? 6 : 4;
+  const interval = schedule === "Every 30-60 days" ? 2 : 3;
+  const startMonth = new Date().getMonth();
+
+  return Array.from({ length: count }, (_, index) => monthNames[(startMonth + index * interval) % 12]);
+}
+
+function getMatchScore(size, location) {
+  if (size && location) return 94;
+  if (size && !location) return 88;
+  if (!size && location) return 72;
+  return 60;
+}
+
 async function submitFinderEmail(result) {
   if (!reservationForm || !result.email) return true;
 
@@ -440,6 +542,9 @@ async function submitFinderEmail(result) {
   formData.set("filterLocation", result.location);
   formData.set("homeConditions", result.homeConditions.join(", ") || "Not specified");
   formData.set("recommendedSchedule", result.recommendedSchedule);
+  formData.set("recommendedFilterType", result.recommendedFilterType);
+  formData.set("estimatedReminderMonths", result.reminderMonths.join(", "));
+  formData.set("filterMatchScore", `${result.matchScore}%`);
   formData.set("submittedAt", result.submittedAt);
 
   try {
@@ -460,6 +565,10 @@ async function completeFilterFinder() {
   finderState.email = finderEmailInput?.value.trim() || "";
   finderState.recommendedSchedule = getRecommendedSchedule();
   finderState.normalizedSize = foundSize;
+  const filterType = getRecommendedFilterType();
+  finderState.recommendedFilterType = filterType.type;
+  finderState.matchScore = getMatchScore(foundSize, finderState.location);
+  finderState.reminderMonths = getReminderMonths(finderState.recommendedSchedule);
 
   if (finderEmailNote) finderEmailNote.hidden = true;
   if (finderCopyStatus) finderCopyStatus.hidden = true;
@@ -470,6 +579,10 @@ async function completeFilterFinder() {
     filterSize: foundSize || "Check before ordering",
     homeConditions: [...finderState.conditions],
     recommendedSchedule: finderState.recommendedSchedule,
+    recommendedFilterType: filterType.type,
+    recommendedFilterCopy: filterType.copy,
+    reminderMonths: [...finderState.reminderMonths],
+    matchScore: finderState.matchScore,
     normalizedFilterSize: foundSize || "",
     email: finderState.email || "",
     submittedAt: new Date().toISOString()
@@ -489,15 +602,20 @@ async function completeFilterFinder() {
     knows_size: finderState.knowsSize,
     location: finderState.location,
     has_email: Boolean(finderState.email),
-    recommended_schedule: finderState.recommendedSchedule
+    recommended_schedule: finderState.recommendedSchedule,
+    recommended_filter_type: result.recommendedFilterType,
+    match_score: result.matchScore
   });
   trackEvent("filter_finder_result_viewed", {
     normalized_filter_size: result.normalizedFilterSize || "not_specified",
     location: result.location,
     recommended_schedule: result.recommendedSchedule,
-    conditions_count: result.homeConditions.length
+    recommended_filter_type: result.recommendedFilterType,
+    conditions_count: result.homeConditions.length,
+    match_score: result.matchScore
   });
 
+  finderCompleted = true;
   if (finderQuiz) finderQuiz.hidden = true;
   if (finderResult) {
     finderResult.hidden = false;
@@ -577,17 +695,24 @@ function trackCountdownViewed() {
 }
 
 function setSelectedPlan(plan) {
-  selectedPlan = plan;
-  document.querySelector("[data-selected-plan]").textContent = plan.plan;
-  document.querySelector("[data-selected-regular]").textContent = plan.regular;
-  document.querySelector("[data-selected-founder]").textContent = plan.founder;
-  document.querySelector("[data-plan-field]").value = plan.plan;
-  document.querySelector("[data-regular-field]").value = plan.regular;
-  document.querySelector("[data-founder-field]").value = plan.founder;
+  selectedPlan = { ...fallbackPlan, ...plan };
+  document.querySelector("[data-selected-plan]").textContent = selectedPlan.plan;
+  document.querySelector("[data-selected-regular]").textContent = selectedPlan.regular;
+  document.querySelector("[data-selected-founder]").textContent = selectedPlan.founder;
+  document.querySelector("[data-selected-savings]").textContent = selectedPlan.savings;
+  document.querySelector("[data-plan-field]").value = selectedPlan.plan;
+  document.querySelector("[data-regular-field]").value = selectedPlan.regular;
+  document.querySelector("[data-founder-field]").value = selectedPlan.founder;
 }
 
 function openReservation(plan = fallbackPlan) {
   setSelectedPlan(plan);
+  reservationModalOpened = true;
+  reservationSubmitted = false;
+  if (exitAssist) {
+    exitAssist.classList.remove("visible");
+    exitAssist.hidden = true;
+  }
 
   modalBackdrop.hidden = false;
   modalBackdrop.style.display = "grid";
@@ -612,11 +737,18 @@ function openReservation(plan = fallbackPlan) {
 function closeReservation() {
   if (!modalBackdrop) return;
 
+  const wasOpen = !modalBackdrop.hidden;
   modalBackdrop.classList.remove("closing");
   modalBackdrop.hidden = true;
   modalBackdrop.style.display = "none";
   document.body.classList.remove("modal-open");
   document.documentElement.classList.remove("modal-open");
+
+  if (wasOpen && !reservationSubmitted) {
+    trackEvent("reservation_modal_closed", {
+      plan_name: selectedPlan.plan
+    });
+  }
 }
 
 window.closeReservation = closeReservation;
@@ -673,6 +805,7 @@ async function handleReservationSubmit(event) {
   formData.set("selectedPlan", selectedPlan.plan);
   formData.set("plannedRegularPrice", selectedPlan.regular);
   formData.set("founderPrice", selectedPlan.founder);
+  formData.set("founderSavings", selectedPlan.savings);
 
   setFormMessage(reservationForm, "clear");
   submitButton.disabled = true;
@@ -685,6 +818,7 @@ async function handleReservationSubmit(event) {
       selectedPlan: selectedPlan.plan,
       plannedRegularPrice: selectedPlan.regular,
       founderPrice: selectedPlan.founder,
+      founderSavings: selectedPlan.savings,
       freeShipping: true,
       submittedAt
     };
@@ -697,6 +831,7 @@ async function handleReservationSubmit(event) {
     trackEvent("subscription_interest_confirmed", {
       plan_name: selectedPlan.plan
     });
+    reservationSubmitted = true;
     reservationForm.hidden = true;
     reservationSuccess.hidden = false;
     reservationForm.reset();
@@ -709,9 +844,194 @@ async function handleReservationSubmit(event) {
   }
 }
 
+function hideSizeSuggestions(container) {
+  if (!container) return;
+  container.hidden = true;
+  container.innerHTML = "";
+}
+
+function renderSizeSuggestions(input) {
+  const container = input.parentElement?.querySelector("[data-size-suggestions]");
+  if (!container) return;
+
+  const query = normalizeFilterSize(input.value);
+  if (!query) {
+    hideSizeSuggestions(container);
+    return;
+  }
+
+  const matches = commonFilterSizes
+    .filter((size) => size.startsWith(query) || size.includes(query))
+    .slice(0, 6);
+
+  if (!matches.length) {
+    hideSizeSuggestions(container);
+    return;
+  }
+
+  container.innerHTML = "";
+  matches.forEach((size) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = size;
+    button.addEventListener("click", () => {
+      input.value = size;
+      hideSizeSuggestions(container);
+      input.focus();
+      clearFinderError(input.closest("[data-finder-step]"));
+    });
+    container.appendChild(button);
+  });
+  container.hidden = false;
+}
+
+function setupSizeAutocomplete() {
+  sizeAutocompleteInputs.forEach((input) => {
+    input.addEventListener("input", () => renderSizeSuggestions(input));
+    input.addEventListener("focus", () => renderSizeSuggestions(input));
+    input.addEventListener("blur", () => {
+      const container = input.parentElement?.querySelector("[data-size-suggestions]");
+      window.setTimeout(() => hideSizeSuggestions(container), 140);
+    });
+  });
+}
+
+function setupPricingViewedTracking() {
+  if (!pricingSection || pricingViewedTracked) return;
+
+  if (!("IntersectionObserver" in window)) {
+    pricingViewedTracked = true;
+    trackEvent("pricing_card_viewed", {
+      card_count: pricingCards.length
+    });
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting) && !pricingViewedTracked) {
+        pricingViewedTracked = true;
+        trackEvent("pricing_card_viewed", {
+          card_count: pricingCards.length
+        });
+        observer.disconnect();
+      }
+    },
+    { threshold: 0.28 }
+  );
+
+  observer.observe(pricingSection);
+}
+
+function setupFinderAbandonTracking() {
+  if (!filterFinder || !("IntersectionObserver" in window)) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (finderStarted && !finderCompleted && !finderAbandonedTracked && !entry.isIntersecting) {
+          finderAbandonedTracked = true;
+          trackEvent("finder_abandoned", {
+            current_step: finderCurrentStep
+          });
+        }
+      });
+    },
+    { threshold: 0.08 }
+  );
+
+  observer.observe(filterFinder);
+}
+
+function setupFaqTracking() {
+  faqItems.forEach((item) => {
+    item.addEventListener("toggle", () => {
+      if (!item.open) return;
+
+      faqItems.forEach((otherItem) => {
+        if (otherItem !== item) otherItem.open = false;
+      });
+
+      trackEvent("faq_opened", {
+        question: item.querySelector("summary")?.textContent.trim() || "Unknown question"
+      });
+    });
+  });
+}
+
+function exitAssistDismissed() {
+  try {
+    return sessionStorage.getItem("filterWizardExitAssistDismissed") === "true";
+  } catch (error) {
+    return false;
+  }
+}
+
+function dismissExitAssist() {
+  if (!exitAssist) return;
+  exitAssist.classList.remove("visible");
+  exitAssist.hidden = true;
+  try {
+    sessionStorage.setItem("filterWizardExitAssistDismissed", "true");
+  } catch (error) {
+    // Session storage is optional; dismissal still works for this page view.
+  }
+}
+
+function showExitAssist() {
+  if (!exitAssist || exitAssistShown || exitAssistDismissed() || reservationModalOpened) return;
+
+  exitAssistShown = true;
+  if (exitAssistText) {
+    exitAssistText.textContent = finderCompleted
+      ? "Ready to never remember this again?"
+      : "Still not sure what filter you need?";
+  }
+  if (exitAssistAction) {
+    exitAssistAction.textContent = finderCompleted ? "Reserve Founder Pricing" : "Try Free Filter Finder";
+  }
+
+  exitAssist.hidden = false;
+  window.requestAnimationFrame(() => exitAssist.classList.add("visible"));
+  trackEvent("exit_assist_shown", {
+    finder_completed: finderCompleted
+  });
+}
+
+function setupExitAssist() {
+  if (!exitAssist) return;
+
+  window.addEventListener("scroll", () => {
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    if (scrollable <= 0) return;
+    const scrolled = window.scrollY / scrollable;
+    if (scrolled >= 0.8) showExitAssist();
+  }, { passive: true });
+
+  exitAssistClose?.addEventListener("click", dismissExitAssist);
+  exitAssistAction?.addEventListener("click", () => {
+    trackEvent("exit_assist_clicked", {
+      finder_completed: finderCompleted
+    });
+    dismissExitAssist();
+
+    if (finderCompleted) {
+      openReservation(selectedPlan);
+      return;
+    }
+
+    startFilterFinder();
+  });
+}
+
 setHeaderState();
 setupRevealAnimations();
 setupCountdownTracking();
+setupPricingViewedTracking();
+setupFinderAbandonTracking();
+setupFaqTracking();
+setupSizeAutocomplete();
+setupExitAssist();
 updateCountdown();
 window.setInterval(updateCountdown, 1000);
 window.addEventListener("scroll", setHeaderState, { passive: true });
@@ -732,12 +1052,19 @@ subscriptionCtas.forEach((cta) => {
   });
 });
 
+document.querySelector(".hero-actions [data-subscription-cta]")?.addEventListener("click", () => {
+  trackEvent("hero_cta_clicked", {
+    link_text: "Build My Filter Plan"
+  });
+});
+
 planButtons.forEach((button) => {
   button.addEventListener("click", () => {
     const plan = {
       plan: button.dataset.plan,
       regular: button.dataset.regular,
-      founder: button.dataset.founder
+      founder: button.dataset.founder,
+      savings: button.dataset.savings
     };
     trackEvent("plan_selected", {
       plan_name: plan.plan
@@ -803,6 +1130,7 @@ finderCopyButton?.addEventListener("click", async () => {
       normalized_filter_size: latestFinderReport.normalizedFilterSize || "not_specified",
       location: latestFinderReport.location,
       recommended_schedule: latestFinderReport.recommendedSchedule,
+      recommended_filter_type: latestFinderReport.recommendedFilterType,
       conditions_count: latestFinderReport.homeConditions.length
     });
   } catch (error) {
