@@ -305,26 +305,50 @@
         </div>
 
         <div class="finder-result" data-finder-result hidden>
-          <p class="eyebrow">Your Filter Finder Result</p>
-          <h3>Your Personalized Filter Recommendation</h3>
+          <div class="finder-report-header">
+            <div>
+              <p class="eyebrow">Your Filter Finder Result</p>
+              <h3>Filter Wizard Report</h3>
+              <p>Your personalized air filter recommendation based on your answers.</p>
+            </div>
+            <span class="finder-status-badge" data-finder-status-badge>Size Confirmation Needed</span>
+          </div>
           <p class="finder-email-note" data-finder-email-note hidden>We could not email your result, but your recommendation is shown below.</p>
           <div class="finder-result-block finder-result-primary">
-            <strong>Likely Filter Size</strong>
+            <strong>Estimated Filter Size</strong>
             <span data-finder-result-size>Check before ordering</span>
+            <small data-finder-size-status>Size confirmation needed</small>
             <p data-finder-location-guidance>Check the printed size on your current filter's cardboard edge before ordering.</p>
+          </div>
+          <div class="finder-result-block">
+            <strong>Based On</strong>
+            <div class="finder-answer-pills" data-finder-answer-pills></div>
           </div>
           <div class="finder-result-block">
             <strong>Recommended Replacement Schedule</strong>
             <span data-finder-result-schedule>Every 60-90 days</span>
-            <p>Based on your home conditions, this schedule can help maintain airflow and reduce forgotten replacements.</p>
+            <p>Based on common residential HVAC systems, this schedule can help maintain airflow and reduce forgotten replacements.</p>
           </div>
-          <div class="finder-result-block">
-            <strong>Suggested Next Step</strong>
-            <p>Once you confirm your size, Filter Wizard can send reminders and schedule deliveries automatically.</p>
+          <div class="finder-result-block finder-guidance-card" data-finder-guidance-card>
+            <strong data-finder-guidance-label>Not sure</strong>
+            <p data-finder-guidance-short>Use the guidance above to confirm the printed size before ordering.</p>
+          </div>
+          <div class="finder-result-block finder-next-step">
+            <strong>Forget replacing your filter again?</strong>
+            <p>Filter Wizard can remind you before your filter gets dirty and help schedule deliveries automatically.</p>
+            <ul>
+              <li>Free shipping</li>
+              <li>Cancel anytime</li>
+              <li>Founder pricing available</li>
+            </ul>
           </div>
           <div class="finder-result-actions">
-            <a class="btn btn-primary" href="#plans" data-finder-to-plans>View Delivery Plans</a>
+            <a class="btn btn-primary" href="#plans" data-finder-to-plans>See Plans For My Filter</a>
             <button class="btn btn-secondary" type="button" data-finder-to-reservation>Reserve Founder Pricing</button>
+          </div>
+          <div class="finder-copy-row">
+            <button class="finder-copy-button" type="button" data-finder-copy>Copy My Recommendation</button>
+            <span data-finder-copy-status hidden></span>
           </div>
         </div>
       </div>

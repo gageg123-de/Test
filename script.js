@@ -28,6 +28,13 @@ const finderResultSize = document.querySelector("[data-finder-result-size]");
 const finderLocationGuidance = document.querySelector("[data-finder-location-guidance]");
 const finderResultSchedule = document.querySelector("[data-finder-result-schedule]");
 const finderEmailNote = document.querySelector("[data-finder-email-note]");
+const finderStatusBadge = document.querySelector("[data-finder-status-badge]");
+const finderSizeStatus = document.querySelector("[data-finder-size-status]");
+const finderAnswerPills = document.querySelector("[data-finder-answer-pills]");
+const finderGuidanceLabel = document.querySelector("[data-finder-guidance-label]");
+const finderGuidanceShort = document.querySelector("[data-finder-guidance-short]");
+const finderCopyButton = document.querySelector("[data-finder-copy]");
+const finderCopyStatus = document.querySelector("[data-finder-copy-status]");
 const finderToPlansButton = document.querySelector("[data-finder-to-plans]");
 const finderToReservationButton = document.querySelector("[data-finder-to-reservation]");
 const countdownEls = document.querySelectorAll("[data-countdown]");
@@ -51,8 +58,10 @@ const finderState = {
   knownSize: "",
   finalSize: "",
   email: "",
-  recommendedSchedule: ""
+  recommendedSchedule: "",
+  normalizedSize: ""
 };
+let latestFinderReport = null;
 
 function trackEvent(eventName, parameters = {}) {
   if (typeof window.gtag === "function") {
@@ -142,7 +151,7 @@ function scrollToElement(element) {
 
 function updateFinderProgress() {
   if (!finderProgressLabel || !finderProgressBar) return;
-  finderProgressLabel.textContent = `Step ${finderCurrentStep} of ${finderTotalSteps}`;
+  finderProgressLabel.textContent = `Step ${finderCurrentStep} of ${finderTotalSteps} · ${getFinderStepLabel(finderCurrentStep)}`;
   finderProgressBar.style.width = `${(finderCurrentStep / finderTotalSteps) * 100}%`;
 }
 
@@ -202,7 +211,24 @@ function setFinderOption(button) {
 function getFinderSize() {
   finderState.knownSize = finderKnownSizeInput?.value.trim() || "";
   finderState.finalSize = finderFinalSizeInput?.value.trim() || "";
-  return finderState.finalSize || finderState.knownSize;
+  return normalizeFilterSize(finderState.finalSize || finderState.knownSize);
+}
+
+function normalizeFilterSize(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) return "";
+
+  const lowered = trimmed
+    .replace(/[×X]/g, "x")
+    .replace(/\s*x\s*/g, "x")
+    .replace(/\s+/g, " ");
+
+  const spaceSeparatedNumbers = lowered.match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/);
+  if (spaceSeparatedNumbers) {
+    return `${spaceSeparatedNumbers[1]}x${spaceSeparatedNumbers[2]}x${spaceSeparatedNumbers[3]}`;
+  }
+
+  return lowered.replace(/\s+/g, "");
 }
 
 function updateFinderConditions(button, value) {
@@ -279,9 +305,19 @@ function getFinderStepName(step) {
     1: "filter_size",
     2: "filter_location",
     3: "home_conditions",
-    4: "result_email"
+    4: "results"
   };
   return names[step] || `step_${step}`;
+}
+
+function getFinderStepLabel(step) {
+  const labels = {
+    1: "Filter Size",
+    2: "Location",
+    3: "Home Conditions",
+    4: "Results"
+  };
+  return labels[step] || "Finder";
 }
 
 function trackFinderStepCompleted(step) {
@@ -299,6 +335,82 @@ function getLocationGuidance(location) {
     "I'm not sure": "Look for a large return grille inside your home or a filter slot near your HVAC unit. The filter size is usually printed on the cardboard edge."
   };
   return guidance[location] || guidance["I'm not sure"];
+}
+
+function getLocationVisual(location) {
+  const visuals = {
+    "Ceiling return vent": {
+      label: "Ceiling return vent",
+      text: "Start at the ceiling grille and check the filter frame edge."
+    },
+    "Wall return vent": {
+      label: "Wall return vent",
+      text: "Open the wall grille and look for printed dimensions on the filter frame."
+    },
+    "Furnace or air handler": {
+      label: "Furnace or air handler",
+      text: "Check the filter slot near the blower compartment or air handler."
+    },
+    "I'm not sure": {
+      label: "Not sure",
+      text: "Look for a large return grille or a filter slot near your HVAC unit."
+    }
+  };
+  return visuals[location] || visuals["I'm not sure"];
+}
+
+function renderFinderPills(result) {
+  if (!finderAnswerPills) return;
+
+  const conditionPills = result.homeConditions.length
+    ? result.homeConditions
+    : ["Standard home conditions"];
+  const pills = [
+    result.knowsSize,
+    result.location,
+    ...conditionPills
+  ].filter(Boolean);
+
+  finderAnswerPills.innerHTML = "";
+  pills.forEach((pill) => {
+    const item = document.createElement("span");
+    item.textContent = `✓ ${pill}`;
+    finderAnswerPills.appendChild(item);
+  });
+}
+
+function renderFinderReport(result) {
+  const hasSize = result.filterSize !== "Check before ordering";
+  const statusText = hasSize ? "Likely Match" : "Size Confirmation Needed";
+  const locationVisual = getLocationVisual(result.location);
+
+  if (finderResultSize) finderResultSize.textContent = result.filterSize;
+  if (finderStatusBadge) {
+    finderStatusBadge.textContent = statusText;
+    finderStatusBadge.classList.toggle("needs-confirmation", !hasSize);
+  }
+  if (finderSizeStatus) finderSizeStatus.textContent = hasSize ? "Likely Match" : "Size confirmation needed";
+  if (finderLocationGuidance) finderLocationGuidance.textContent = getLocationGuidance(result.location);
+  if (finderResultSchedule) finderResultSchedule.textContent = result.recommendedSchedule;
+  if (finderGuidanceLabel) finderGuidanceLabel.textContent = locationVisual.label;
+  if (finderGuidanceShort) finderGuidanceShort.textContent = locationVisual.text;
+  renderFinderPills(result);
+}
+
+function getFinderCopyText(result) {
+  return [
+    "Filter Wizard Report",
+    `Filter size: ${result.filterSize}`,
+    `Location: ${result.location}`,
+    `Home conditions: ${result.homeConditions.length ? result.homeConditions.join(", ") : "Standard home conditions"}`,
+    `Recommended schedule: ${result.recommendedSchedule}`
+  ].join("\n");
+}
+
+function setFinderCopyStatus(message) {
+  if (!finderCopyStatus) return;
+  finderCopyStatus.textContent = message;
+  finderCopyStatus.hidden = false;
 }
 
 function getRecommendedSchedule() {
@@ -346,33 +458,24 @@ async function completeFilterFinder() {
   const foundSize = getFinderSize();
   finderState.email = finderEmailInput?.value.trim() || "";
   finderState.recommendedSchedule = getRecommendedSchedule();
-
-  if (finderResultSize) {
-    finderResultSize.textContent = foundSize
-      ? foundSize
-      : "Check before ordering";
-  }
-
-  if (finderLocationGuidance) {
-    finderLocationGuidance.textContent = getLocationGuidance(finderState.location);
-  }
-
-  if (finderResultSchedule) {
-    finderResultSchedule.textContent = finderState.recommendedSchedule;
-  }
+  finderState.normalizedSize = foundSize;
 
   if (finderEmailNote) finderEmailNote.hidden = true;
+  if (finderCopyStatus) finderCopyStatus.hidden = true;
 
   const result = {
     knowsSize: finderState.knowsSize || "Not answered",
     location: finderState.location || "Not answered",
-    filterSize: foundSize || "Not specified",
+    filterSize: foundSize || "Check before ordering",
     homeConditions: [...finderState.conditions],
     recommendedSchedule: finderState.recommendedSchedule,
+    normalizedFilterSize: foundSize || "",
     email: finderState.email || "",
     submittedAt: new Date().toISOString()
   };
 
+  latestFinderReport = result;
+  renderFinderReport(result);
   saveFinderResult(result);
 
   const shouldSubmitEmail = Boolean(finderState.email);
@@ -388,7 +491,10 @@ async function completeFilterFinder() {
     recommended_schedule: finderState.recommendedSchedule
   });
   trackEvent("filter_finder_result_viewed", {
-    recommended_schedule: finderState.recommendedSchedule
+    normalized_filter_size: result.normalizedFilterSize || "not_specified",
+    location: result.location,
+    recommended_schedule: result.recommendedSchedule,
+    conditions_count: result.homeConditions.length
   });
 
   if (finderQuiz) finderQuiz.hidden = true;
@@ -674,6 +780,29 @@ finderToPlansButton?.addEventListener("click", () => {
 finderToReservationButton?.addEventListener("click", () => {
   trackEvent("filter_finder_to_reservation_clicked");
   openReservation(selectedPlan);
+});
+
+finderCopyButton?.addEventListener("click", async () => {
+  if (!latestFinderReport) return;
+
+  if (!navigator.clipboard?.writeText) {
+    setFinderCopyStatus("Copy not available on this browser.");
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(getFinderCopyText(latestFinderReport));
+    setFinderCopyStatus("Recommendation copied.");
+    trackEvent("filter_finder_recommendation_copied", {
+      normalized_filter_size: latestFinderReport.normalizedFilterSize || "not_specified",
+      location: latestFinderReport.location,
+      recommended_schedule: latestFinderReport.recommendedSchedule,
+      conditions_count: latestFinderReport.homeConditions.length
+    });
+  } catch (error) {
+    console.warn("Filter Wizard recommendation could not be copied.", error);
+    setFinderCopyStatus("Copy not available on this browser.");
+  }
 });
 
 closeModalButton?.addEventListener("click", closeReservation);
