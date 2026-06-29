@@ -25,6 +25,9 @@ const finderFinalSizeInput = document.querySelector("[data-finder-size-final]");
 const finderEmailInput = document.querySelector("[data-finder-email]");
 const finderResult = document.querySelector("[data-finder-result]");
 const finderResultSize = document.querySelector("[data-finder-result-size]");
+const finderLocationGuidance = document.querySelector("[data-finder-location-guidance]");
+const finderResultSchedule = document.querySelector("[data-finder-result-schedule]");
+const finderEmailNote = document.querySelector("[data-finder-email-note]");
 const finderToPlansButton = document.querySelector("[data-finder-to-plans]");
 const finderToReservationButton = document.querySelector("[data-finder-to-reservation]");
 const countdownEls = document.querySelectorAll("[data-countdown]");
@@ -40,12 +43,15 @@ const fallbackPlan = {
 let selectedPlan = { ...fallbackPlan };
 let countdownViewed = false;
 let finderCurrentStep = 1;
+const finderTotalSteps = 4;
 const finderState = {
   knowsSize: "",
   location: "",
+  conditions: [],
   knownSize: "",
   finalSize: "",
-  email: ""
+  email: "",
+  recommendedSchedule: ""
 };
 
 function trackEvent(eventName, parameters = {}) {
@@ -136,22 +142,23 @@ function scrollToElement(element) {
 
 function updateFinderProgress() {
   if (!finderProgressLabel || !finderProgressBar) return;
-  finderProgressLabel.textContent = `Step ${finderCurrentStep} of 3`;
-  finderProgressBar.style.width = `${(finderCurrentStep / 3) * 100}%`;
+  finderProgressLabel.textContent = `Step ${finderCurrentStep} of ${finderTotalSteps}`;
+  finderProgressBar.style.width = `${(finderCurrentStep / finderTotalSteps) * 100}%`;
 }
 
 function showFinderStep(step) {
-  finderCurrentStep = Math.min(3, Math.max(1, step));
+  finderCurrentStep = Math.min(finderTotalSteps, Math.max(1, step));
 
   finderSteps.forEach((stepEl) => {
     const isActive = Number(stepEl.dataset.finderStep) === finderCurrentStep;
     stepEl.hidden = !isActive;
     stepEl.classList.toggle("is-active", isActive);
+    clearFinderError(stepEl);
   });
 
   if (finderBackButton) finderBackButton.hidden = finderCurrentStep === 1;
-  if (finderNextButton) finderNextButton.hidden = finderCurrentStep === 3;
-  if (finderCompleteButton) finderCompleteButton.hidden = finderCurrentStep !== 3;
+  if (finderNextButton) finderNextButton.hidden = finderCurrentStep === finderTotalSteps;
+  if (finderCompleteButton) finderCompleteButton.hidden = finderCurrentStep !== finderTotalSteps;
   updateFinderProgress();
 }
 
@@ -170,6 +177,12 @@ function setFinderOption(button) {
   const group = button.dataset.finderOption;
   const value = button.dataset.value;
 
+  if (group === "conditions") {
+    updateFinderConditions(button, value);
+    clearFinderError(button.closest("[data-finder-step]"));
+    return;
+  }
+
   finderState[group] = value;
   document.querySelectorAll(`[data-finder-option="${group}"]`).forEach((option) => {
     option.classList.toggle("selected", option === button);
@@ -182,6 +195,8 @@ function setFinderOption(button) {
       setTimeout(() => finderKnownSizeInput?.focus(), 40);
     }
   }
+
+  clearFinderError(button.closest("[data-finder-step]"));
 }
 
 function getFinderSize() {
@@ -190,36 +205,202 @@ function getFinderSize() {
   return finderState.finalSize || finderState.knownSize;
 }
 
-function completeFilterFinder() {
+function updateFinderConditions(button, value) {
+  if (value === "None of these") {
+    finderState.conditions = button.classList.contains("selected") ? [] : ["None of these"];
+  } else {
+    const current = new Set(finderState.conditions.filter((condition) => condition !== "None of these"));
+    if (current.has(value)) {
+      current.delete(value);
+    } else {
+      current.add(value);
+    }
+    finderState.conditions = [...current];
+  }
+
+  document.querySelectorAll('[data-finder-option="conditions"]').forEach((option) => {
+    const selected = finderState.conditions.includes(option.dataset.value);
+    option.classList.toggle("selected", selected);
+    option.setAttribute("aria-pressed", String(selected));
+  });
+}
+
+function getActiveFinderStep() {
+  return document.querySelector(`[data-finder-step="${finderCurrentStep}"]`);
+}
+
+function setFinderError(stepEl, message) {
+  const errorEl = stepEl?.querySelector("[data-finder-error]");
+  if (!errorEl) return;
+  errorEl.textContent = message;
+  errorEl.hidden = false;
+}
+
+function clearFinderError(stepEl) {
+  const errorEl = stepEl?.querySelector("[data-finder-error]");
+  if (!errorEl) return;
+  errorEl.textContent = "";
+  errorEl.hidden = true;
+}
+
+function validateFinderStep(step = finderCurrentStep) {
+  const stepEl = document.querySelector(`[data-finder-step="${step}"]`);
+  clearFinderError(stepEl);
+
+  if (step === 1) {
+    if (!finderState.knowsSize) {
+      setFinderError(stepEl, "Choose one option to continue.");
+      return false;
+    }
+
+    if (finderState.knowsSize === "Yes, I know it" && !finderKnownSizeInput?.value.trim()) {
+      setFinderError(stepEl, "Enter your filter size before continuing.");
+      finderKnownSizeInput?.focus();
+      return false;
+    }
+  }
+
+  if (step === 2 && !finderState.location) {
+    setFinderError(stepEl, "Choose where your filter is located.");
+    return false;
+  }
+
+  if (step === 4 && finderEmailInput?.value.trim() && !finderEmailInput.validity.valid) {
+    setFinderError(stepEl, "Enter a valid email address or leave it blank.");
+    finderEmailInput.focus();
+    return false;
+  }
+
+  return true;
+}
+
+function getFinderStepName(step) {
+  const names = {
+    1: "filter_size",
+    2: "filter_location",
+    3: "home_conditions",
+    4: "result_email"
+  };
+  return names[step] || `step_${step}`;
+}
+
+function trackFinderStepCompleted(step) {
+  trackEvent("filter_finder_step_completed", {
+    step_number: step,
+    step_name: getFinderStepName(step)
+  });
+}
+
+function getLocationGuidance(location) {
+  const guidance = {
+    "Ceiling return vent": "Check the edge of the filter behind your ceiling return grille. The size is usually printed on the cardboard frame.",
+    "Wall return vent": "Open the wall return grille and check the cardboard edge of the filter for printed dimensions like 20x25x1.",
+    "Furnace or air handler": "Look near the blower compartment or filter slot beside the furnace or air handler. The size is usually printed on the filter frame.",
+    "I'm not sure": "Look for a large return grille inside your home or a filter slot near your HVAC unit. The filter size is usually printed on the cardboard edge."
+  };
+  return guidance[location] || guidance["I'm not sure"];
+}
+
+function getRecommendedSchedule() {
+  const conditions = finderState.conditions;
+  if (conditions.some((condition) => ["Pets", "Allergies", "Heavy dust"].includes(condition))) {
+    return "Every 30-60 days";
+  }
+  if (conditions.length === 1 && conditions.includes("Kids at home")) {
+    return "Every 60-90 days";
+  }
+  if (conditions.includes("None of these")) {
+    return "Every 90 days";
+  }
+  return "Every 60-90 days";
+}
+
+async function submitFinderEmail(result) {
+  if (!reservationForm || !result.email) return true;
+
+  const formData = new FormData();
+  formData.set("_subject", "New Filter Wizard filter finder result");
+  formData.set("source", "Filter Finder");
+  formData.set("email", result.email);
+  formData.set("knownSizeStatus", result.knowsSize);
+  formData.set("enteredFilterSize", result.filterSize);
+  formData.set("filterLocation", result.location);
+  formData.set("homeConditions", result.homeConditions.join(", ") || "Not specified");
+  formData.set("recommendedSchedule", result.recommendedSchedule);
+  formData.set("submittedAt", result.submittedAt);
+
+  try {
+    await postToFormspree(reservationForm, formData);
+    return true;
+  } catch (error) {
+    console.error("Filter Wizard finder email submission error:", error);
+    return false;
+  }
+}
+
+async function completeFilterFinder() {
+  if (!validateFinderStep(finderCurrentStep)) return;
+
+  trackFinderStepCompleted(finderCurrentStep);
+
   const foundSize = getFinderSize();
   finderState.email = finderEmailInput?.value.trim() || "";
+  finderState.recommendedSchedule = getRecommendedSchedule();
 
   if (finderResultSize) {
     finderResultSize.textContent = foundSize
-      ? `Likely filter size: ${foundSize}`
-      : "We recommend checking the printed size on your current filter's cardboard edge before ordering.";
+      ? foundSize
+      : "Check before ordering";
   }
+
+  if (finderLocationGuidance) {
+    finderLocationGuidance.textContent = getLocationGuidance(finderState.location);
+  }
+
+  if (finderResultSchedule) {
+    finderResultSchedule.textContent = finderState.recommendedSchedule;
+  }
+
+  if (finderEmailNote) finderEmailNote.hidden = true;
 
   const result = {
     knowsSize: finderState.knowsSize || "Not answered",
     location: finderState.location || "Not answered",
     filterSize: foundSize || "Not specified",
+    homeConditions: [...finderState.conditions],
+    recommendedSchedule: finderState.recommendedSchedule,
     email: finderState.email || "",
     submittedAt: new Date().toISOString()
   };
 
   saveFinderResult(result);
 
-  if (finderState.email) {
+  const shouldSubmitEmail = Boolean(finderState.email);
+
+  if (shouldSubmitEmail) {
     trackEvent("filter_finder_email_entered");
   }
 
-  trackEvent("filter_finder_completed");
-  trackEvent("filter_finder_result_viewed");
+  trackEvent("filter_finder_completed", {
+    knows_size: finderState.knowsSize,
+    location: finderState.location,
+    has_email: Boolean(finderState.email),
+    recommended_schedule: finderState.recommendedSchedule
+  });
+  trackEvent("filter_finder_result_viewed", {
+    recommended_schedule: finderState.recommendedSchedule
+  });
 
   if (finderQuiz) finderQuiz.hidden = true;
   if (finderResult) finderResult.hidden = false;
   scrollToElement(finderResult || filterFinder);
+
+  if (shouldSubmitEmail) {
+    const emailSubmitted = await submitFinderEmail(result);
+    if (!emailSubmitted && finderEmailNote) {
+      finderEmailNote.hidden = false;
+    }
+  }
 }
 
 function getCountdownEnd() {
@@ -466,7 +647,17 @@ document.querySelectorAll("[data-finder-option]").forEach((button) => {
   button.addEventListener("click", () => setFinderOption(button));
 });
 
+finderKnownSizeInput?.addEventListener("input", () => {
+  clearFinderError(document.querySelector('[data-finder-step="1"]'));
+});
+
+finderEmailInput?.addEventListener("input", () => {
+  clearFinderError(document.querySelector('[data-finder-step="4"]'));
+});
+
 finderNextButton?.addEventListener("click", () => {
+  if (!validateFinderStep(finderCurrentStep)) return;
+  trackFinderStepCompleted(finderCurrentStep);
   showFinderStep(finderCurrentStep + 1);
 });
 

@@ -823,7 +823,7 @@ input:focus-visible {
 
 .finder-progress-track span {
   display: block;
-  width: 33.333%;
+  width: 25%;
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(135deg, var(--blue), var(--green));
@@ -844,6 +844,10 @@ input:focus-visible {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+}
+
+.finder-options-multi {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .finder-option {
@@ -890,6 +894,32 @@ input:focus-visible {
   font-weight: 750;
 }
 
+.finder-error,
+.finder-email-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.finder-error {
+  color: #9f2f2f;
+  border: 1px solid #f0b4b4;
+  background: #fff0f0;
+}
+
+.finder-email-note {
+  color: #76520c;
+  border: 1px solid rgba(242, 139, 46, 0.28);
+  background: #fff8ed;
+}
+
+.finder-error[hidden],
+.finder-email-note[hidden] {
+  display: none !important;
+}
+
 .finder-actions,
 .finder-result-actions {
   display: flex;
@@ -913,6 +943,14 @@ input:focus-visible {
   color: var(--green-dark);
   font-size: 1.1rem;
   font-weight: 900;
+}
+
+.finder-result-primary span,
+.finder-result-block [data-finder-result-schedule] {
+  display: block;
+  margin-top: 6px;
+  font-size: clamp(1.55rem, 3vw, 2.15rem);
+  line-height: 1.08;
 }
 
 .finder-schedule-grid {
