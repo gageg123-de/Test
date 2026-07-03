@@ -59,8 +59,8 @@ const countdownKey = "filterWizardFounderOfferEndsAt";
 const fallbackPlan = {
   plan: "Plus",
   regular: "$39.99 / month",
-  founder: "$19.99 / month",
-  savings: "You save $20"
+  founder: "$14.99 / month",
+  savings: "You save $25"
 };
 let selectedPlan = { ...fallbackPlan };
 let countdownViewed = false;
@@ -85,8 +85,10 @@ let finderCompleted = false;
 let finderAbandonedTracked = false;
 let reservationModalOpened = false;
 let reservationSubmitted = false;
+let previouslyFocusedElement = null;
 let pricingViewedTracked = false;
 let exitAssistShown = false;
+let finderEmailEnteredTracked = false;
 
 const commonFilterSizes = [
   "10x20x1",
@@ -549,6 +551,12 @@ async function submitFinderEmail(result) {
 
   try {
     await postToFormspree(reservationForm, formData);
+    trackEvent("filter_finder_email_submitted", {
+      recommended_schedule: result.recommendedSchedule,
+      recommended_filter_type: result.recommendedFilterType,
+      match_score: result.matchScore,
+      location: result.location
+    });
     return true;
   } catch (error) {
     console.error("Filter Wizard finder email submission error:", error);
@@ -594,10 +602,6 @@ async function completeFilterFinder() {
 
   const shouldSubmitEmail = Boolean(finderState.email);
 
-  if (shouldSubmitEmail) {
-    trackEvent("filter_finder_email_entered");
-  }
-
   trackEvent("filter_finder_completed", {
     knows_size: finderState.knowsSize,
     location: finderState.location,
@@ -613,6 +617,13 @@ async function completeFilterFinder() {
     recommended_filter_type: result.recommendedFilterType,
     conditions_count: result.homeConditions.length,
     match_score: result.matchScore
+  });
+  trackEvent("filter_finder_recommendation_generated", {
+    filter_size_known: Boolean(result.normalizedFilterSize),
+    recommended_schedule: result.recommendedSchedule,
+    recommended_filter_type: result.recommendedFilterType,
+    match_score: result.matchScore,
+    location: result.location
   });
 
   finderCompleted = true;
@@ -703,10 +714,12 @@ function setSelectedPlan(plan) {
   document.querySelector("[data-plan-field]").value = selectedPlan.plan;
   document.querySelector("[data-regular-field]").value = selectedPlan.regular;
   document.querySelector("[data-founder-field]").value = selectedPlan.founder;
+  document.querySelector("[data-savings-field]").value = selectedPlan.savings;
 }
 
 function openReservation(plan = fallbackPlan) {
   setSelectedPlan(plan);
+  previouslyFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   reservationModalOpened = true;
   reservationSubmitted = false;
   if (exitAssist) {
@@ -749,6 +762,11 @@ function closeReservation() {
       plan_name: selectedPlan.plan
     });
   }
+
+  if (wasOpen && previouslyFocusedElement?.isConnected) {
+    previouslyFocusedElement.focus();
+  }
+  previouslyFocusedElement = null;
 }
 
 window.closeReservation = closeReservation;
@@ -772,6 +790,38 @@ function setFormMessage(form, type, message = "") {
 
   if (successMessage) successMessage.hidden = true;
   if (errorMessage) errorMessage.hidden = true;
+}
+
+function isReservationOpen() {
+  return Boolean(modalBackdrop && !modalBackdrop.hidden);
+}
+
+function getModalFocusableElements() {
+  if (!modalBackdrop) return [];
+  return Array.from(modalBackdrop.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter((element) => element.offsetParent !== null);
+}
+
+function trapModalFocus(event) {
+  if (!isReservationOpen() || event.key !== "Tab") return;
+
+  const focusableElements = getModalFocusableElements();
+  if (!focusableElements.length) return;
+
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+
+  if (event.shiftKey && document.activeElement === firstElement) {
+    event.preventDefault();
+    lastElement.focus();
+    return;
+  }
+
+  if (!event.shiftKey && document.activeElement === lastElement) {
+    event.preventDefault();
+    firstElement.focus();
+  }
 }
 
 async function postToFormspree(form, formData) {
@@ -826,10 +876,16 @@ async function handleReservationSubmit(event) {
     console.log("Filter Wizard subscription interest:", reservation);
     trackEvent("generate_lead", {
       form_location: "reservation_modal",
-      plan_name: selectedPlan.plan
+      plan_name: selectedPlan.plan,
+      founder_price: selectedPlan.founder,
+      regular_price: selectedPlan.regular,
+      savings: selectedPlan.savings
     });
     trackEvent("subscription_interest_confirmed", {
-      plan_name: selectedPlan.plan
+      plan_name: selectedPlan.plan,
+      founder_price: selectedPlan.founder,
+      regular_price: selectedPlan.regular,
+      savings: selectedPlan.savings
     });
     reservationSubmitted = true;
     reservationForm.hidden = true;
@@ -874,6 +930,7 @@ function renderSizeSuggestions(input) {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = size;
+    button.setAttribute("aria-label", `Use filter size ${size}`);
     button.addEventListener("click", () => {
       input.value = size;
       hideSizeSuggestions(container);
@@ -885,13 +942,57 @@ function renderSizeSuggestions(input) {
   container.hidden = false;
 }
 
+function getSuggestionButtons(container) {
+  return Array.from(container?.querySelectorAll("button") || []);
+}
+
+function moveSuggestionFocus(container, direction) {
+  const buttons = getSuggestionButtons(container);
+  if (!buttons.length) return;
+
+  const currentIndex = buttons.indexOf(document.activeElement);
+  const nextIndex = currentIndex === -1
+    ? 0
+    : (currentIndex + direction + buttons.length) % buttons.length;
+  buttons[nextIndex].focus();
+}
+
 function setupSizeAutocomplete() {
   sizeAutocompleteInputs.forEach((input) => {
+    const container = input.parentElement?.querySelector("[data-size-suggestions]");
+
     input.addEventListener("input", () => renderSizeSuggestions(input));
     input.addEventListener("focus", () => renderSizeSuggestions(input));
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        hideSizeSuggestions(container);
+        return;
+      }
+
+      if (event.key === "ArrowDown") {
+        renderSizeSuggestions(input);
+        if (!container?.hidden) {
+          event.preventDefault();
+          moveSuggestionFocus(container, 1);
+        }
+      }
+    });
     input.addEventListener("blur", () => {
-      const container = input.parentElement?.querySelector("[data-size-suggestions]");
       window.setTimeout(() => hideSizeSuggestions(container), 140);
+    });
+
+    container?.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        hideSizeSuggestions(container);
+        input.focus();
+        return;
+      }
+
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        moveSuggestionFocus(container, event.key === "ArrowDown" ? 1 : -1);
+      }
     });
   });
 }
@@ -945,15 +1046,22 @@ function setupFinderAbandonTracking() {
 
 function setupFaqTracking() {
   faqItems.forEach((item) => {
+    const summary = item.querySelector("summary");
+    summary?.setAttribute("aria-expanded", String(item.open));
+
     item.addEventListener("toggle", () => {
+      summary?.setAttribute("aria-expanded", String(item.open));
       if (!item.open) return;
 
       faqItems.forEach((otherItem) => {
-        if (otherItem !== item) otherItem.open = false;
+        if (otherItem !== item) {
+          otherItem.open = false;
+          otherItem.querySelector("summary")?.setAttribute("aria-expanded", "false");
+        }
       });
 
       trackEvent("faq_opened", {
-        question: item.querySelector("summary")?.textContent.trim() || "Unknown question"
+        question: summary?.textContent.trim() || "Unknown question"
       });
     });
   });
@@ -1067,7 +1175,10 @@ planButtons.forEach((button) => {
       savings: button.dataset.savings
     };
     trackEvent("plan_selected", {
-      plan_name: plan.plan
+      plan_name: plan.plan,
+      founder_price: plan.founder,
+      regular_price: plan.regular,
+      savings: plan.savings
     });
     openReservation(plan);
   });
@@ -1092,6 +1203,10 @@ finderKnownSizeInput?.addEventListener("input", () => {
 
 finderEmailInput?.addEventListener("input", () => {
   clearFinderError(document.querySelector('[data-finder-step="4"]'));
+  if (!finderEmailEnteredTracked && finderEmailInput.value.trim()) {
+    finderEmailEnteredTracked = true;
+    trackEvent("filter_finder_email_entered");
+  }
 });
 
 finderNextButton?.addEventListener("click", () => {
@@ -1150,6 +1265,8 @@ modalBackdrop.addEventListener("click", function(event) {
 });
 
 document.addEventListener("keydown", function(event) {
+  trapModalFocus(event);
+
   if (event.key === "Escape") {
     if (navMenu?.classList.contains("open")) closeNav();
     closeReservation();
