@@ -706,6 +706,7 @@ function trackCountdownViewed() {
 }
 
 function setSelectedPlan(plan) {
+  if (!document.querySelector("[data-selected-plan]")) return;
   selectedPlan = { ...fallbackPlan, ...plan };
   document.querySelector("[data-selected-plan]").textContent = selectedPlan.plan;
   document.querySelector("[data-selected-regular]").textContent = selectedPlan.regular;
@@ -718,6 +719,11 @@ function setSelectedPlan(plan) {
 }
 
 function openReservation(plan = fallbackPlan) {
+  if (!modalBackdrop || !reservationForm || !document.querySelector("[data-selected-plan]")) {
+    scrollToElement(document.querySelector("#early-access"));
+    return;
+  }
+
   setSelectedPlan(plan);
   previouslyFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   reservationModalOpened = true;
@@ -850,43 +856,51 @@ async function handleReservationSubmit(event) {
   const submitButton = reservationForm.querySelector(".form-submit");
   const submittedAt = new Date().toISOString();
   const email = String(formData.get("email") || "").trim();
+  const hasPlanFields = Boolean(reservationForm.querySelector("[data-plan-field]"));
 
   formData.set("submittedAt", submittedAt);
-  formData.set("selectedPlan", selectedPlan.plan);
-  formData.set("plannedRegularPrice", selectedPlan.regular);
-  formData.set("founderPrice", selectedPlan.founder);
-  formData.set("founderSavings", selectedPlan.savings);
+  if (hasPlanFields) {
+    formData.set("selectedPlan", selectedPlan.plan);
+    formData.set("plannedRegularPrice", selectedPlan.regular);
+    formData.set("founderPrice", selectedPlan.founder);
+    formData.set("founderSavings", selectedPlan.savings);
+  }
 
   setFormMessage(reservationForm, "clear");
   submitButton.disabled = true;
-  submitButton.textContent = "Reserving...";
+  submitButton.textContent = "Joining...";
 
   try {
     await postToFormspree(reservationForm, formData);
     const reservation = {
       email,
-      selectedPlan: selectedPlan.plan,
-      plannedRegularPrice: selectedPlan.regular,
-      founderPrice: selectedPlan.founder,
-      founderSavings: selectedPlan.savings,
-      freeShipping: true,
+      source: hasPlanFields ? "Plan Reservation" : "Early Access Form",
       submittedAt
     };
+    if (hasPlanFields) {
+      reservation.selectedPlan = selectedPlan.plan;
+      reservation.plannedRegularPrice = selectedPlan.regular;
+      reservation.founderPrice = selectedPlan.founder;
+      reservation.founderSavings = selectedPlan.savings;
+      reservation.freeShipping = true;
+    }
     saveReservation(reservation);
-    console.log("Filter Wizard subscription interest:", reservation);
+    console.log("Filter Wizard early access signup:", reservation);
     trackEvent("generate_lead", {
-      form_location: "reservation_modal",
-      plan_name: selectedPlan.plan,
-      founder_price: selectedPlan.founder,
-      regular_price: selectedPlan.regular,
-      savings: selectedPlan.savings
+      form_location: hasPlanFields ? "reservation_modal" : "early_access",
+      plan_name: hasPlanFields ? selectedPlan.plan : "not_selected",
+      founder_price: hasPlanFields ? selectedPlan.founder : "not_selected",
+      regular_price: hasPlanFields ? selectedPlan.regular : "not_selected",
+      savings: hasPlanFields ? selectedPlan.savings : "not_selected"
     });
-    trackEvent("subscription_interest_confirmed", {
-      plan_name: selectedPlan.plan,
-      founder_price: selectedPlan.founder,
-      regular_price: selectedPlan.regular,
-      savings: selectedPlan.savings
-    });
+    if (hasPlanFields) {
+      trackEvent("subscription_interest_confirmed", {
+        plan_name: selectedPlan.plan,
+        founder_price: selectedPlan.founder,
+        regular_price: selectedPlan.regular,
+        savings: selectedPlan.savings
+      });
+    }
     reservationSubmitted = true;
     reservationForm.hidden = true;
     reservationSuccess.hidden = false;
@@ -896,7 +910,7 @@ async function handleReservationSubmit(event) {
     setFormMessage(reservationForm, "error", "Something went wrong while reserving your plan. Please try again in a moment.");
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = "Reserve My Plan";
+    submitButton.textContent = hasPlanFields ? "Reserve My Plan" : "Get Early Access";
   }
 }
 
@@ -1134,14 +1148,11 @@ function setupExitAssist() {
 
 setHeaderState();
 setupRevealAnimations();
-setupCountdownTracking();
 setupPricingViewedTracking();
 setupFinderAbandonTracking();
 setupFaqTracking();
 setupSizeAutocomplete();
 setupExitAssist();
-updateCountdown();
-window.setInterval(updateCountdown, 1000);
 window.addEventListener("scroll", setHeaderState, { passive: true });
 
 if (navToggle && navMenu) {
@@ -1162,7 +1173,7 @@ subscriptionCtas.forEach((cta) => {
 
 document.querySelector(".hero-actions [data-subscription-cta]")?.addEventListener("click", () => {
   trackEvent("hero_cta_clicked", {
-    link_text: "Build My Filter Plan"
+    link_text: "Find My Filter"
   });
 });
 
@@ -1227,7 +1238,6 @@ finderToPlansButton?.addEventListener("click", () => {
 
 finderToReservationButton?.addEventListener("click", () => {
   trackEvent("filter_finder_to_reservation_clicked");
-  openReservation(selectedPlan);
 });
 
 finderCopyButton?.addEventListener("click", async () => {
@@ -1258,7 +1268,7 @@ closeModalButton?.addEventListener("click", closeReservation);
 
 continueBrowsingButton?.addEventListener("click", closeReservation);
 
-modalBackdrop.addEventListener("click", function(event) {
+modalBackdrop?.addEventListener("click", function(event) {
   if (event.target === modalBackdrop) {
     closeReservation();
   }
