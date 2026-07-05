@@ -2,14 +2,7 @@ const header = document.querySelector("[data-header]");
 const navToggle = document.querySelector("[data-nav-toggle]");
 const navMenu = document.querySelector("[data-nav-menu]");
 const navLinks = document.querySelectorAll(".nav-links a, .footer-links a");
-const subscriptionCtas = document.querySelectorAll("[data-subscription-cta]");
-const planButtons = document.querySelectorAll("[data-plan-button]");
-const modalBackdrop = document.querySelector("[data-modal-backdrop]");
-const closeModalButton = document.querySelector("[data-close-modal]");
-const openReservationButtons = document.querySelectorAll("[data-open-reservation]");
-const reservationForm = document.querySelector("[data-reservation-form]");
-const reservationSuccess = document.querySelector("[data-reservation-success]");
-const continueBrowsingButton = document.querySelector("[data-continue-browsing]");
+const heroFinderCta = document.querySelector("[data-hero-finder-cta]");
 const filterFinder = document.querySelector("[data-filter-finder]");
 const finderStartButton = document.querySelector("[data-finder-start]");
 const finderQuiz = document.querySelector("[data-finder-quiz]");
@@ -28,44 +21,26 @@ const finderResultSize = document.querySelector("[data-finder-result-size]");
 const finderLocationGuidance = document.querySelector("[data-finder-location-guidance]");
 const finderResultSchedule = document.querySelector("[data-finder-result-schedule]");
 const finderEmailNote = document.querySelector("[data-finder-email-note]");
-const finderStatusBadge = document.querySelector("[data-finder-status-badge]");
 const finderSizeStatus = document.querySelector("[data-finder-size-status]");
-const finderAnswerPills = document.querySelector("[data-finder-answer-pills]");
-const finderGuidanceLabel = document.querySelector("[data-finder-guidance-label]");
-const finderGuidanceShort = document.querySelector("[data-finder-guidance-short]");
-const finderCopyButton = document.querySelector("[data-finder-copy]");
-const finderCopyStatus = document.querySelector("[data-finder-copy-status]");
-const finderToPlansButton = document.querySelector("[data-finder-to-plans]");
-const finderToReservationButton = document.querySelector("[data-finder-to-reservation]");
-const finderMatchScore = document.querySelector("[data-finder-match-score]");
-const finderMatchBar = document.querySelector("[data-finder-match-bar]");
 const finderMerv = document.querySelector("[data-finder-merv]");
 const finderMervCopy = document.querySelector("[data-finder-merv-copy]");
 const finderMonths = document.querySelector("[data-finder-months]");
-const finderReminderCount = document.querySelector("[data-finder-reminder-count]");
-const faqItems = document.querySelectorAll("[data-faq-item]");
-const pricingSection = document.querySelector("#plans");
-const pricingCards = document.querySelectorAll(".pricing-card");
+const finderCopyButton = document.querySelector("[data-finder-copy]");
+const finderCopyStatus = document.querySelector("[data-finder-copy-status]");
 const sizeAutocompleteInputs = document.querySelectorAll("[data-size-autocomplete]");
-const exitAssist = document.querySelector("[data-exit-assist]");
-const exitAssistText = document.querySelector("[data-exit-assist-text]");
-const exitAssistAction = document.querySelector("[data-exit-assist-action]");
-const exitAssistClose = document.querySelector("[data-exit-assist-close]");
-const countdownEls = document.querySelectorAll("[data-countdown]");
-const countdownView = document.querySelector("[data-countdown-view]");
-const storageKey = "filterWizardReservations";
+const resultEmailForm = document.querySelector("[data-result-email-form]");
+const resultEmailInput = document.querySelector("[data-result-email]");
+const resultEmailSuccess = document.querySelector("[data-result-email-success]");
+const earlyAccessForm = document.querySelector("[data-reservation-form]");
+const earlyAccessSuccess = document.querySelector("[data-reservation-success]");
 const finderStorageKey = "filterWizardFinderResults";
-const countdownKey = "filterWizardFounderOfferEndsAt";
-const fallbackPlan = {
-  plan: "Plus",
-  regular: "$39.99 / month",
-  founder: "$14.99 / month",
-  savings: "You save $25"
-};
-let selectedPlan = { ...fallbackPlan };
-let countdownViewed = false;
-let finderCurrentStep = 1;
+const emailStorageKey = "filterWizardEmailSignups";
 const finderTotalSteps = 4;
+
+let finderCurrentStep = 1;
+let finderEmailEnteredTracked = false;
+let latestFinderReport = null;
+
 const finderState = {
   knowsSize: "",
   location: "",
@@ -74,21 +49,8 @@ const finderState = {
   finalSize: "",
   email: "",
   recommendedSchedule: "",
-  normalizedSize: "",
-  recommendedFilterType: "",
-  matchScore: 60,
-  reminderMonths: []
+  normalizedSize: ""
 };
-let latestFinderReport = null;
-let finderStarted = false;
-let finderCompleted = false;
-let finderAbandonedTracked = false;
-let reservationModalOpened = false;
-let reservationSubmitted = false;
-let previouslyFocusedElement = null;
-let pricingViewedTracked = false;
-let exitAssistShown = false;
-let finderEmailEnteredTracked = false;
 
 const commonFilterSizes = [
   "10x20x1",
@@ -122,9 +84,7 @@ function trackEvent(eventName, parameters = {}) {
 }
 
 function setHeaderState() {
-  if (header) {
-    header.classList.toggle("scrolled", window.scrollY > 8);
-  }
+  header?.classList.toggle("scrolled", window.scrollY > 8);
 }
 
 function closeNav() {
@@ -135,11 +95,11 @@ function closeNav() {
 }
 
 function toggleNav() {
-  const isOpen = navToggle.getAttribute("aria-expanded") === "true";
+  const isOpen = navToggle?.getAttribute("aria-expanded") === "true";
   document.body.classList.toggle("nav-open", !isOpen);
-  navMenu.classList.toggle("open", !isOpen);
-  navToggle.setAttribute("aria-expanded", String(!isOpen));
-  navToggle.setAttribute("aria-label", isOpen ? "Open navigation menu" : "Close navigation menu");
+  navMenu?.classList.toggle("open", !isOpen);
+  navToggle?.setAttribute("aria-expanded", String(!isOpen));
+  navToggle?.setAttribute("aria-label", isOpen ? "Open navigation menu" : "Close navigation menu");
 }
 
 function setupRevealAnimations() {
@@ -165,35 +125,6 @@ function setupRevealAnimations() {
   revealItems.forEach((item) => observer.observe(item));
 }
 
-function getStoredReservations() {
-  try {
-    return JSON.parse(localStorage.getItem(storageKey)) || [];
-  } catch (error) {
-    console.warn("Filter Wizard reservations could not be read from localStorage.", error);
-    return [];
-  }
-}
-
-function saveReservation(reservation) {
-  try {
-    const reservations = getStoredReservations();
-    reservations.push(reservation);
-    localStorage.setItem(storageKey, JSON.stringify(reservations));
-  } catch (error) {
-    console.warn("Filter Wizard reservation could not be saved to localStorage.", error);
-  }
-}
-
-function saveFinderResult(result) {
-  try {
-    const results = JSON.parse(localStorage.getItem(finderStorageKey)) || [];
-    results.push(result);
-    localStorage.setItem(finderStorageKey, JSON.stringify(results));
-  } catch (error) {
-    console.warn("Filter Wizard finder result could not be saved to localStorage.", error);
-  }
-}
-
 function scrollToElement(element) {
   element?.scrollIntoView({
     behavior: "smooth",
@@ -201,10 +132,77 @@ function scrollToElement(element) {
   });
 }
 
+function saveToLocalStorage(key, value) {
+  try {
+    const current = JSON.parse(localStorage.getItem(key)) || [];
+    current.push(value);
+    localStorage.setItem(key, JSON.stringify(current));
+  } catch (error) {
+    console.warn("Filter Wizard could not save to localStorage.", error);
+  }
+}
+
+function normalizeFilterSize(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) return "";
+
+  const lowered = trimmed
+    .replace(/[X]/g, "x")
+    .replace(/\s*x\s*/g, "x")
+    .replace(/\s+/g, " ");
+
+  const spaceSeparatedNumbers = lowered.match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/);
+  if (spaceSeparatedNumbers) {
+    return `${spaceSeparatedNumbers[1]}x${spaceSeparatedNumbers[2]}x${spaceSeparatedNumbers[3]}`;
+  }
+
+  return lowered.replace(/\s+/g, "");
+}
+
+function getFinderSize() {
+  finderState.knownSize = finderKnownSizeInput?.value.trim() || "";
+  finderState.finalSize = finderFinalSizeInput?.value.trim() || "";
+  return normalizeFilterSize(finderState.finalSize || finderState.knownSize);
+}
+
+function getFinderStepLabel(step) {
+  const labels = {
+    1: "Filter Size",
+    2: "Location",
+    3: "Home Conditions",
+    4: "Email Result"
+  };
+  return labels[step] || "Finder";
+}
+
+function getFinderStepName(step) {
+  const names = {
+    1: "filter_size",
+    2: "filter_location",
+    3: "home_conditions",
+    4: "email_result"
+  };
+  return names[step] || `step_${step}`;
+}
+
 function updateFinderProgress() {
   if (!finderProgressLabel || !finderProgressBar) return;
   finderProgressLabel.textContent = `Step ${finderCurrentStep} of ${finderTotalSteps} - ${getFinderStepLabel(finderCurrentStep)}`;
   finderProgressBar.style.width = `${(finderCurrentStep / finderTotalSteps) * 100}%`;
+}
+
+function clearFinderError(stepEl) {
+  const errorEl = stepEl?.querySelector("[data-finder-error]");
+  if (!errorEl) return;
+  errorEl.textContent = "";
+  errorEl.hidden = true;
+}
+
+function setFinderError(stepEl, message) {
+  const errorEl = stepEl?.querySelector("[data-finder-error]");
+  if (!errorEl) return;
+  errorEl.textContent = message;
+  errorEl.hidden = false;
 }
 
 function showFinderStep(step) {
@@ -226,7 +224,6 @@ function showFinderStep(step) {
 function startFilterFinder() {
   if (!finderQuiz || !filterFinder) return;
 
-  finderStarted = true;
   finderQuiz.hidden = false;
   finderResult.hidden = true;
   finderResult?.classList.remove("report-visible");
@@ -234,55 +231,6 @@ function startFilterFinder() {
   showFinderStep(1);
   scrollToElement(filterFinder);
   trackEvent("filter_finder_started");
-}
-
-function setFinderOption(button) {
-  const group = button.dataset.finderOption;
-  const value = button.dataset.value;
-
-  if (group === "conditions") {
-    updateFinderConditions(button, value);
-    clearFinderError(button.closest("[data-finder-step]"));
-    return;
-  }
-
-  finderState[group] = value;
-  document.querySelectorAll(`[data-finder-option="${group}"]`).forEach((option) => {
-    option.classList.toggle("selected", option === button);
-    option.setAttribute("aria-pressed", String(option === button));
-  });
-
-  if (group === "knowsSize" && knownSizeField) {
-    knownSizeField.hidden = value !== "Yes, I know it";
-    if (value === "Yes, I know it") {
-      setTimeout(() => finderKnownSizeInput?.focus(), 40);
-    }
-  }
-
-  clearFinderError(button.closest("[data-finder-step]"));
-}
-
-function getFinderSize() {
-  finderState.knownSize = finderKnownSizeInput?.value.trim() || "";
-  finderState.finalSize = finderFinalSizeInput?.value.trim() || "";
-  return normalizeFilterSize(finderState.finalSize || finderState.knownSize);
-}
-
-function normalizeFilterSize(value) {
-  const trimmed = String(value || "").trim();
-  if (!trimmed) return "";
-
-  const lowered = trimmed
-    .replace(/[×X]/g, "x")
-    .replace(/\s*x\s*/g, "x")
-    .replace(/\s+/g, " ");
-
-  const spaceSeparatedNumbers = lowered.match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/);
-  if (spaceSeparatedNumbers) {
-    return `${spaceSeparatedNumbers[1]}x${spaceSeparatedNumbers[2]}x${spaceSeparatedNumbers[3]}`;
-  }
-
-  return lowered.replace(/\s+/g, "");
 }
 
 function updateFinderConditions(button, value) {
@@ -305,22 +253,28 @@ function updateFinderConditions(button, value) {
   });
 }
 
-function getActiveFinderStep() {
-  return document.querySelector(`[data-finder-step="${finderCurrentStep}"]`);
-}
+function setFinderOption(button) {
+  const group = button.dataset.finderOption;
+  const value = button.dataset.value;
 
-function setFinderError(stepEl, message) {
-  const errorEl = stepEl?.querySelector("[data-finder-error]");
-  if (!errorEl) return;
-  errorEl.textContent = message;
-  errorEl.hidden = false;
-}
+  if (group === "conditions") {
+    updateFinderConditions(button, value);
+    return;
+  }
 
-function clearFinderError(stepEl) {
-  const errorEl = stepEl?.querySelector("[data-finder-error]");
-  if (!errorEl) return;
-  errorEl.textContent = "";
-  errorEl.hidden = true;
+  finderState[group] = value;
+  document.querySelectorAll(`[data-finder-option="${group}"]`).forEach((option) => {
+    const selected = option === button;
+    option.classList.toggle("selected", selected);
+    option.setAttribute("aria-pressed", String(selected));
+  });
+
+  if (group === "knowsSize" && knownSizeField) {
+    knownSizeField.hidden = value !== "Yes, I know it";
+    if (value === "Yes, I know it") {
+      setTimeout(() => finderKnownSizeInput?.focus(), 40);
+    }
+  }
 }
 
 function validateFinderStep(step = finderCurrentStep) {
@@ -332,7 +286,6 @@ function validateFinderStep(step = finderCurrentStep) {
       setFinderError(stepEl, "Choose one option to continue.");
       return false;
     }
-
     if (finderState.knowsSize === "Yes, I know it" && !finderKnownSizeInput?.value.trim()) {
       setFinderError(stepEl, "Enter your filter size before continuing.");
       finderKnownSizeInput?.focus();
@@ -354,26 +307,6 @@ function validateFinderStep(step = finderCurrentStep) {
   return true;
 }
 
-function getFinderStepName(step) {
-  const names = {
-    1: "filter_size",
-    2: "filter_location",
-    3: "home_conditions",
-    4: "results"
-  };
-  return names[step] || `step_${step}`;
-}
-
-function getFinderStepLabel(step) {
-  const labels = {
-    1: "Filter Size",
-    2: "Location",
-    3: "Home Conditions",
-    4: "Results"
-  };
-  return labels[step] || "Finder";
-}
-
 function trackFinderStepCompleted(step) {
   trackEvent("filter_finder_step_completed", {
     step_number: step,
@@ -389,97 +322,6 @@ function getLocationGuidance(location) {
     "I'm not sure": "Look for a large return grille inside your home or a filter slot near your HVAC unit. The filter size is usually printed on the cardboard edge."
   };
   return guidance[location] || guidance["I'm not sure"];
-}
-
-function getLocationVisual(location) {
-  const visuals = {
-    "Ceiling return vent": {
-      label: "Ceiling return vent",
-      text: "Start at the ceiling grille and check the filter frame edge."
-    },
-    "Wall return vent": {
-      label: "Wall return vent",
-      text: "Open the wall grille and look for printed dimensions on the filter frame."
-    },
-    "Furnace or air handler": {
-      label: "Furnace or air handler",
-      text: "Check the filter slot near the blower compartment or air handler."
-    },
-    "I'm not sure": {
-      label: "Not sure",
-      text: "Look for a large return grille or a filter slot near your HVAC unit."
-    }
-  };
-  return visuals[location] || visuals["I'm not sure"];
-}
-
-function renderFinderPills(result) {
-  if (!finderAnswerPills) return;
-
-  const conditionPills = result.homeConditions.length
-    ? result.homeConditions
-    : ["Standard home conditions"];
-  const pills = [
-    result.knowsSize,
-    result.location,
-    ...conditionPills
-  ].filter(Boolean);
-
-  finderAnswerPills.innerHTML = "";
-  pills.forEach((pill) => {
-    const item = document.createElement("span");
-    item.textContent = `✓ ${pill}`;
-    finderAnswerPills.appendChild(item);
-  });
-}
-
-function renderFinderReport(result) {
-  const hasSize = result.filterSize !== "Check before ordering";
-  const statusText = hasSize ? "✓ Likely Match" : "Size Confirmation Needed";
-  const locationVisual = getLocationVisual(result.location);
-
-  if (finderResultSize) finderResultSize.textContent = result.filterSize;
-  if (finderStatusBadge) {
-    finderStatusBadge.textContent = statusText;
-    finderStatusBadge.classList.toggle("needs-confirmation", !hasSize);
-  }
-  if (finderSizeStatus) finderSizeStatus.textContent = hasSize ? "Likely Match" : "Size confirmation needed";
-  if (finderLocationGuidance) finderLocationGuidance.textContent = getLocationGuidance(result.location);
-  if (finderResultSchedule) finderResultSchedule.textContent = result.recommendedSchedule;
-  if (finderMatchScore) finderMatchScore.textContent = `${result.matchScore}%`;
-  if (finderMatchBar) finderMatchBar.style.width = `${result.matchScore}%`;
-  if (finderMerv) finderMerv.textContent = result.recommendedFilterType;
-  if (finderMervCopy) finderMervCopy.textContent = result.recommendedFilterCopy;
-  if (finderMonths) {
-    finderMonths.innerHTML = "";
-    result.reminderMonths.forEach((month) => {
-      const item = document.createElement("span");
-      item.textContent = month;
-      finderMonths.appendChild(item);
-    });
-  }
-  if (finderReminderCount) finderReminderCount.textContent = String(result.reminderMonths.length);
-  if (finderGuidanceLabel) finderGuidanceLabel.textContent = locationVisual.label;
-  if (finderGuidanceShort) finderGuidanceShort.textContent = locationVisual.text;
-  renderFinderPills(result);
-}
-
-function getFinderCopyText(result) {
-  return [
-    "Filter Wizard Report",
-    `Filter size: ${result.filterSize}`,
-    `Location: ${result.location}`,
-    `Home conditions: ${result.homeConditions.length ? result.homeConditions.join(", ") : "Standard home conditions"}`,
-    `Recommended schedule: ${result.recommendedSchedule}`,
-    `Recommended filter type: ${result.recommendedFilterType}`,
-    `Estimated reminders: ${result.reminderMonths.join(", ")}`
-  ].join("\n");
-}
-
-function setFinderCopyStatus(message) {
-  if (!finderCopyStatus) return;
-  finderCopyStatus.textContent = message;
-  finderCopyStatus.hidden = false;
 }
 
 function getRecommendedSchedule() {
@@ -525,309 +367,43 @@ function getReminderMonths(schedule) {
   return Array.from({ length: count }, (_, index) => monthNames[(startMonth + index * interval) % 12]);
 }
 
-function getMatchScore(size, location) {
-  if (size && location) return 94;
-  if (size && !location) return 88;
-  if (!size && location) return 72;
-  return 60;
-}
+function renderFinderReport(result) {
+  const hasSize = result.filterSize !== "Check before ordering";
 
-async function submitFinderEmail(result) {
-  if (!reservationForm || !result.email) return true;
-
-  const formData = new FormData();
-  formData.set("_subject", "New Filter Wizard filter finder result");
-  formData.set("source", "Filter Finder");
-  formData.set("email", result.email);
-  formData.set("knownSizeStatus", result.knowsSize);
-  formData.set("enteredFilterSize", result.filterSize);
-  formData.set("filterLocation", result.location);
-  formData.set("homeConditions", result.homeConditions.join(", ") || "Not specified");
-  formData.set("recommendedSchedule", result.recommendedSchedule);
-  formData.set("recommendedFilterType", result.recommendedFilterType);
-  formData.set("estimatedReminderMonths", result.reminderMonths.join(", "));
-  formData.set("filterMatchScore", `${result.matchScore}%`);
-  formData.set("submittedAt", result.submittedAt);
-
-  try {
-    await postToFormspree(reservationForm, formData);
-    trackEvent("filter_finder_email_submitted", {
-      recommended_schedule: result.recommendedSchedule,
-      recommended_filter_type: result.recommendedFilterType,
-      match_score: result.matchScore,
-      location: result.location
-    });
-    return true;
-  } catch (error) {
-    console.error("Filter Wizard finder email submission error:", error);
-    return false;
-  }
-}
-
-async function completeFilterFinder() {
-  if (!validateFinderStep(finderCurrentStep)) return;
-
-  trackFinderStepCompleted(finderCurrentStep);
-
-  const foundSize = getFinderSize();
-  finderState.email = finderEmailInput?.value.trim() || "";
-  finderState.recommendedSchedule = getRecommendedSchedule();
-  finderState.normalizedSize = foundSize;
-  const filterType = getRecommendedFilterType();
-  finderState.recommendedFilterType = filterType.type;
-  finderState.matchScore = getMatchScore(foundSize, finderState.location);
-  finderState.reminderMonths = getReminderMonths(finderState.recommendedSchedule);
-
-  if (finderEmailNote) finderEmailNote.hidden = true;
-  if (finderCopyStatus) finderCopyStatus.hidden = true;
-
-  const result = {
-    knowsSize: finderState.knowsSize || "Not answered",
-    location: finderState.location || "Not answered",
-    filterSize: foundSize || "Check before ordering",
-    homeConditions: [...finderState.conditions],
-    recommendedSchedule: finderState.recommendedSchedule,
-    recommendedFilterType: filterType.type,
-    recommendedFilterCopy: filterType.copy,
-    reminderMonths: [...finderState.reminderMonths],
-    matchScore: finderState.matchScore,
-    normalizedFilterSize: foundSize || "",
-    email: finderState.email || "",
-    submittedAt: new Date().toISOString()
-  };
-
-  latestFinderReport = result;
-  renderFinderReport(result);
-  saveFinderResult(result);
-
-  const shouldSubmitEmail = Boolean(finderState.email);
-
-  trackEvent("filter_finder_completed", {
-    knows_size: finderState.knowsSize,
-    location: finderState.location,
-    has_email: Boolean(finderState.email),
-    recommended_schedule: finderState.recommendedSchedule,
-    recommended_filter_type: result.recommendedFilterType,
-    match_score: result.matchScore
-  });
-  trackEvent("filter_finder_result_viewed", {
-    normalized_filter_size: result.normalizedFilterSize || "not_specified",
-    location: result.location,
-    recommended_schedule: result.recommendedSchedule,
-    recommended_filter_type: result.recommendedFilterType,
-    conditions_count: result.homeConditions.length,
-    match_score: result.matchScore
-  });
-  trackEvent("filter_finder_recommendation_generated", {
-    filter_size_known: Boolean(result.normalizedFilterSize),
-    recommended_schedule: result.recommendedSchedule,
-    recommended_filter_type: result.recommendedFilterType,
-    match_score: result.matchScore,
-    location: result.location
-  });
-
-  finderCompleted = true;
-  if (finderQuiz) finderQuiz.hidden = true;
-  if (finderResult) {
-    finderResult.hidden = false;
-    window.requestAnimationFrame(() => {
-      finderResult.classList.add("report-visible");
+  if (finderResultSize) finderResultSize.textContent = result.filterSize;
+  if (finderSizeStatus) finderSizeStatus.textContent = hasSize ? "Likely match" : "Confirm size before ordering";
+  if (finderLocationGuidance) finderLocationGuidance.textContent = getLocationGuidance(result.location);
+  if (finderResultSchedule) finderResultSchedule.textContent = result.recommendedSchedule;
+  if (finderMerv) finderMerv.textContent = result.recommendedFilterType;
+  if (finderMervCopy) finderMervCopy.textContent = result.recommendedFilterCopy;
+  if (finderMonths) {
+    finderMonths.innerHTML = "";
+    result.reminderMonths.forEach((month) => {
+      const item = document.createElement("span");
+      item.textContent = month;
+      finderMonths.appendChild(item);
     });
   }
-  scrollToElement(finderResult || filterFinder);
-
-  if (shouldSubmitEmail) {
-    const emailSubmitted = await submitFinderEmail(result);
-    if (!emailSubmitted && finderEmailNote) {
-      finderEmailNote.hidden = false;
-    }
+  if (resultEmailInput && result.email) {
+    resultEmailInput.value = result.email;
   }
 }
 
-function getCountdownEnd() {
-  const fortyEightHours = 48 * 60 * 60 * 1000;
-  const now = Date.now();
-
-  try {
-    const stored = Number(localStorage.getItem(countdownKey));
-    if (stored && stored > now) return stored;
-
-    const end = now + fortyEightHours;
-    localStorage.setItem(countdownKey, String(end));
-    return end;
-  } catch (error) {
-    return now + fortyEightHours;
-  }
+function getFinderCopyText(result) {
+  return [
+    "Filter Wizard Recommendation",
+    `Filter size: ${result.filterSize}`,
+    `Location: ${result.location}`,
+    `Recommended schedule: ${result.recommendedSchedule}`,
+    `Recommended filter type: ${result.recommendedFilterType}`,
+    `Reminder months: ${result.reminderMonths.join(", ")}`
+  ].join("\n");
 }
 
-const countdownEnd = getCountdownEnd();
-
-function formatTime(ms) {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-  const seconds = String(totalSeconds % 60).padStart(2, "0");
-  return `${hours}:${minutes}:${seconds}`;
-}
-
-function updateCountdown() {
-  const remaining = countdownEnd - Date.now();
-  const display = remaining > 0 ? formatTime(remaining) : "Founder spots still open";
-  countdownEls.forEach((el) => {
-    el.textContent = display;
-  });
-}
-
-function setupCountdownTracking() {
-  if (!countdownView || !("IntersectionObserver" in window)) {
-    trackCountdownViewed();
-    return;
-  }
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          trackCountdownViewed();
-          observer.disconnect();
-        }
-      });
-    },
-    { threshold: 0.35 }
-  );
-
-  observer.observe(countdownView);
-}
-
-function trackCountdownViewed() {
-  if (countdownViewed) return;
-  countdownViewed = true;
-  trackEvent("founder_countdown_viewed");
-}
-
-function setSelectedPlan(plan) {
-  if (!document.querySelector("[data-selected-plan]")) return;
-  selectedPlan = { ...fallbackPlan, ...plan };
-  document.querySelector("[data-selected-plan]").textContent = selectedPlan.plan;
-  document.querySelector("[data-selected-regular]").textContent = selectedPlan.regular;
-  document.querySelector("[data-selected-founder]").textContent = selectedPlan.founder;
-  document.querySelector("[data-selected-savings]").textContent = selectedPlan.savings;
-  document.querySelector("[data-plan-field]").value = selectedPlan.plan;
-  document.querySelector("[data-regular-field]").value = selectedPlan.regular;
-  document.querySelector("[data-founder-field]").value = selectedPlan.founder;
-  document.querySelector("[data-savings-field]").value = selectedPlan.savings;
-}
-
-function openReservation(plan = fallbackPlan) {
-  if (!modalBackdrop || !reservationForm || !document.querySelector("[data-selected-plan]")) {
-    scrollToElement(document.querySelector("#early-access"));
-    return;
-  }
-
-  setSelectedPlan(plan);
-  previouslyFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  reservationModalOpened = true;
-  reservationSubmitted = false;
-  if (exitAssist) {
-    exitAssist.classList.remove("visible");
-    exitAssist.hidden = true;
-  }
-
-  modalBackdrop.hidden = false;
-  modalBackdrop.style.display = "grid";
-  modalBackdrop.classList.remove("closing");
-
-  reservationSuccess.hidden = true;
-  reservationForm.hidden = false;
-
-  setFormMessage(reservationForm, "clear");
-  document.body.classList.add("modal-open");
-  document.documentElement.classList.add("modal-open");
-
-  setTimeout(() => {
-    reservationForm?.querySelector("input[name='email']")?.focus();
-  }, 50);
-
-  trackEvent("reservation_started", {
-    plan_name: plan.plan
-  });
-}
-
-function closeReservation() {
-  if (!modalBackdrop) return;
-
-  const wasOpen = !modalBackdrop.hidden;
-  modalBackdrop.classList.remove("closing");
-  modalBackdrop.hidden = true;
-  modalBackdrop.style.display = "none";
-  document.body.classList.remove("modal-open");
-  document.documentElement.classList.remove("modal-open");
-
-  if (wasOpen && !reservationSubmitted) {
-    trackEvent("reservation_modal_closed", {
-      plan_name: selectedPlan.plan
-    });
-  }
-
-  if (wasOpen && previouslyFocusedElement?.isConnected) {
-    previouslyFocusedElement.focus();
-  }
-  previouslyFocusedElement = null;
-}
-
-window.closeReservation = closeReservation;
-
-function setFormMessage(form, type, message = "") {
-  const successMessage = form.querySelector("[data-form-success]");
-  const errorMessage = form.querySelector("[data-form-error]");
-
-  if (type === "success") {
-    if (successMessage) successMessage.hidden = false;
-    if (errorMessage) errorMessage.hidden = true;
-    return;
-  }
-
-  if (type === "error") {
-    if (message && errorMessage) errorMessage.textContent = message;
-    if (errorMessage) errorMessage.hidden = false;
-    if (successMessage) successMessage.hidden = true;
-    return;
-  }
-
-  if (successMessage) successMessage.hidden = true;
-  if (errorMessage) errorMessage.hidden = true;
-}
-
-function isReservationOpen() {
-  return Boolean(modalBackdrop && !modalBackdrop.hidden);
-}
-
-function getModalFocusableElements() {
-  if (!modalBackdrop) return [];
-  return Array.from(modalBackdrop.querySelectorAll(
-    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  )).filter((element) => element.offsetParent !== null);
-}
-
-function trapModalFocus(event) {
-  if (!isReservationOpen() || event.key !== "Tab") return;
-
-  const focusableElements = getModalFocusableElements();
-  if (!focusableElements.length) return;
-
-  const firstElement = focusableElements[0];
-  const lastElement = focusableElements[focusableElements.length - 1];
-
-  if (event.shiftKey && document.activeElement === firstElement) {
-    event.preventDefault();
-    lastElement.focus();
-    return;
-  }
-
-  if (!event.shiftKey && document.activeElement === lastElement) {
-    event.preventDefault();
-    firstElement.focus();
-  }
+function setFinderCopyStatus(message) {
+  if (!finderCopyStatus) return;
+  finderCopyStatus.textContent = message;
+  finderCopyStatus.hidden = false;
 }
 
 async function postToFormspree(form, formData) {
@@ -844,73 +420,153 @@ async function postToFormspree(form, formData) {
   }
 }
 
-async function handleReservationSubmit(event) {
-  event.preventDefault();
+function addResultFields(formData, result) {
+  if (!result) return;
+  formData.set("knownSizeStatus", result.knowsSize);
+  formData.set("enteredFilterSize", result.filterSize);
+  formData.set("filterLocation", result.location);
+  formData.set("homeConditions", result.homeConditions.join(", ") || "Not specified");
+  formData.set("recommendedSchedule", result.recommendedSchedule);
+  formData.set("recommendedFilterType", result.recommendedFilterType);
+  formData.set("estimatedReminderMonths", result.reminderMonths.join(", "));
+}
 
-  if (!reservationForm.checkValidity()) {
-    reservationForm.reportValidity();
+async function submitFinderEmail(result) {
+  if (!result.email) return true;
+
+  const formData = new FormData();
+  formData.set("_subject", "New Filter Wizard filter finder result");
+  formData.set("source", "Filter Finder");
+  formData.set("email", result.email);
+  formData.set("submittedAt", result.submittedAt);
+  addResultFields(formData, result);
+
+  try {
+    await postToFormspree(resultEmailForm || earlyAccessForm, formData);
+    trackEvent("filter_finder_email_submitted", {
+      recommended_schedule: result.recommendedSchedule,
+      recommended_filter_type: result.recommendedFilterType,
+      location: result.location
+    });
+    return true;
+  } catch (error) {
+    console.error("Filter Wizard finder email submission error:", error);
+    return false;
+  }
+}
+
+async function completeFilterFinder() {
+  if (!validateFinderStep(finderCurrentStep)) return;
+
+  trackFinderStepCompleted(finderCurrentStep);
+
+  const foundSize = getFinderSize();
+  const filterType = getRecommendedFilterType();
+  finderState.email = finderEmailInput?.value.trim() || "";
+  finderState.recommendedSchedule = getRecommendedSchedule();
+  finderState.normalizedSize = foundSize;
+
+  if (finderEmailNote) finderEmailNote.hidden = true;
+  if (finderCopyStatus) finderCopyStatus.hidden = true;
+
+  const result = {
+    knowsSize: finderState.knowsSize || "Not answered",
+    location: finderState.location || "Not answered",
+    filterSize: foundSize || "Check before ordering",
+    homeConditions: [...finderState.conditions],
+    recommendedSchedule: finderState.recommendedSchedule,
+    recommendedFilterType: filterType.type,
+    recommendedFilterCopy: filterType.copy,
+    reminderMonths: getReminderMonths(finderState.recommendedSchedule),
+    normalizedFilterSize: foundSize || "",
+    email: finderState.email || "",
+    submittedAt: new Date().toISOString()
+  };
+
+  latestFinderReport = result;
+  renderFinderReport(result);
+  saveToLocalStorage(finderStorageKey, result);
+
+  trackEvent("filter_finder_completed", {
+    knows_size: result.knowsSize,
+    location: result.location,
+    has_email: Boolean(result.email),
+    recommended_schedule: result.recommendedSchedule,
+    recommended_filter_type: result.recommendedFilterType
+  });
+
+  if (finderQuiz) finderQuiz.hidden = true;
+  if (finderResult) {
+    finderResult.hidden = false;
+    window.requestAnimationFrame(() => finderResult.classList.add("report-visible"));
+  }
+  scrollToElement(finderResult || filterFinder);
+
+  if (result.email) {
+    const emailSubmitted = await submitFinderEmail(result);
+    if (!emailSubmitted && finderEmailNote) {
+      finderEmailNote.hidden = false;
+    }
+  }
+}
+
+function setFormMessage(form, message = "") {
+  const errorMessage = form?.querySelector("[data-form-error]");
+  if (!errorMessage) return;
+  errorMessage.textContent = message || errorMessage.textContent;
+  errorMessage.hidden = !message;
+}
+
+async function handleEmailFormSubmit(event, eventName, successElement) {
+  event.preventDefault();
+  const form = event.currentTarget;
+
+  if (!form.checkValidity()) {
+    form.reportValidity();
     return;
   }
 
-  const formData = new FormData(reservationForm);
-  const submitButton = reservationForm.querySelector(".form-submit");
-  const submittedAt = new Date().toISOString();
+  const submitButton = form.querySelector(".form-submit");
+  const originalText = submitButton?.textContent || "Submit";
+  const formData = new FormData(form);
   const email = String(formData.get("email") || "").trim();
-  const hasPlanFields = Boolean(reservationForm.querySelector("[data-plan-field]"));
+  const submittedAt = new Date().toISOString();
 
   formData.set("submittedAt", submittedAt);
-  if (hasPlanFields) {
-    formData.set("selectedPlan", selectedPlan.plan);
-    formData.set("plannedRegularPrice", selectedPlan.regular);
-    formData.set("founderPrice", selectedPlan.founder);
-    formData.set("founderSavings", selectedPlan.savings);
+  addResultFields(formData, latestFinderReport);
+
+  setFormMessage(form);
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = "Sending...";
   }
 
-  setFormMessage(reservationForm, "clear");
-  submitButton.disabled = true;
-  submitButton.textContent = "Joining...";
-
   try {
-    await postToFormspree(reservationForm, formData);
-    const reservation = {
+    await postToFormspree(form, formData);
+    const signup = {
       email,
-      source: hasPlanFields ? "Plan Reservation" : "Early Access Form",
+      source: String(formData.get("source") || "Email Form"),
       submittedAt
     };
-    if (hasPlanFields) {
-      reservation.selectedPlan = selectedPlan.plan;
-      reservation.plannedRegularPrice = selectedPlan.regular;
-      reservation.founderPrice = selectedPlan.founder;
-      reservation.founderSavings = selectedPlan.savings;
-      reservation.freeShipping = true;
-    }
-    saveReservation(reservation);
-    console.log("Filter Wizard early access signup:", reservation);
-    trackEvent("generate_lead", {
-      form_location: hasPlanFields ? "reservation_modal" : "early_access",
-      plan_name: hasPlanFields ? selectedPlan.plan : "not_selected",
-      founder_price: hasPlanFields ? selectedPlan.founder : "not_selected",
-      regular_price: hasPlanFields ? selectedPlan.regular : "not_selected",
-      savings: hasPlanFields ? selectedPlan.savings : "not_selected"
+    saveToLocalStorage(emailStorageKey, signup);
+    trackEvent(eventName, {
+      form_location: String(formData.get("source") || "Email Form"),
+      has_finder_result: Boolean(latestFinderReport)
     });
-    if (hasPlanFields) {
-      trackEvent("subscription_interest_confirmed", {
-        plan_name: selectedPlan.plan,
-        founder_price: selectedPlan.founder,
-        regular_price: selectedPlan.regular,
-        savings: selectedPlan.savings
-      });
-    }
-    reservationSubmitted = true;
-    reservationForm.hidden = true;
-    reservationSuccess.hidden = false;
-    reservationForm.reset();
+    trackEvent("generate_lead", {
+      form_location: String(formData.get("source") || "Email Form")
+    });
+    form.reset();
+    form.hidden = true;
+    if (successElement) successElement.hidden = false;
   } catch (error) {
-    console.error("Filter Wizard reservation submission error:", error);
-    setFormMessage(reservationForm, "error", "Something went wrong while reserving your plan. Please try again in a moment.");
+    console.error("Filter Wizard email submission error:", error);
+    setFormMessage(form, "Something went wrong. Please try again in a moment.");
   } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = hasPlanFields ? "Reserve My Plan" : "Get Early Access";
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = originalText;
+    }
   }
 }
 
@@ -982,7 +638,6 @@ function setupSizeAutocomplete() {
         hideSizeSuggestions(container);
         return;
       }
-
       if (event.key === "ArrowDown") {
         renderSizeSuggestions(input);
         if (!container?.hidden) {
@@ -1002,7 +657,6 @@ function setupSizeAutocomplete() {
         input.focus();
         return;
       }
-
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
         moveSuggestionFocus(container, event.key === "ArrowDown" ? 1 : -1);
@@ -1011,194 +665,18 @@ function setupSizeAutocomplete() {
   });
 }
 
-function setupPricingViewedTracking() {
-  if (!pricingSection || pricingViewedTracked) return;
-
-  if (!("IntersectionObserver" in window)) {
-    pricingViewedTracked = true;
-    trackEvent("pricing_card_viewed", {
-      card_count: pricingCards.length
-    });
-    return;
-  }
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      if (entries.some((entry) => entry.isIntersecting) && !pricingViewedTracked) {
-        pricingViewedTracked = true;
-        trackEvent("pricing_card_viewed", {
-          card_count: pricingCards.length
-        });
-        observer.disconnect();
-      }
-    },
-    { threshold: 0.28 }
-  );
-
-  observer.observe(pricingSection);
-}
-
-function setupFinderAbandonTracking() {
-  if (!filterFinder || !("IntersectionObserver" in window)) return;
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (finderStarted && !finderCompleted && !finderAbandonedTracked && !entry.isIntersecting) {
-          finderAbandonedTracked = true;
-          trackEvent("finder_abandoned", {
-            current_step: finderCurrentStep
-          });
-        }
-      });
-    },
-    { threshold: 0.08 }
-  );
-
-  observer.observe(filterFinder);
-}
-
-function setupFaqTracking() {
-  faqItems.forEach((item) => {
-    const summary = item.querySelector("summary");
-    summary?.setAttribute("aria-expanded", String(item.open));
-
-    item.addEventListener("toggle", () => {
-      summary?.setAttribute("aria-expanded", String(item.open));
-      if (!item.open) return;
-
-      faqItems.forEach((otherItem) => {
-        if (otherItem !== item) {
-          otherItem.open = false;
-          otherItem.querySelector("summary")?.setAttribute("aria-expanded", "false");
-        }
-      });
-
-      trackEvent("faq_opened", {
-        question: summary?.textContent.trim() || "Unknown question"
-      });
-    });
-  });
-}
-
-function exitAssistDismissed() {
-  try {
-    return sessionStorage.getItem("filterWizardExitAssistDismissed") === "true";
-  } catch (error) {
-    return false;
-  }
-}
-
-function dismissExitAssist() {
-  if (!exitAssist) return;
-  exitAssist.classList.remove("visible");
-  exitAssist.hidden = true;
-  try {
-    sessionStorage.setItem("filterWizardExitAssistDismissed", "true");
-  } catch (error) {
-    // Session storage is optional; dismissal still works for this page view.
-  }
-}
-
-function showExitAssist() {
-  if (!exitAssist || exitAssistShown || exitAssistDismissed() || reservationModalOpened) return;
-
-  exitAssistShown = true;
-  if (exitAssistText) {
-    exitAssistText.textContent = finderCompleted
-      ? "Ready to never remember this again?"
-      : "Still not sure what filter you need?";
-  }
-  if (exitAssistAction) {
-    exitAssistAction.textContent = finderCompleted ? "Reserve Founder Pricing" : "Try Free Filter Finder";
-  }
-
-  exitAssist.hidden = false;
-  window.requestAnimationFrame(() => exitAssist.classList.add("visible"));
-  trackEvent("exit_assist_shown", {
-    finder_completed: finderCompleted
-  });
-}
-
-function setupExitAssist() {
-  if (!exitAssist) return;
-
-  window.addEventListener("scroll", () => {
-    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-    if (scrollable <= 0) return;
-    const scrolled = window.scrollY / scrollable;
-    if (scrolled >= 0.8) showExitAssist();
-  }, { passive: true });
-
-  exitAssistClose?.addEventListener("click", dismissExitAssist);
-  exitAssistAction?.addEventListener("click", () => {
-    trackEvent("exit_assist_clicked", {
-      finder_completed: finderCompleted
-    });
-    dismissExitAssist();
-
-    if (finderCompleted) {
-      openReservation(selectedPlan);
-      return;
-    }
-
-    startFilterFinder();
-  });
-}
-
 setHeaderState();
 setupRevealAnimations();
-setupPricingViewedTracking();
-setupFinderAbandonTracking();
-setupFaqTracking();
 setupSizeAutocomplete();
-setupExitAssist();
 window.addEventListener("scroll", setHeaderState, { passive: true });
 
 if (navToggle && navMenu) {
   navToggle.addEventListener("click", toggleNav);
-
-  navLinks.forEach((link) => {
-    link.addEventListener("click", closeNav);
-  });
+  navLinks.forEach((link) => link.addEventListener("click", closeNav));
 }
 
-subscriptionCtas.forEach((cta) => {
-  cta.addEventListener("click", () => {
-    trackEvent("subscription_cta_clicked", {
-      link_text: cta.textContent.trim()
-    });
-  });
-});
-
-document.querySelector(".hero-actions [data-subscription-cta]")?.addEventListener("click", () => {
-  trackEvent("hero_cta_clicked", {
-    link_text: "Find My Filter"
-  });
-});
-
-planButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    const plan = {
-      plan: button.dataset.plan,
-      regular: button.dataset.regular,
-      founder: button.dataset.founder,
-      savings: button.dataset.savings
-    };
-    trackEvent("plan_selected", {
-      plan_name: plan.plan,
-      founder_price: plan.founder,
-      regular_price: plan.regular,
-      savings: plan.savings
-    });
-    openReservation(plan);
-  });
-});
-
-openReservationButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    openReservation(selectedPlan);
-  });
+heroFinderCta?.addEventListener("click", () => {
+  trackEvent("hero_filter_finder_clicked");
 });
 
 finderStartButton?.addEventListener("click", startFilterFinder);
@@ -1232,14 +710,6 @@ finderBackButton?.addEventListener("click", () => {
 
 finderCompleteButton?.addEventListener("click", completeFilterFinder);
 
-finderToPlansButton?.addEventListener("click", () => {
-  trackEvent("filter_finder_to_plans_clicked");
-});
-
-finderToReservationButton?.addEventListener("click", () => {
-  trackEvent("filter_finder_to_reservation_clicked");
-});
-
 finderCopyButton?.addEventListener("click", async () => {
   if (!latestFinderReport) return;
 
@@ -1251,12 +721,9 @@ finderCopyButton?.addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(getFinderCopyText(latestFinderReport));
     setFinderCopyStatus("Recommendation copied.");
-    trackEvent("filter_finder_recommendation_copied", {
-      normalized_filter_size: latestFinderReport.normalizedFilterSize || "not_specified",
-      location: latestFinderReport.location,
+    trackEvent("copy_recommendation_clicked", {
       recommended_schedule: latestFinderReport.recommendedSchedule,
-      recommended_filter_type: latestFinderReport.recommendedFilterType,
-      conditions_count: latestFinderReport.homeConditions.length
+      recommended_filter_type: latestFinderReport.recommendedFilterType
     });
   } catch (error) {
     console.warn("Filter Wizard recommendation could not be copied.", error);
@@ -1264,27 +731,10 @@ finderCopyButton?.addEventListener("click", async () => {
   }
 });
 
-closeModalButton?.addEventListener("click", closeReservation);
-
-continueBrowsingButton?.addEventListener("click", closeReservation);
-
-modalBackdrop?.addEventListener("click", function(event) {
-  if (event.target === modalBackdrop) {
-    closeReservation();
-  }
+resultEmailForm?.addEventListener("submit", (event) => {
+  handleEmailFormSubmit(event, "early_access_submitted", resultEmailSuccess);
 });
 
-document.addEventListener("keydown", function(event) {
-  trapModalFocus(event);
-
-  if (event.key === "Escape") {
-    if (navMenu?.classList.contains("open")) closeNav();
-    closeReservation();
-  }
+earlyAccessForm?.addEventListener("submit", (event) => {
+  handleEmailFormSubmit(event, "early_access_submitted", earlyAccessSuccess);
 });
-
-reservationForm?.addEventListener("input", () => {
-  setFormMessage(reservationForm, "clear");
-});
-
-reservationForm?.addEventListener("submit", handleReservationSubmit);

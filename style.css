@@ -1681,12 +1681,14 @@ input:focus-visible {
   line-height: 1.05;
 }
 
-.reservation-form {
+.reservation-form,
+.result-email-form {
   display: grid;
   gap: 12px;
 }
 
-.reservation-form .form-submit {
+.reservation-form .form-submit,
+.result-email-form .form-submit {
   width: 100%;
 }
 
