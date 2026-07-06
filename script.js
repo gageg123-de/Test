@@ -5,6 +5,9 @@ const navLinks = document.querySelectorAll(".nav-links a, .footer-links a");
 const heroFinderCta = document.querySelector("[data-hero-finder-cta]");
 const filterFinder = document.querySelector("[data-filter-finder]");
 const finderStartButton = document.querySelector("[data-finder-start]");
+const finderModal = document.querySelector("[data-finder-modal]");
+const finderModalCard = document.querySelector(".finder-modal");
+const finderCloseButton = document.querySelector("[data-finder-close]");
 const finderQuiz = document.querySelector("[data-finder-quiz]");
 const finderSteps = document.querySelectorAll("[data-finder-step]");
 const finderBackButton = document.querySelector("[data-finder-back]");
@@ -27,6 +30,11 @@ const finderMervCopy = document.querySelector("[data-finder-merv-copy]");
 const finderMonths = document.querySelector("[data-finder-months]");
 const finderCopyButton = document.querySelector("[data-finder-copy]");
 const finderCopyStatus = document.querySelector("[data-finder-copy-status]");
+const finderSizeTitle = document.querySelector("[data-finder-size-title]");
+const finderAnswerPills = document.querySelector("[data-finder-answer-pills]");
+const finderEmailSkipButton = document.querySelector("[data-finder-email-skip]");
+const finderEmailSkipped = document.querySelector("[data-finder-email-skipped]");
+const finderEarlyAccessButton = document.querySelector("[data-finder-early-access]");
 const sizeAutocompleteInputs = document.querySelectorAll("[data-size-autocomplete]");
 const resultEmailForm = document.querySelector("[data-result-email-form]");
 const resultEmailInput = document.querySelector("[data-result-email]");
@@ -40,6 +48,8 @@ const finderTotalSteps = 4;
 let finderCurrentStep = 1;
 let finderEmailEnteredTracked = false;
 let latestFinderReport = null;
+let finderModalOpener = null;
+let finderCompleted = false;
 
 const finderState = {
   knowsSize: "",
@@ -132,6 +142,85 @@ function scrollToElement(element) {
   });
 }
 
+function getFocusableElements(container) {
+  return Array.from(
+    container?.querySelectorAll(
+      'a[href], button:not([disabled]):not([hidden]), input:not([disabled]):not([hidden]), select:not([disabled]):not([hidden]), textarea:not([disabled]):not([hidden]), [tabindex]:not([tabindex="-1"])'
+    ) || []
+  ).filter((element) => element.offsetParent !== null);
+}
+
+function closeFinderModal(reason = "closed") {
+  if (!finderModal || finderModal.hidden) return;
+
+  const wasCompleted = finderCompleted;
+  finderModal.hidden = true;
+  finderModal.style.display = "none";
+  document.body.classList.remove("modal-open");
+  document.documentElement.classList.remove("modal-open");
+
+  trackEvent("filter_finder_modal_closed", {
+    current_step: finderCurrentStep,
+    completed: wasCompleted,
+    reason
+  });
+
+  if (!wasCompleted) {
+    trackEvent("finder_abandoned", {
+      current_step: finderCurrentStep,
+      knows_size: finderState.knowsSize || "Not answered",
+      completed: false
+    });
+  }
+
+  finderModalOpener?.focus?.();
+}
+
+function openFinderModal(opener = finderStartButton) {
+  if (!finderModal) return;
+
+  finderModalOpener = opener;
+  finderCompleted = false;
+  finderModal.hidden = false;
+  finderModal.style.display = "grid";
+  document.body.classList.add("modal-open");
+  document.documentElement.classList.add("modal-open");
+  trackEvent("filter_finder_modal_opened");
+  resetFinderForModal();
+  startFilterFinder();
+
+  window.setTimeout(() => {
+    const firstInteractive = finderModal.querySelector("[data-finder-option]") || finderModal.querySelector("button, input");
+    firstInteractive?.focus();
+  }, 40);
+}
+
+function resetFinderForModal() {
+  finderState.knowsSize = "";
+  finderState.location = "";
+  finderState.conditions = [];
+  finderState.knownSize = "";
+  finderState.finalSize = "";
+  finderState.email = "";
+  finderState.recommendedSchedule = "";
+  finderState.normalizedSize = "";
+  finderEmailEnteredTracked = false;
+
+  document.querySelectorAll("[data-finder-option]").forEach((option) => {
+    option.classList.remove("selected");
+    option.setAttribute("aria-pressed", "false");
+  });
+  if (knownSizeField) knownSizeField.hidden = true;
+  if (finderKnownSizeInput) finderKnownSizeInput.value = "";
+  if (finderFinalSizeInput) finderFinalSizeInput.value = "";
+  if (resultEmailInput) resultEmailInput.value = "";
+  if (resultEmailForm) resultEmailForm.hidden = false;
+  if (resultEmailSuccess) resultEmailSuccess.hidden = true;
+  if (finderEmailSkipped) finderEmailSkipped.hidden = true;
+  if (finderEmailNote) finderEmailNote.hidden = true;
+  if (finderCopyStatus) finderCopyStatus.hidden = true;
+}
+
 function saveToLocalStorage(key, value) {
   try {
     const current = JSON.parse(localStorage.getItem(key)) || [];
@@ -170,7 +259,7 @@ function getFinderStepLabel(step) {
     1: "Filter Size",
     2: "Location",
     3: "Home Conditions",
-    4: "Email Result"
+    4: "Review"
   };
   return labels[step] || "Finder";
 }
@@ -180,7 +269,7 @@ function getFinderStepName(step) {
     1: "filter_size",
     2: "filter_location",
     3: "home_conditions",
-    4: "email_result"
+    4: "review"
   };
   return names[step] || `step_${step}`;
 }
@@ -222,14 +311,12 @@ function showFinderStep(step) {
 }
 
 function startFilterFinder() {
-  if (!finderQuiz || !filterFinder) return;
+  if (!finderQuiz) return;
 
   finderQuiz.hidden = false;
-  finderResult.hidden = true;
+  if (finderResult) finderResult.hidden = true;
   finderResult?.classList.remove("report-visible");
-  if (finderStartButton) finderStartButton.hidden = true;
   showFinderStep(1);
-  scrollToElement(filterFinder);
   trackEvent("filter_finder_started");
 }
 
@@ -272,7 +359,10 @@ function setFinderOption(button) {
   if (group === "knowsSize" && knownSizeField) {
     knownSizeField.hidden = value !== "Yes, I know it";
     if (value === "Yes, I know it") {
-      setTimeout(() => finderKnownSizeInput?.focus(), 40);
+      setTimeout(() => {
+        finderKnownSizeInput?.focus();
+        knownSizeField.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }, 40);
     }
   }
 }
@@ -295,12 +385,6 @@ function validateFinderStep(step = finderCurrentStep) {
 
   if (step === 2 && !finderState.location) {
     setFinderError(stepEl, "Choose where your filter is located.");
-    return false;
-  }
-
-  if (step === 4 && finderEmailInput?.value.trim() && !finderEmailInput.validity.valid) {
-    setFinderError(stepEl, "Enter a valid email address or leave it blank.");
-    finderEmailInput.focus();
     return false;
   }
 
@@ -369,13 +453,34 @@ function getReminderMonths(schedule) {
 
 function renderFinderReport(result) {
   const hasSize = result.filterSize !== "Check before ordering";
+  const confirmedSize = result.knowsSize === "Yes, I know it" && hasSize;
 
+  if (finderSizeTitle) finderSizeTitle.textContent = confirmedSize ? "✓ Filter Size Confirmed" : "Estimated Filter Size";
   if (finderResultSize) finderResultSize.textContent = result.filterSize;
-  if (finderSizeStatus) finderSizeStatus.textContent = hasSize ? "Likely match" : "Confirm size before ordering";
-  if (finderLocationGuidance) finderLocationGuidance.textContent = getLocationGuidance(result.location);
+  if (finderSizeStatus) finderSizeStatus.textContent = confirmedSize
+    ? "We recognized this as a standard residential filter size."
+    : "Size confirmation needed";
+  if (finderLocationGuidance) {
+    finderLocationGuidance.textContent = confirmedSize
+      ? ""
+      : "Use the guidance below to confirm the printed size on your current filter's cardboard edge. " + getLocationGuidance(result.location);
+  }
   if (finderResultSchedule) finderResultSchedule.textContent = result.recommendedSchedule;
   if (finderMerv) finderMerv.textContent = result.recommendedFilterType;
   if (finderMervCopy) finderMervCopy.textContent = result.recommendedFilterCopy;
+  if (finderAnswerPills) {
+    finderAnswerPills.innerHTML = "";
+    const answers = [
+      result.knowsSize,
+      result.location,
+      ...(result.homeConditions.length ? result.homeConditions : ["Standard home conditions"])
+    ].filter(Boolean);
+    answers.forEach((answer) => {
+      const pill = document.createElement("span");
+      pill.textContent = `✓ ${answer}`;
+      finderAnswerPills.appendChild(pill);
+    });
+  }
   if (finderMonths) {
     finderMonths.innerHTML = "";
     result.reminderMonths.forEach((month) => {
@@ -486,11 +591,26 @@ async function completeFilterFinder() {
   latestFinderReport = result;
   renderFinderReport(result);
   saveToLocalStorage(finderStorageKey, result);
+  finderCompleted = true;
 
   trackEvent("filter_finder_completed", {
     knows_size: result.knowsSize,
+    normalized_filter_size: result.normalizedFilterSize,
     location: result.location,
     has_email: Boolean(result.email),
+    recommended_schedule: result.recommendedSchedule,
+    recommended_filter_type: result.recommendedFilterType
+  });
+  trackEvent("filter_finder_result_viewed", {
+    knows_size: result.knowsSize,
+    normalized_filter_size: result.normalizedFilterSize,
+    location: result.location,
+    recommended_schedule: result.recommendedSchedule,
+    recommended_filter_type: result.recommendedFilterType,
+    has_email: false,
+    completed: true
+  });
+  trackEvent("filter_finder_email_prompt_viewed", {
     recommended_schedule: result.recommendedSchedule,
     recommended_filter_type: result.recommendedFilterType
   });
@@ -500,14 +620,7 @@ async function completeFilterFinder() {
     finderResult.hidden = false;
     window.requestAnimationFrame(() => finderResult.classList.add("report-visible"));
   }
-  scrollToElement(finderResult || filterFinder);
-
-  if (result.email) {
-    const emailSubmitted = await submitFinderEmail(result);
-    if (!emailSubmitted && finderEmailNote) {
-      finderEmailNote.hidden = false;
-    }
-  }
+  finderModalCard?.querySelector(".finder-modal-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function setFormMessage(form, message = "") {
@@ -551,17 +664,27 @@ async function handleEmailFormSubmit(event, eventName, successElement) {
     saveToLocalStorage(emailStorageKey, signup);
     trackEvent(eventName, {
       form_location: String(formData.get("source") || "Email Form"),
-      has_finder_result: Boolean(latestFinderReport)
+      has_finder_result: Boolean(latestFinderReport),
+      normalized_filter_size: latestFinderReport?.normalizedFilterSize || "",
+      recommended_schedule: latestFinderReport?.recommendedSchedule || "",
+      recommended_filter_type: latestFinderReport?.recommendedFilterType || "",
+      has_email: Boolean(email)
     });
     trackEvent("generate_lead", {
-      form_location: String(formData.get("source") || "Email Form")
+      form_location: String(formData.get("source") || "Email Form"),
+      normalized_filter_size: latestFinderReport?.normalizedFilterSize || "",
+      recommended_schedule: latestFinderReport?.recommendedSchedule || "",
+      recommended_filter_type: latestFinderReport?.recommendedFilterType || ""
     });
     form.reset();
     form.hidden = true;
     if (successElement) successElement.hidden = false;
   } catch (error) {
     console.error("Filter Wizard email submission error:", error);
-    setFormMessage(form, "Something went wrong. Please try again in a moment.");
+    const fallbackMessage = form === resultEmailForm
+      ? "We could not email your report, but your recommendation is shown above."
+      : "Something went wrong. Please try again in a moment.";
+    setFormMessage(form, fallbackMessage);
   } finally {
     if (submitButton) {
       submitButton.disabled = false;
@@ -675,11 +798,48 @@ if (navToggle && navMenu) {
   navLinks.forEach((link) => link.addEventListener("click", closeNav));
 }
 
-heroFinderCta?.addEventListener("click", () => {
+heroFinderCta?.addEventListener("click", (event) => {
+  event.preventDefault();
   trackEvent("hero_filter_finder_clicked");
+  openFinderModal(event.currentTarget);
 });
 
-finderStartButton?.addEventListener("click", startFilterFinder);
+finderStartButton?.addEventListener("click", (event) => {
+  openFinderModal(event.currentTarget);
+});
+
+finderCloseButton?.addEventListener("click", () => closeFinderModal("close_button"));
+
+finderModal?.addEventListener("click", (event) => {
+  if (event.target === finderModal) {
+    closeFinderModal("overlay");
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (!finderModal || finderModal.hidden) return;
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeFinderModal("escape");
+    return;
+  }
+
+  if (event.key !== "Tab") return;
+  const focusable = getFocusableElements(finderModal);
+  if (!focusable.length) return;
+
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+});
 
 document.querySelectorAll("[data-finder-option]").forEach((button) => {
   button.setAttribute("aria-pressed", "false");
@@ -693,6 +853,13 @@ finderKnownSizeInput?.addEventListener("input", () => {
 finderEmailInput?.addEventListener("input", () => {
   clearFinderError(document.querySelector('[data-finder-step="4"]'));
   if (!finderEmailEnteredTracked && finderEmailInput.value.trim()) {
+    finderEmailEnteredTracked = true;
+    trackEvent("filter_finder_email_entered");
+  }
+});
+
+resultEmailInput?.addEventListener("input", () => {
+  if (!finderEmailEnteredTracked && resultEmailInput.value.trim()) {
     finderEmailEnteredTracked = true;
     trackEvent("filter_finder_email_entered");
   }
@@ -731,8 +898,27 @@ finderCopyButton?.addEventListener("click", async () => {
   }
 });
 
+finderEmailSkipButton?.addEventListener("click", () => {
+  if (resultEmailForm) resultEmailForm.hidden = true;
+  if (finderEmailSkipped) finderEmailSkipped.hidden = false;
+  trackEvent("filter_finder_email_skipped", {
+    recommended_schedule: latestFinderReport?.recommendedSchedule,
+    recommended_filter_type: latestFinderReport?.recommendedFilterType,
+    has_email: false
+  });
+});
+
+finderEarlyAccessButton?.addEventListener("click", () => {
+  trackEvent("filter_finder_to_early_access_clicked", {
+    recommended_schedule: latestFinderReport?.recommendedSchedule,
+    recommended_filter_type: latestFinderReport?.recommendedFilterType
+  });
+  closeFinderModal("early_access");
+  scrollToElement(document.querySelector("#early-access"));
+});
+
 resultEmailForm?.addEventListener("submit", (event) => {
-  handleEmailFormSubmit(event, "early_access_submitted", resultEmailSuccess);
+  handleEmailFormSubmit(event, "filter_finder_email_submitted", resultEmailSuccess);
 });
 
 earlyAccessForm?.addEventListener("submit", (event) => {
