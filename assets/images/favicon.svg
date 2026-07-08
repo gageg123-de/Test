@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Filter Wizard icon</title>
+  <desc id="desc">A flat air filter icon with a wizard hat and airflow lines.</desc>
+  <rect width="64" height="64" rx="14" fill="#102033"/>
+  <path d="M9 37c5-5 10-5 15 0" fill="none" stroke="#2fb36d" stroke-width="4" stroke-linecap="round"/>
+  <path d="M9 45c6-4 11-4 16 0" fill="none" stroke="#2477d4" stroke-width="4" stroke-linecap="round"/>
+  <rect x="24" y="26" width="31" height="29" rx="5" fill="#ffffff"/>
+  <rect x="29" y="31" width="21" height="19" rx="2" fill="#2477d4"/>
+  <path d="M31 32l17 17M48 32L31 49" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <path d="M31 36h18M31 43h18" fill="none" stroke="#175fae" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M17 28c9-5 19-8 34-7-6 3-15 5-27 8-5 1-7 1-7-1z" fill="#2477d4"/>
+  <path d="M29 23c3-12 8-17 17-14 0 0-3 8-1 13-6 0-11 1-16 1z" fill="#2477d4"/>
+  <path d="M32 24c4-2 9-3 15-3" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+</svg>
