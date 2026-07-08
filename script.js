@@ -33,7 +33,6 @@ const finderSizeTitle = document.querySelector("[data-finder-size-title]");
 const finderAnswerPills = document.querySelector("[data-finder-answer-pills]");
 const finderEmailSkipButton = document.querySelector("[data-finder-email-skip]");
 const finderEmailSkipped = document.querySelector("[data-finder-email-skipped]");
-const finderEarlyAccessButton = document.querySelector("[data-finder-early-access]");
 const finderProductImage = document.querySelector("[data-finder-product-image]");
 const finderProductPlaceholder = document.querySelector("[data-finder-product-placeholder]");
 const finderProductTitle = document.querySelector("[data-finder-product-title]");
@@ -1018,15 +1017,6 @@ finderProductCta?.addEventListener("click", () => {
     resultEmailForm.scrollIntoView({ behavior: "smooth", block: "center" });
     window.setTimeout(() => resultEmailInput?.focus({ preventScroll: true }), 260);
   }
-});
-
-finderEarlyAccessButton?.addEventListener("click", () => {
-  trackEvent("filter_finder_to_early_access_clicked", {
-    recommended_schedule: latestFinderReport?.recommendedSchedule,
-    recommended_filter_type: latestFinderReport?.recommendedFilterType
-  });
-  closeFinderModal("early_access");
-  scrollToElement(document.querySelector("#early-access"));
 });
 
 resultEmailForm?.addEventListener("submit", (event) => {

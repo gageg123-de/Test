@@ -1347,8 +1347,11 @@ input:focus-visible {
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  min-height: 138px;
+  aspect-ratio: 3 / 2;
+  min-height: unset;
+  max-height: 220px;
   overflow: hidden;
+  padding: 8px;
   border: 1px solid rgba(217, 231, 238, 0.95);
   border-radius: 14px;
   background: linear-gradient(180deg, #ffffff, #eef7fb);
@@ -1357,9 +1360,9 @@ input:focus-visible {
 .finder-product-image {
   display: block;
   width: 100%;
+  height: 100%;
   max-width: 100%;
-  height: auto;
-  max-height: 154px;
+  max-height: none;
   object-fit: contain;
 }
 
@@ -1372,7 +1375,8 @@ input:focus-visible {
   display: grid;
   place-items: center;
   width: 100%;
-  min-height: 138px;
+  height: 100%;
+  min-height: 0;
   padding: 14px;
   color: var(--muted);
   font-size: 0.82rem;
@@ -2712,11 +2716,12 @@ input:focus {
 
   .finder-product-image-wrap,
   .finder-product-placeholder {
-    min-height: 118px;
+    max-height: 170px;
+    padding: 6px;
   }
 
   .finder-product-image {
-    max-height: 132px;
+    max-height: none;
   }
 
   .finder-product-content {
