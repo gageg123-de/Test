@@ -16,11 +16,10 @@ const finderCompleteButton = document.querySelector("[data-finder-complete]");
 const finderProgressLabel = document.querySelector("[data-finder-progress-label]");
 const finderProgressBar = document.querySelector("[data-finder-progress-bar]");
 const knownSizeField = document.querySelector("[data-known-size-field]");
+const knownSizeOptions = document.querySelector("[data-known-size-options]");
 const finderKnownSizeInput = document.querySelector("[data-finder-size-known]");
-const finderFinalSizeInput = document.querySelector("[data-finder-size-final]");
-const finderEmailInput = document.querySelector("[data-finder-email]");
 const finderResult = document.querySelector("[data-finder-result]");
-const finderResultSize = document.querySelector("[data-finder-result-size]");
+const finderResultSizeItems = document.querySelectorAll("[data-finder-result-size]");
 const finderLocationGuidance = document.querySelector("[data-finder-location-guidance]");
 const finderResultSchedule = document.querySelector("[data-finder-result-schedule]");
 const finderEmailNote = document.querySelector("[data-finder-email-note]");
@@ -35,6 +34,15 @@ const finderAnswerPills = document.querySelector("[data-finder-answer-pills]");
 const finderEmailSkipButton = document.querySelector("[data-finder-email-skip]");
 const finderEmailSkipped = document.querySelector("[data-finder-email-skipped]");
 const finderEarlyAccessButton = document.querySelector("[data-finder-early-access]");
+const finderProductImage = document.querySelector("[data-finder-product-image]");
+const finderProductPlaceholder = document.querySelector("[data-finder-product-placeholder]");
+const finderProductTitle = document.querySelector("[data-finder-product-title]");
+const finderProductSize = document.querySelector("[data-finder-product-size]");
+const finderProductMerv = document.querySelector("[data-finder-product-merv]");
+const finderProductBestFor = document.querySelector("[data-finder-product-best-for]");
+const finderProductPrice = document.querySelector("[data-finder-product-price]");
+const finderProductSchedule = document.querySelector("[data-finder-product-schedule]");
+const finderProductCta = document.querySelector("[data-finder-product-cta]");
 const sizeAutocompleteInputs = document.querySelectorAll("[data-size-autocomplete]");
 const resultEmailForm = document.querySelector("[data-result-email-form]");
 const resultEmailInput = document.querySelector("[data-result-email]");
@@ -56,7 +64,6 @@ const finderState = {
   location: "",
   conditions: [],
   knownSize: "",
-  finalSize: "",
   email: "",
   recommendedSchedule: "",
   normalizedSize: ""
@@ -200,7 +207,6 @@ function resetFinderForModal() {
   finderState.location = "";
   finderState.conditions = [];
   finderState.knownSize = "";
-  finderState.finalSize = "";
   finderState.email = "";
   finderState.recommendedSchedule = "";
   finderState.normalizedSize = "";
@@ -210,9 +216,9 @@ function resetFinderForModal() {
     option.classList.remove("selected");
     option.setAttribute("aria-pressed", "false");
   });
+  knownSizeOptions?.classList.remove("knows-size-selected");
   if (knownSizeField) knownSizeField.hidden = true;
   if (finderKnownSizeInput) finderKnownSizeInput.value = "";
-  if (finderFinalSizeInput) finderFinalSizeInput.value = "";
   if (resultEmailInput) resultEmailInput.value = "";
   if (resultEmailForm) resultEmailForm.hidden = false;
   if (resultEmailSuccess) resultEmailSuccess.hidden = true;
@@ -250,8 +256,7 @@ function normalizeFilterSize(value) {
 
 function getFinderSize() {
   finderState.knownSize = finderKnownSizeInput?.value.trim() || "";
-  finderState.finalSize = finderFinalSizeInput?.value.trim() || "";
-  return normalizeFilterSize(finderState.finalSize || finderState.knownSize);
+  return normalizeFilterSize(finderState.knownSize);
 }
 
 function getFinderStepLabel(step) {
@@ -276,8 +281,15 @@ function getFinderStepName(step) {
 
 function updateFinderProgress() {
   if (!finderProgressLabel || !finderProgressBar) return;
-  finderProgressLabel.textContent = `Step ${finderCurrentStep} of ${finderTotalSteps} - ${getFinderStepLabel(finderCurrentStep)}`;
+  finderProgressLabel.textContent = `Step ${finderCurrentStep} • ${getFinderStepLabel(finderCurrentStep)}`;
   finderProgressBar.style.width = `${(finderCurrentStep / finderTotalSteps) * 100}%`;
+}
+
+function updateFinderActionLabels() {
+  if (!finderNextButton) return;
+  finderNextButton.textContent = finderCurrentStep === 1 && finderState.knowsSize === "Yes, I know it"
+    ? "Continue"
+    : "Next";
 }
 
 function clearFinderError(stepEl) {
@@ -304,10 +316,15 @@ function showFinderStep(step) {
     clearFinderError(stepEl);
   });
 
-  if (finderBackButton) finderBackButton.hidden = finderCurrentStep === 1;
+  if (finderBackButton) {
+    finderBackButton.hidden = false;
+    finderBackButton.disabled = finderCurrentStep === 1;
+    finderBackButton.setAttribute("aria-disabled", String(finderCurrentStep === 1));
+  }
   if (finderNextButton) finderNextButton.hidden = finderCurrentStep === finderTotalSteps;
   if (finderCompleteButton) finderCompleteButton.hidden = finderCurrentStep !== finderTotalSteps;
   updateFinderProgress();
+  updateFinderActionLabels();
 }
 
 function startFilterFinder() {
@@ -358,12 +375,13 @@ function setFinderOption(button) {
 
   if (group === "knowsSize" && knownSizeField) {
     knownSizeField.hidden = value !== "Yes, I know it";
+    knownSizeOptions?.classList.toggle("knows-size-selected", value === "Yes, I know it");
     if (value === "Yes, I know it") {
       setTimeout(() => {
-        finderKnownSizeInput?.focus();
-        knownSizeField.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        finderKnownSizeInput?.focus({ preventScroll: true });
       }, 40);
     }
+    updateFinderActionLabels();
   }
 }
 
@@ -378,7 +396,7 @@ function validateFinderStep(step = finderCurrentStep) {
     }
     if (finderState.knowsSize === "Yes, I know it" && !finderKnownSizeInput?.value.trim()) {
       setFinderError(stepEl, "Enter your filter size before continuing.");
-      finderKnownSizeInput?.focus();
+      finderKnownSizeInput?.focus({ preventScroll: true });
       return false;
     }
   }
@@ -442,6 +460,43 @@ function getRecommendedFilterType() {
   };
 }
 
+function getProductRecommendation(result) {
+  const merv = result.recommendedFilterType || "MERV 8";
+  const size = result.filterSize && result.filterSize !== "Check before ordering"
+    ? result.filterSize
+    : "Check before ordering";
+  const productDetails = {
+    "MERV 13": {
+      image: "assets/images/filter-product-merv-13.webp",
+      bestFor: "allergies, fine particles, and stronger filtration",
+      priceRange: "Estimated $16-$25 each"
+    },
+    "MERV 11": {
+      image: "assets/images/filter-product-merv-11.webp",
+      bestFor: "pets, dust, and improved everyday filtration",
+      priceRange: "Estimated $12-$18 each"
+    },
+    "MERV 8": {
+      image: "assets/images/filter-product-merv-8.webp",
+      bestFor: "standard homes and everyday dust control",
+      priceRange: "Estimated $8-$14 each"
+    }
+  };
+  const details = productDetails[merv] || productDetails["MERV 8"];
+
+  return {
+    title: size === "Check before ordering"
+      ? `Confirm Size Before Ordering ${merv} Pleated Air Filter`
+      : `${size} ${merv} Pleated Air Filter`,
+    image: details.image,
+    size,
+    merv,
+    bestFor: details.bestFor,
+    priceRange: details.priceRange,
+    schedule: result.recommendedSchedule
+  };
+}
+
 function getReminderMonths(schedule) {
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const count = schedule === "Every 30-60 days" ? 6 : 4;
@@ -456,7 +511,9 @@ function renderFinderReport(result) {
   const confirmedSize = result.knowsSize === "Yes, I know it" && hasSize;
 
   if (finderSizeTitle) finderSizeTitle.textContent = confirmedSize ? "✓ Filter Size Confirmed" : "Estimated Filter Size";
-  if (finderResultSize) finderResultSize.textContent = result.filterSize;
+  finderResultSizeItems.forEach((item) => {
+    item.textContent = result.filterSize;
+  });
   if (finderSizeStatus) finderSizeStatus.textContent = confirmedSize
     ? "We recognized this as a standard residential filter size."
     : "Size confirmation needed";
@@ -492,11 +549,41 @@ function renderFinderReport(result) {
   if (resultEmailInput && result.email) {
     resultEmailInput.value = result.email;
   }
+  if (finderProductTitle) finderProductTitle.textContent = result.productTitle;
+  if (finderProductSize) finderProductSize.textContent = result.productSize;
+  if (finderProductMerv) finderProductMerv.textContent = result.productMerv;
+  if (finderProductBestFor) finderProductBestFor.textContent = `Best for ${result.productBestFor}.`;
+  if (finderProductPrice) finderProductPrice.textContent = result.productPrice;
+  if (finderProductSchedule) finderProductSchedule.textContent = `Recommended replacement: ${result.productSchedule}`;
+  if (finderProductImage) {
+    finderProductImage.hidden = true;
+    if (finderProductPlaceholder) finderProductPlaceholder.hidden = false;
+    finderProductImage.onload = () => {
+      finderProductImage.hidden = false;
+      if (finderProductPlaceholder) finderProductPlaceholder.hidden = true;
+    };
+    finderProductImage.onerror = () => {
+      finderProductImage.hidden = true;
+      if (finderProductPlaceholder) finderProductPlaceholder.hidden = false;
+    };
+    finderProductImage.alt = result.productTitle;
+    finderProductImage.src = result.productImage;
+  }
+  trackEvent("filter_finder_product_recommendation_viewed", {
+    product_merv: result.productMerv,
+    product_size: result.productSize,
+    product_price: result.productPrice,
+    recommended_schedule: result.recommendedSchedule,
+    normalized_filter_size: result.normalizedFilterSize
+  });
 }
 
 function getFinderCopyText(result) {
   return [
     "Filter Wizard Recommendation",
+    `Recommended filter: ${result.productTitle}`,
+    `Estimated price range: ${result.productPrice}`,
+    `Best for: ${result.productBestFor}`,
     `Filter size: ${result.filterSize}`,
     `Location: ${result.location}`,
     `Recommended schedule: ${result.recommendedSchedule}`,
@@ -534,6 +621,10 @@ function addResultFields(formData, result) {
   formData.set("recommendedSchedule", result.recommendedSchedule);
   formData.set("recommendedFilterType", result.recommendedFilterType);
   formData.set("estimatedReminderMonths", result.reminderMonths.join(", "));
+  formData.set("recommendedFilterProduct", result.productTitle || "");
+  formData.set("recommendedFilterBestFor", result.productBestFor || "");
+  formData.set("estimatedFilterPrice", result.productPrice || "");
+  formData.set("productImage", result.productImage || "");
 }
 
 async function submitFinderEmail(result) {
@@ -567,7 +658,7 @@ async function completeFilterFinder() {
 
   const foundSize = getFinderSize();
   const filterType = getRecommendedFilterType();
-  finderState.email = finderEmailInput?.value.trim() || "";
+  finderState.email = "";
   finderState.recommendedSchedule = getRecommendedSchedule();
   finderState.normalizedSize = foundSize;
 
@@ -587,6 +678,16 @@ async function completeFilterFinder() {
     email: finderState.email || "",
     submittedAt: new Date().toISOString()
   };
+  const product = getProductRecommendation(result);
+  Object.assign(result, {
+    productTitle: product.title,
+    productImage: product.image,
+    productSize: product.size,
+    productMerv: product.merv,
+    productBestFor: product.bestFor,
+    productPrice: product.priceRange,
+    productSchedule: product.schedule
+  });
 
   latestFinderReport = result;
   renderFinderReport(result);
@@ -668,13 +769,17 @@ async function handleEmailFormSubmit(event, eventName, successElement) {
       normalized_filter_size: latestFinderReport?.normalizedFilterSize || "",
       recommended_schedule: latestFinderReport?.recommendedSchedule || "",
       recommended_filter_type: latestFinderReport?.recommendedFilterType || "",
+      recommended_filter_product: latestFinderReport?.productTitle || "",
+      estimated_filter_price: latestFinderReport?.productPrice || "",
       has_email: Boolean(email)
     });
     trackEvent("generate_lead", {
       form_location: String(formData.get("source") || "Email Form"),
       normalized_filter_size: latestFinderReport?.normalizedFilterSize || "",
       recommended_schedule: latestFinderReport?.recommendedSchedule || "",
-      recommended_filter_type: latestFinderReport?.recommendedFilterType || ""
+      recommended_filter_type: latestFinderReport?.recommendedFilterType || "",
+      recommended_filter_product: latestFinderReport?.productTitle || "",
+      estimated_filter_price: latestFinderReport?.productPrice || ""
     });
     form.reset();
     form.hidden = true;
@@ -850,14 +955,6 @@ finderKnownSizeInput?.addEventListener("input", () => {
   clearFinderError(document.querySelector('[data-finder-step="1"]'));
 });
 
-finderEmailInput?.addEventListener("input", () => {
-  clearFinderError(document.querySelector('[data-finder-step="4"]'));
-  if (!finderEmailEnteredTracked && finderEmailInput.value.trim()) {
-    finderEmailEnteredTracked = true;
-    trackEvent("filter_finder_email_entered");
-  }
-});
-
 resultEmailInput?.addEventListener("input", () => {
   if (!finderEmailEnteredTracked && resultEmailInput.value.trim()) {
     finderEmailEnteredTracked = true;
@@ -906,6 +1003,21 @@ finderEmailSkipButton?.addEventListener("click", () => {
     recommended_filter_type: latestFinderReport?.recommendedFilterType,
     has_email: false
   });
+});
+
+finderProductCta?.addEventListener("click", () => {
+  trackEvent("filter_finder_product_plan_clicked", {
+    product_merv: latestFinderReport?.productMerv || "",
+    product_size: latestFinderReport?.productSize || "",
+    product_price: latestFinderReport?.productPrice || "",
+    recommended_schedule: latestFinderReport?.recommendedSchedule || "",
+    normalized_filter_size: latestFinderReport?.normalizedFilterSize || ""
+  });
+  if (resultEmailForm) {
+    resultEmailForm.hidden = false;
+    resultEmailForm.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => resultEmailInput?.focus({ preventScroll: true }), 260);
+  }
 });
 
 finderEarlyAccessButton?.addEventListener("click", () => {

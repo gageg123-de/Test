@@ -63,7 +63,7 @@
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "xbqsjc3yut");
   </script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=hero-safari-fix-1">
 </head>
 <body>
   <header class="site-header" data-header>
@@ -91,21 +91,15 @@
         <div class="hero-intro reveal">
           <p class="eyebrow">Free homeowner tool</p>
           <h1>Find Your Home Air Filter Size in Under 60 Seconds</h1>
-          <p class="hero-subtitle">Answer a few quick questions and Filter Wizard will help estimate your filter size and replacement schedule.</p>
-          <ul class="hero-value-pills" aria-label="Filter Wizard benefits">
-            <li>&#10003; No payment today</li>
-            <li>&#10003; No spam</li>
-            <li>&#10003; Built for homeowners</li>
-          </ul>
+          <p class="hero-subtitle">Answer a few quick questions and we&rsquo;ll help you find the right filter size and replacement schedule.</p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="#filter-finder" data-hero-finder-cta>Start Free Filter Finder</a>
             <a class="btn btn-secondary" href="#how-it-works">How It Works</a>
           </div>
-          <ul class="credibility-bar" aria-label="Filter Wizard trust badges">
-            <li>&#10003; Free to Use</li>
-            <li>&#10003; No Credit Card Required</li>
-            <li>&#10003; Takes Under 60 Seconds</li>
-            <li>&#10003; Mobile Friendly</li>
+          <ul class="hero-trust-row" aria-label="Filter Wizard trust badges">
+            <li>100% Free</li>
+            <li>No Spam</li>
+            <li>Built for Homeowners</li>
           </ul>
         </div>
         <div class="hero-visual image-card reveal">
@@ -128,17 +122,17 @@
         </div>
         <div class="trust-card-grid">
           <article class="trust-card reveal">
-            <span aria-hidden="true">âœ“</span>
+            <span aria-hidden="true">&#10003;</span>
             <h3>Free Tool</h3>
             <p>No payment required. Find your filter size completely free.</p>
           </article>
           <article class="trust-card reveal">
-            <span aria-hidden="true">âœ“</span>
+            <span aria-hidden="true">&#10003;</span>
             <h3>Built for Homeowners</h3>
             <p>Designed to simplify one of the most confusing home maintenance tasks.</p>
           </article>
           <article class="trust-card reveal">
-            <span aria-hidden="true">âœ“</span>
+            <span aria-hidden="true">&#10003;</span>
             <h3>Privacy First</h3>
             <p>We only ask for your email if you want reminders. No spam. Ever.</p>
           </article>
@@ -166,7 +160,7 @@
             <p class="eyebrow">Free Filter Finder</p>
             <h2 id="finder-modal-title">Filter Wizard Finder</h2>
           </div>
-        <div class="finder-quiz" data-finder-quiz hidden>
+          <div class="finder-quiz" data-finder-quiz hidden>
           <div class="finder-progress" aria-live="polite">
             <span data-finder-progress-label>Step 1 of 4</span>
             <div class="finder-progress-track" aria-hidden="true">
@@ -175,15 +169,15 @@
           </div>
 
           <div class="finder-step is-active" data-finder-step="1">
-            <h3>Do you already know the size printed on your current air filter?</h3>
-            <div class="finder-options" role="group" aria-label="Known filter size">
+            <h3>Do you know your filter size?</h3>
+            <div class="finder-options" role="group" aria-label="Known filter size" data-known-size-options>
               <button class="finder-option" type="button" data-finder-option="knowsSize" data-value="Yes, I know it">Yes, I know it</button>
               <button class="finder-option" type="button" data-finder-option="knowsSize" data-value="Not sure">Not sure</button>
               <button class="finder-option" type="button" data-finder-option="knowsSize" data-value="Help me find it">Help me find it</button>
             </div>
             <label class="finder-field" data-known-size-field hidden>
               <span>Enter your filter size</span>
-              <input type="text" data-finder-size-known data-size-autocomplete placeholder="20x25x1, 16x20x1, etc." inputmode="text" autocomplete="off">
+              <input type="text" data-finder-size-known data-size-autocomplete placeholder="Example: 20x25x1" inputmode="text" autocomplete="off">
               <div class="size-suggestions" data-size-suggestions hidden></div>
             </label>
             <p class="finder-error" data-finder-error hidden></p>
@@ -226,25 +220,46 @@
           </div>
         </div>
 
-        <div class="finder-result" data-finder-result hidden>
+          <div class="finder-result" data-finder-result hidden>
           <div class="recommendation-banner">
-            <strong><span aria-hidden="true">&#9679;</span> Recommendation Ready</strong>
+            <strong><span aria-hidden="true">&#9679;</span> Your Recommendation</strong>
+            <span class="recommendation-size" data-finder-result-size>Check before ordering</span>
             <div class="recommendation-summary">
               <div>
-                <small>Recommended Filter Type</small>
+                <small>MERV Type</small>
                 <span data-finder-merv>MERV 8</span>
               </div>
               <div>
-                <small>Replacement Schedule</small>
+                <small>Schedule</small>
                 <span data-finder-result-schedule>Every 60-90 days</span>
               </div>
             </div>
+            <div class="finder-months recommendation-months" data-finder-months></div>
           </div>
           <div class="finder-report-header">
             <div>
-              <p class="eyebrow">Your Result</p>
               <h3>Your Filter Recommendation</h3>
               <p>Your estimate is based on the answers you provided.</p>
+            </div>
+          </div>
+          <div class="finder-result-block finder-product-card">
+            <div class="finder-product-layout">
+              <div class="finder-product-image-wrap">
+                <img class="finder-product-image" src="" alt="" loading="lazy" decoding="async" data-finder-product-image hidden>
+                <div class="finder-product-placeholder" data-finder-product-placeholder>Filter image coming soon</div>
+              </div>
+              <div class="finder-product-content">
+                <p class="eyebrow">Your Recommended Filter</p>
+                <strong data-finder-product-title>Confirm Size Before Ordering MERV 8 Pleated Air Filter</strong>
+                <div class="finder-product-meta">
+                  <span data-finder-product-size>Check before ordering</span>
+                  <span data-finder-product-merv>MERV 8</span>
+                </div>
+                <p data-finder-product-best-for>Best for standard homes and everyday dust control</p>
+                <p class="finder-product-price" data-finder-product-price>Estimated $8-$14 each</p>
+                <p data-finder-product-schedule>Recommended replacement: Every 60-90 days</p>
+                <button class="btn btn-primary finder-product-cta" type="button" data-finder-product-cta>Save My Filter Plan</button>
+              </div>
             </div>
           </div>
           <p class="finder-email-note" data-finder-email-note hidden>We could not email your report, but your recommendation is shown above.</p>
@@ -261,17 +276,17 @@
           </div>
           <div class="finder-result-block finder-reminder-schedule">
             <strong>Estimated Reminder Months</strong>
-            <div class="finder-months" data-finder-months></div>
+            <p>Your estimated reminder months are shown in the summary above.</p>
           </div>
           <div class="finder-result-block finder-next-step finder-result-next">
-            <strong>Want this sent to your inbox?</strong>
-            <p>We will send your filter size, MERV recommendation, and replacement schedule so you can find it later.</p>
+            <strong>Save My Filter Plan</strong>
+            <p>Email yourself your recommended filter, estimated price range, and replacement schedule so you can find it later.</p>
             <form class="result-email-form" action="https://formspree.io/f/mzdlpbwp" method="POST" data-result-email-form>
               <input type="hidden" name="_subject" value="New Filter Wizard result reminder signup">
               <input type="hidden" name="source" value="Filter Finder Result">
               <label class="sr-only" for="result-email">Email address</label>
               <input id="result-email" name="email" type="email" autocomplete="email" placeholder="Email address" required data-result-email>
-              <button class="btn btn-primary form-submit" type="submit">Email My Filter Report</button>
+              <button class="btn btn-primary form-submit" type="submit">Email My Filter Plan</button>
               <button class="finder-skip-email" type="button" data-finder-email-skip>Continue without email</button>
               <p class="form-trust">No payment today. No spam. You can unsubscribe anytime.</p>
               <p class="form-error" role="alert" data-form-error hidden>We could not email your report, but your recommendation is shown above.</p>
@@ -280,17 +295,17 @@
             <p class="finder-email-note" data-finder-email-skipped hidden>Your report will stay visible here.</p>
           </div>
           <div class="finder-result-block finder-next-step finder-result-next">
-            <strong>Want Filter Wizard to remember this for you?</strong>
-            <p>Join the early access list and we will email you when reminders and filter delivery are available.</p>
-            <button class="btn btn-primary" type="button" data-finder-early-access>Get Early Access</button>
+            <strong>Want this filter shipped on schedule?</strong>
+            <p>Join early access and we'll let you know when automatic reminders and filter delivery are available for your exact size and schedule.</p>
+            <button class="btn btn-primary" type="button" data-finder-early-access>Join Early Access for This Filter</button>
           </div>
           <div class="finder-copy-row">
             <button class="finder-copy-button" type="button" data-finder-copy>Copy My Recommendation</button>
             <span data-finder-copy-status hidden></span>
           </div>
         </div>
-      </div>
-    </section>
+        </div>
+      </section>
     </div>
 
     <section class="section compact-section" id="how-it-works">
@@ -379,6 +394,6 @@
     </div>
   </footer>
 
-  <script src="script.js?v=version-b-tool-1"></script>
+  <script src="script.js?v=hero-safari-fix-1"></script>
 </body>
 </html>

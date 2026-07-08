@@ -331,6 +331,31 @@ input:focus-visible {
   font-weight: 850;
 }
 
+.hero-trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 0;
+  margin: 14px 0 0;
+  list-style: none;
+  color: #526170;
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
+.hero-trust-row li {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.hero-trust-row li + li::before {
+  content: "/";
+  margin-right: 14px;
+  color: #9aa8b4;
+  font-weight: 700;
+}
+
 .trust-row {
   display: flex;
   flex-wrap: wrap;
@@ -941,6 +966,9 @@ input:focus-visible {
 
 .finder-quiz,
 .finder-result {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   gap: 18px;
   padding: 22px;
@@ -987,6 +1015,8 @@ input:focus-visible {
 }
 
 .finder-step {
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   gap: 16px;
 }
@@ -1001,6 +1031,9 @@ input:focus-visible {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .finder-report-header p:not(.eyebrow) {
@@ -1010,6 +1043,9 @@ input:focus-visible {
 }
 
 .recommendation-banner {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   gap: 4px;
   padding: 14px 16px;
@@ -1038,6 +1074,9 @@ input:focus-visible {
 }
 
 .recommendation-summary {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
@@ -1045,6 +1084,8 @@ input:focus-visible {
 }
 
 .recommendation-summary div {
+  min-width: 0;
+  max-width: 100%;
   padding: 12px;
   border: 1px solid rgba(47, 179, 109, 0.18);
   border-radius: 13px;
@@ -1062,10 +1103,26 @@ input:focus-visible {
 
 .recommendation-summary span {
   display: block;
+  max-width: 100%;
   margin-top: 4px;
   color: var(--green-dark);
   font-size: 1.12rem;
   font-weight: 950;
+  overflow-wrap: anywhere;
+}
+
+.recommendation-size {
+  display: block;
+  max-width: 100%;
+  color: var(--blue-dark);
+  font-size: clamp(1.7rem, 5vw, 2.4rem);
+  font-weight: 950;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.recommendation-months {
+  margin-top: 6px;
 }
 
 .finder-result.report-visible .recommendation-banner {
@@ -1099,6 +1156,14 @@ input:focus-visible {
 
 .finder-options-multi {
   grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.finder-options.knows-size-selected {
+  grid-template-columns: 1fr;
+}
+
+.finder-options.knows-size-selected .finder-option:not(.selected) {
+  display: none;
 }
 
 .finder-option {
@@ -1215,21 +1280,160 @@ input:focus-visible {
 
 .finder-actions,
 .finder-result-actions {
-  display: flex;
-  flex-wrap: wrap;
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 10px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(217, 231, 238, 0.95);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 -12px 24px rgba(11, 31, 53, 0.06);
+}
+
+.finder-actions .btn,
+.finder-result-actions .btn {
+  width: 100%;
+  min-width: 0;
+}
+
+.finder-actions .btn:disabled,
+.finder-result-actions .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .finder-result-block {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding: 15px;
   border: 1px solid rgba(217, 231, 238, 0.95);
   border-radius: 16px;
   background: #f8fbfe;
+  overflow-wrap: anywhere;
 }
 
 .finder-result-size {
   border-color: rgba(36, 119, 212, 0.2);
   background: linear-gradient(180deg, #f3f9ff, #ffffff);
+}
+
+.finder-product-card {
+  border-color: rgba(36, 119, 212, 0.2);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(47, 179, 109, 0.08), transparent 34%),
+    linear-gradient(180deg, #f7fbff, #ffffff);
+}
+
+.finder-product-layout {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.72fr) minmax(0, 1.28fr);
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.finder-product-image-wrap {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 138px;
+  overflow: hidden;
+  border: 1px solid rgba(217, 231, 238, 0.95);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff, #eef7fb);
+}
+
+.finder-product-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: 154px;
+  object-fit: contain;
+}
+
+.finder-product-image[hidden],
+.finder-product-placeholder[hidden] {
+  display: none !important;
+}
+
+.finder-product-placeholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 138px;
+  padding: 14px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+.finder-product-content {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.finder-product-content .eyebrow {
+  margin: 0;
+}
+
+.finder-product-content strong {
+  color: var(--blue-dark);
+  font-size: clamp(1.08rem, 3vw, 1.32rem);
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.finder-product-content p {
+  margin: 0;
+}
+
+.finder-product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.finder-product-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  max-width: 100%;
+  padding: 5px 9px;
+  border: 1px solid rgba(36, 119, 212, 0.15);
+  border-radius: 999px;
+  color: var(--blue-dark);
+  background: var(--blue-soft);
+  font-size: 0.78rem;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.finder-product-price {
+  color: var(--green-dark);
+  font-size: 1.02rem;
+  font-weight: 950;
+}
+
+.finder-product-cta {
+  width: 100%;
+  margin-top: 2px;
 }
 
 .finder-match-score {
@@ -1260,9 +1464,11 @@ input:focus-visible {
 }
 
 .finder-result-block span {
+  max-width: 100%;
   color: var(--green-dark);
   font-size: 1.1rem;
   font-weight: 900;
+  overflow-wrap: anywhere;
 }
 
 .finder-result-primary span,
@@ -1313,6 +1519,9 @@ input:focus-visible {
 }
 
 .finder-months {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -1322,6 +1531,7 @@ input:focus-visible {
 .finder-months span {
   display: inline-flex;
   min-width: 48px;
+  max-width: 100%;
   justify-content: center;
   padding: 7px 10px;
   border-radius: 999px;
@@ -1332,6 +1542,9 @@ input:focus-visible {
 }
 
 .finder-answer-pills {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -1339,6 +1552,7 @@ input:focus-visible {
 }
 
 .finder-answer-pills span {
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   min-height: 30px;
@@ -1461,9 +1675,13 @@ input:focus-visible {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .finder-copy-button {
+  max-width: 100%;
   min-height: 40px;
   padding: 9px 12px;
   border: 1px solid #cddde7;
@@ -1835,6 +2053,8 @@ input:focus-visible {
 .finder-modal {
   position: relative;
   width: min(100%, 660px);
+  min-width: 0;
+  max-width: 100%;
   height: min(760px, calc(100vh - 32px));
   max-height: calc(100vh - 32px);
   overflow: hidden;
@@ -1844,14 +2064,28 @@ input:focus-visible {
   box-shadow: 0 30px 90px rgba(5, 18, 30, 0.28);
 }
 
+.finder-modal *,
+.finder-modal *::before,
+.finder-modal *::after {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .finder-modal-scroll {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   height: 100%;
   overflow-y: auto;
+  overflow-x: clip;
   padding: 26px;
   scroll-behavior: smooth;
 }
 
 .finder-modal-heading {
+  min-width: 0;
+  max-width: 100%;
   padding-right: 44px;
   margin-bottom: 18px;
 }
@@ -1916,6 +2150,9 @@ input:focus-visible {
 
 .reservation-form,
 .result-email-form {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   gap: 12px;
 }
@@ -2130,6 +2367,10 @@ input:focus {
 }
 
 @media (max-width: 640px) {
+  .finder-modal-backdrop {
+    padding: 12px;
+  }
+
   .section,
   .compact-section {
     padding: 50px 0;
@@ -2179,7 +2420,7 @@ input:focus {
   .hero-value-pills {
     display: flex;
     gap: 7px;
-    margin-bottom: 10px;
+    margin: 10px 0 0;
   }
 
   .hero-value-pills li {
@@ -2187,11 +2428,42 @@ input:focus {
     font-size: 0.76rem;
   }
 
+  .hero-trust-row {
+    justify-content: space-between;
+    gap: 0;
+    margin-top: 11px;
+    color: #5b6875;
+    font-size: 0.76rem;
+    line-height: 1.2;
+  }
+
+  .hero-trust-row li {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 0 8px;
+    text-align: center;
+  }
+
+  .hero-trust-row li:first-child {
+    justify-content: flex-start;
+    padding-left: 0;
+  }
+
+  .hero-trust-row li:last-child {
+    justify-content: flex-end;
+    padding-right: 0;
+  }
+
+  .hero-trust-row li + li {
+    border-left: 1px solid rgba(100, 115, 129, 0.24);
+  }
+
+  .hero-trust-row li + li::before {
+    content: none;
+  }
+
   .credibility-bar {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 7px;
-    margin-top: 12px;
+    display: none;
   }
 
   .credibility-bar li {
@@ -2284,6 +2556,19 @@ input:focus {
     grid-template-columns: 1fr;
   }
 
+  .finder-step {
+    gap: 12px;
+  }
+
+  .finder-field {
+    gap: 7px;
+  }
+
+  .finder-option {
+    min-height: 50px;
+    padding: 11px 12px;
+  }
+
   .finder-actions,
   .finder-result-actions {
     display: grid;
@@ -2348,18 +2633,182 @@ input:focus {
   }
 
   .finder-modal {
-    width: min(100%, calc(100vw - 24px));
+    width: 100%;
+    max-width: 100%;
     height: calc(100dvh - 32px);
     max-height: calc(100dvh - 32px);
     border-radius: 20px;
   }
 
   .finder-modal-scroll {
-    padding: 20px;
+    padding: 16px;
+  }
+
+  .finder-modal-heading {
+    margin-bottom: 12px;
+  }
+
+  .finder-quiz,
+  .finder-result {
+    gap: 9px;
+    padding: 12px;
   }
 
   .recommendation-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 6px;
+  }
+
+  .recommendation-banner {
+    gap: 5px;
+    padding: 11px 12px;
+    border-radius: 14px;
+  }
+
+  .recommendation-banner strong {
+    font-size: 0.88rem;
+  }
+
+  .recommendation-size {
+    font-size: 1.55rem;
+  }
+
+  .recommendation-summary div {
+    padding: 8px;
+    border-radius: 10px;
+  }
+
+  .recommendation-summary small {
+    font-size: 0.64rem;
+  }
+
+  .recommendation-summary span {
+    font-size: 0.94rem;
+  }
+
+  .finder-report-header {
+    gap: 6px;
+  }
+
+  .finder-report-header h3 {
+    font-size: 1rem;
+  }
+
+  .finder-report-header p:not(.eyebrow) {
+    margin-top: 3px;
+    font-size: 0.82rem;
+  }
+
+  .finder-result-block {
+    padding: 10px 11px;
+    border-radius: 12px;
+  }
+
+  .finder-product-layout {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .finder-product-image-wrap,
+  .finder-product-placeholder {
+    min-height: 118px;
+  }
+
+  .finder-product-image {
+    max-height: 132px;
+  }
+
+  .finder-product-content {
+    gap: 6px;
+  }
+
+  .finder-product-content strong {
+    font-size: 1rem;
+  }
+
+  .finder-product-meta {
+    gap: 5px;
+  }
+
+  .finder-product-meta span {
+    min-height: 24px;
+    padding: 4px 7px;
+    font-size: 0.72rem;
+  }
+
+  .finder-product-price {
+    font-size: 0.96rem;
+  }
+
+  .finder-result-block p {
+    margin-top: 3px;
+    font-size: 0.82rem;
+    line-height: 1.42;
+  }
+
+  .finder-result-primary span {
+    font-size: 1.28rem;
+  }
+
+  .finder-result-primary small {
+    margin-top: 5px;
+    padding: 4px 7px;
+    font-size: 0.7rem;
+  }
+
+  .finder-months {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+    margin-top: 6px;
+  }
+
+  .finder-months span {
+    min-width: 0;
+    padding: 5px 6px;
+    font-size: 0.72rem;
+  }
+
+  .finder-answer-pills {
+    gap: 5px;
+    margin-top: 6px;
+  }
+
+  .finder-answer-pills span {
+    min-height: 24px;
+    padding: 4px 7px;
+    font-size: 0.72rem;
+  }
+
+  .finder-next-step {
+    gap: 7px;
+  }
+
+  .finder-next-step .btn {
+    min-height: 46px;
+  }
+
+  .result-email-form {
+    gap: 8px;
+  }
+
+  .result-email-form input {
+    min-height: 46px;
+  }
+
+  .finder-skip-email {
+    min-height: 30px;
+    font-size: 0.82rem;
+  }
+
+  .finder-result-next + .finder-result-next {
+    padding: 9px 10px;
+    background: #f8fbfe;
+  }
+
+  .finder-result-next + .finder-result-next .btn {
+    min-height: 42px;
   }
 
   .footer-links {
