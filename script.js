@@ -555,18 +555,26 @@ function renderFinderReport(result) {
   if (finderProductPrice) finderProductPrice.textContent = result.productPrice;
   if (finderProductSchedule) finderProductSchedule.textContent = `Recommended replacement: ${result.productSchedule}`;
   if (finderProductImage) {
+    const imageUrl = result.productImage;
+
+    finderProductImage.alt = result.productTitle || "Recommended air filter";
     finderProductImage.hidden = true;
     if (finderProductPlaceholder) finderProductPlaceholder.hidden = false;
-    finderProductImage.onload = () => {
+
+    const testImage = new Image();
+
+    testImage.onload = () => {
+      finderProductImage.src = imageUrl;
       finderProductImage.hidden = false;
       if (finderProductPlaceholder) finderProductPlaceholder.hidden = true;
     };
-    finderProductImage.onerror = () => {
+
+    testImage.onerror = () => {
       finderProductImage.hidden = true;
       if (finderProductPlaceholder) finderProductPlaceholder.hidden = false;
     };
-    finderProductImage.alt = result.productTitle;
-    finderProductImage.src = result.productImage;
+
+    testImage.src = imageUrl;
   }
   trackEvent("filter_finder_product_recommendation_viewed", {
     product_merv: result.productMerv,
