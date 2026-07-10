@@ -1343,6 +1343,10 @@ input:focus-visible {
   gap: 10px;
 }
 
+.finder-options[aria-label="Known filter size"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .finder-options-multi {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
@@ -1692,6 +1696,15 @@ input:focus-visible {
 .finder-size-guidance {
   border-color: rgba(242, 139, 46, 0.28);
   background: linear-gradient(180deg, #fff8ed, #ffffff);
+}
+
+.finder-size-guidance[hidden],
+.finder-retailer-block[hidden] {
+  display: none !important;
+}
+
+.finder-size-confirmation-field {
+  margin-top: 10px;
 }
 
 .finder-match-score {

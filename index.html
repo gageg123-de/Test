@@ -63,7 +63,7 @@
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "xbqsjc3yut");
   </script>
-  <link rel="stylesheet" href="style.css?v=result-cleanup-1">
+  <link rel="stylesheet" href="style.css?v=accuracy-trust-fix-1">
 </head>
 <body>
   <header class="site-header" data-header>
@@ -173,7 +173,6 @@
             <div class="finder-options" role="group" aria-label="Known filter size" data-known-size-options>
               <button class="finder-option" type="button" data-finder-option="knowsSize" data-value="Yes, I know it">Yes, I know it</button>
               <button class="finder-option" type="button" data-finder-option="knowsSize" data-value="Not sure">Not sure</button>
-              <button class="finder-option" type="button" data-finder-option="knowsSize" data-value="Help me find it">Help me find it</button>
             </div>
             <label class="finder-field" data-known-size-field hidden>
               <span>Enter your filter size</span>
@@ -205,6 +204,7 @@
               <button class="finder-option" type="button" data-finder-option="conditions" data-value="None of these">None of these</button>
             </div>
             <p class="finder-helper">This helps us suggest a replacement schedule that fits your home.</p>
+            <p class="finder-error" data-finder-error hidden></p>
           </div>
 
           <div class="finder-step" data-finder-step="4" hidden>
@@ -225,9 +225,9 @@
             <strong data-finder-analyzing-title>Building your filter recommendation...</strong>
             <p data-finder-analyzing-copy>Reviewing your size, home conditions, and filtration needs.</p>
             <div class="finder-analyzing-steps">
-              <span data-analyzing-step="1">Checking filter size</span>
-              <span data-analyzing-step="2">Matching MERV rating</span>
-              <span data-analyzing-step="3">Building replacement plan</span>
+              <span data-analyzing-step="1">Verifying size information</span>
+              <span data-analyzing-step="2">Reviewing home conditions</span>
+              <span data-analyzing-step="3">Calculating replacement timing</span>
             </div>
           </div>
 
@@ -248,7 +248,7 @@
               </div>
               <div>
                 <small>Schedule</small>
-                <span data-finder-result-schedule>Every 60-90 days</span>
+                <span data-finder-result-schedule>About every 90 days</span>
               </div>
             </div>
             <div class="finder-result-quick-details">
@@ -283,6 +283,18 @@
               </div>
             </div>
           </div>
+          <div class="finder-result-block finder-size-guidance" data-finder-size-guidance hidden>
+            <strong>How to confirm your size</strong>
+            <p data-finder-size-guidance-copy></p>
+            <p>Check the dimensions printed on the cardboard edge. The format usually looks like 20x25x1.</p>
+            <label class="finder-field finder-size-confirmation-field">
+              <span>Enter the size once you find it</span>
+              <input type="text" data-finder-confirm-size-input data-size-autocomplete placeholder="Example: 20x25x1" autocomplete="off" inputmode="text">
+              <div class="size-suggestions" data-size-suggestions hidden></div>
+            </label>
+            <button class="btn btn-primary" type="button" data-finder-confirm-size-button>Update My Recommendation</button>
+            <p class="finder-error" data-finder-confirm-size-error hidden></p>
+          </div>
           <p class="finder-email-note" data-finder-email-note hidden>We could not email your report, but your recommendation is shown above.</p>
           <div class="finder-result-block finder-retailer-block" data-finder-retailer-block>
             <strong>Ready to buy?</strong>
@@ -310,10 +322,6 @@
           <div class="finder-insight" data-finder-insight>
             <strong data-finder-insight-title>Your filter insight</strong>
             <p data-finder-insight-copy></p>
-          </div>
-          <div class="finder-result-block finder-size-guidance" data-finder-size-guidance hidden>
-            <strong>How to confirm your size</strong>
-            <p data-finder-size-guidance-copy></p>
           </div>
           <details class="finder-result-block finder-disclosure finder-filter-type">
             <summary data-finder-why-title>Why we chose MERV 8</summary>
@@ -441,6 +449,6 @@
     </div>
   </footer>
 
-  <script src="script.js?v=result-cleanup-1"></script>
+  <script src="script.js?v=accuracy-trust-fix-1"></script>
 </body>
 </html>

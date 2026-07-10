@@ -3,7 +3,6 @@ const navToggle = document.querySelector("[data-nav-toggle]");
 const navMenu = document.querySelector("[data-nav-menu]");
 const navLinks = document.querySelectorAll(".nav-links a, .footer-links a");
 const heroFinderCta = document.querySelector("[data-hero-finder-cta]");
-const filterFinder = document.querySelector("[data-filter-finder]");
 const finderStartButton = document.querySelector("[data-finder-start]");
 const finderModal = document.querySelector("[data-finder-modal]");
 const finderModalCard = document.querySelector(".finder-modal");
@@ -16,7 +15,6 @@ const finderCompleteButton = document.querySelector("[data-finder-complete]");
 const finderProgressLabel = document.querySelector("[data-finder-progress-label]");
 const finderProgressBar = document.querySelector("[data-finder-progress-bar]");
 const knownSizeField = document.querySelector("[data-known-size-field]");
-const knownSizeOptions = document.querySelector("[data-known-size-options]");
 const finderKnownSizeInput = document.querySelector("[data-finder-size-known]");
 const finderAnalyzing = document.querySelector("[data-finder-analyzing]");
 const finderAnalyzingSteps = document.querySelectorAll("[data-analyzing-step]");
@@ -42,6 +40,9 @@ const finderInsightTitle = document.querySelector("[data-finder-insight-title]")
 const finderInsightCopy = document.querySelector("[data-finder-insight-copy]");
 const finderSizeGuidance = document.querySelector("[data-finder-size-guidance]");
 const finderSizeGuidanceCopy = document.querySelector("[data-finder-size-guidance-copy]");
+const finderConfirmSizeInput = document.querySelector("[data-finder-confirm-size-input]");
+const finderConfirmSizeButton = document.querySelector("[data-finder-confirm-size-button]");
+const finderConfirmSizeError = document.querySelector("[data-finder-confirm-size-error]");
 const finderProductImage = document.querySelector("[data-finder-product-image]");
 const finderProductPlaceholder = document.querySelector("[data-finder-product-placeholder]");
 const finderProductSizeTitle = document.querySelector("[data-finder-product-size-title]");
@@ -64,6 +65,20 @@ const finderStorageKey = "filterWizardFinderResults";
 const emailStorageKey = "filterWizardEmailSignups";
 const finderTotalSteps = 4;
 const amazonAffiliateTag = "";
+const filterPriceRanges = {
+  "MERV 8": {
+    min: 8,
+    max: 14
+  },
+  "MERV 11": {
+    min: 12,
+    max: 18
+  },
+  "MERV 13": {
+    min: 16,
+    max: 25
+  }
+};
 
 let finderCurrentStep = 1;
 let finderEmailEnteredTracked = false;
@@ -159,13 +174,6 @@ function setupRevealAnimations() {
   revealItems.forEach((item) => observer.observe(item));
 }
 
-function scrollToElement(element) {
-  element?.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-}
-
 function getFocusableElements(container) {
   return Array.from(
     container?.querySelectorAll(
@@ -247,6 +255,11 @@ function resetFinderForModal() {
   });
   if (knownSizeField) knownSizeField.hidden = true;
   if (finderKnownSizeInput) finderKnownSizeInput.value = "";
+  if (finderConfirmSizeInput) finderConfirmSizeInput.value = "";
+  if (finderConfirmSizeError) {
+    finderConfirmSizeError.textContent = "";
+    finderConfirmSizeError.hidden = true;
+  }
   if (resultEmailInput) resultEmailInput.value = "";
   if (resultEmailForm) resultEmailForm.hidden = false;
   if (resultEmailSuccess) resultEmailSuccess.hidden = true;
@@ -255,13 +268,13 @@ function resetFinderForModal() {
   if (finderAnalyzing) finderAnalyzing.hidden = true;
   finderAnalyzingSteps.forEach((step) => step.classList.remove("is-active"));
   if (finderCompleteButton) finderCompleteButton.disabled = false;
+  retailerViewedObserver?.disconnect();
+  retailerViewedTracked = false;
 }
 
-function saveToLocalStorage(key, value) {
+function saveLatestToLocalStorage(key, value) {
   try {
-    const current = JSON.parse(localStorage.getItem(key)) || [];
-    current.push(value);
-    localStorage.setItem(key, JSON.stringify(current));
+    localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
     console.warn("Filter Wizard could not save to localStorage.", error);
   }
@@ -312,12 +325,6 @@ function parseFilterSize(value) {
 
 function isValidFilterSize(value) {
   return Boolean(parseFilterSize(value));
-}
-
-function getFinderSize() {
-  if (finderState.knowsSize !== "Yes, I know it") return "";
-  finderState.knownSize = finderKnownSizeInput?.value.trim() || "";
-  return parseFilterSize(finderState.knownSize)?.normalized || "";
 }
 
 function getFinderStepLabel(step) {
@@ -484,6 +491,16 @@ function validateFinderStep(step = finderCurrentStep) {
     return false;
   }
 
+  if (step === 3 && finderState.conditions.length === 0) {
+    setFinderError(stepEl, "Select anything that applies, or choose \"None of these.\"");
+    trackEvent("filter_finder_conditions_required", {
+      current_step: step,
+      knows_size: finderState.knowsSize || "Not answered",
+      location: finderState.location || "Not answered"
+    });
+    return false;
+  }
+
   return true;
 }
 
@@ -504,18 +521,52 @@ function getLocationGuidance(location) {
   return guidance[location] || guidance["I'm not sure"];
 }
 
-function getRecommendedSchedule() {
-  const conditions = finderState.conditions;
-  if (conditions.some((condition) => ["Pets", "Allergies", "Heavy dust"].includes(condition))) {
-    return "Every 30-60 days";
+function getReplacementPlan(conditions = []) {
+  const selected = new Set(conditions);
+  const hasPets = selected.has("Pets");
+  const hasAllergies = selected.has("Allergies");
+  const hasHeavyDust = selected.has("Heavy dust");
+  const hasKids = selected.has("Kids at home");
+  const hasNone = selected.has("None of these");
+  const demandingConditionCount = [hasPets, hasAllergies, hasHeavyDust].filter(Boolean).length;
+
+  if (demandingConditionCount >= 2) {
+    return {
+      intervalDays: 45,
+      scheduleLabel: "About every 45 days",
+      replacementsPerYear: Math.ceil(365 / 45)
+    };
   }
-  if (conditions.length === 1 && conditions.includes("Kids at home")) {
-    return "Every 60-90 days";
+
+  if (hasPets || hasAllergies || hasHeavyDust) {
+    return {
+      intervalDays: 60,
+      scheduleLabel: "About every 60 days",
+      replacementsPerYear: Math.ceil(365 / 60)
+    };
   }
-  if (conditions.includes("None of these")) {
-    return "Every 90 days";
+
+  if (hasKids) {
+    return {
+      intervalDays: 75,
+      scheduleLabel: "About every 75 days",
+      replacementsPerYear: Math.ceil(365 / 75)
+    };
   }
-  return "Every 60-90 days";
+
+  if (hasNone) {
+    return {
+      intervalDays: 90,
+      scheduleLabel: "About every 90 days",
+      replacementsPerYear: Math.ceil(365 / 90)
+    };
+  }
+
+  return {
+    intervalDays: 90,
+    scheduleLabel: "About every 90 days",
+    replacementsPerYear: Math.ceil(365 / 90)
+  };
 }
 
 function getRecommendedFilterType() {
@@ -523,14 +574,16 @@ function getRecommendedFilterType() {
   if (conditions.includes("Allergies")) {
     return {
       type: "MERV 13",
-      copy: "Best fit for allergy-sensitive homes and finer particle filtration.",
-      benefit: "Designed to capture finer airborne particles than lower-rated filters.",
-      caution: "Higher filtration can create more airflow resistance, so check your HVAC manufacturer's guidance before upgrading."
+      displayLabel: "Consider MERV 13",
+      copy: "Worth considering for allergy-sensitive homes and finer particle filtration.",
+      benefit: "MERV 13 filters are designed to capture finer airborne particles than lower-rated filters.",
+      caution: "Higher filtration can increase airflow resistance. Confirm your HVAC manufacturer's recommended maximum MERV rating before upgrading."
     };
   }
   if (conditions.some((condition) => ["Pets", "Heavy dust"].includes(condition))) {
     return {
       type: "MERV 11",
+      displayLabel: "MERV 11",
       copy: "Better fit for pets, dust, and higher everyday filtration needs.",
       benefit: "Provides stronger particle capture than a basic household filter while remaining practical for many residential systems.",
       caution: "Confirm that your HVAC equipment supports the filter rating recommended by its manufacturer."
@@ -538,6 +591,7 @@ function getRecommendedFilterType() {
   }
   return {
     type: "MERV 8",
+    displayLabel: "MERV 8",
     copy: "Good fit for standard homes with normal dust levels.",
     benefit: "Captures common household dust, pollen, and larger airborne particles.",
     caution: "A practical default when pets, heavy dust, or allergy concerns are not major factors."
@@ -581,15 +635,14 @@ function getFinderInsight(result) {
   return insight;
 }
 
-function getNextSuggestedChange(schedule) {
-  const daysToAdd = schedule === "Every 30-60 days"
-    ? 45
-    : schedule === "Every 60-90 days"
-      ? 75
-      : 90;
+function getNextSuggestedChange(intervalDays) {
   const date = new Date();
-  date.setDate(date.getDate() + daysToAdd);
+  date.setDate(date.getDate() + intervalDays);
   return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+function hasConfirmedFilterSize(result) {
+  return Boolean(parseFilterSize(result?.filterSize));
 }
 
 function getSizeConfidence(result) {
@@ -617,14 +670,15 @@ function getSizeConfidence(result) {
   };
 }
 
-function getEstimatedYearlyCost(schedule, merv) {
-  if (merv === "MERV 13") {
-    return schedule === "Every 30-60 days" ? "$96-$150/year" : "$64-$100/year";
-  }
-  if (merv === "MERV 11") {
-    return schedule === "Every 30-60 days" ? "$72-$108/year" : "$48-$72/year";
-  }
-  return schedule === "Every 30-60 days" ? "$48-$84/year" : "$32-$56/year";
+function formatCurrency(value) {
+  return `$${Math.round(value)}`;
+}
+
+function getEstimatedYearlyCost(merv, replacementsPerYear) {
+  const range = filterPriceRanges[merv] || filterPriceRanges["MERV 8"];
+  const low = range.min * replacementsPerYear;
+  const high = range.max * replacementsPerYear;
+  return `${formatCurrency(low)}-${formatCurrency(high)}/year`;
 }
 
 function getProductRecommendation(result) {
@@ -635,21 +689,19 @@ function getProductRecommendation(result) {
   const productDetails = {
     "MERV 13": {
       image: "assets/images/filter-product-merv-13.webp",
-      bestFor: "Allergies • Fine particles • Stronger filtration",
-      priceRange: "Estimated $16-$25 each"
+      bestFor: "Allergies • Fine particles • Stronger filtration"
     },
     "MERV 11": {
       image: "assets/images/filter-product-merv-11.webp",
-      bestFor: "Pets • Dust • Everyday filtration",
-      priceRange: "Estimated $12-$18 each"
+      bestFor: "Pets • Dust • Everyday filtration"
     },
     "MERV 8": {
       image: "assets/images/filter-product-merv-8.webp",
-      bestFor: "Standard homes • Normal dust",
-      priceRange: "Estimated $8-$14 each"
+      bestFor: "Standard homes • Normal dust"
     }
   };
   const details = productDetails[merv] || productDetails["MERV 8"];
+  const range = filterPriceRanges[merv] || filterPriceRanges["MERV 8"];
 
   return {
     title: size === "Check before ordering"
@@ -661,8 +713,8 @@ function getProductRecommendation(result) {
     size,
     merv,
     bestFor: details.bestFor,
-    priceRange: details.priceRange,
-    yearlyCost: getEstimatedYearlyCost(result.recommendedSchedule, merv),
+    priceRange: `Estimated $${range.min}-$${range.max} each`,
+    yearlyCost: getEstimatedYearlyCost(merv, result.replacementsPerYear),
     schedule: result.recommendedSchedule
   };
 }
@@ -715,6 +767,7 @@ function getRetailerLinks(result) {
 
 function setupRetailerViewedTracking(result) {
   if (!finderRetailerBlock || typeof IntersectionObserver !== "function") return;
+  if (!hasConfirmedFilterSize(result)) return;
 
   retailerViewedTracked = false;
   retailerViewedObserver?.disconnect();
@@ -727,6 +780,8 @@ function setupRetailerViewedTracking(result) {
       product_size: result.productSize,
       product_merv: result.productMerv,
       recommended_schedule: result.recommendedSchedule,
+      replacement_interval_days: result.replacementIntervalDays,
+      replacements_per_year: result.replacementsPerYear,
       size_confidence_level: result.sizeConfidenceLevel
     });
     retailerViewedObserver?.disconnect();
@@ -738,18 +793,28 @@ function setupRetailerViewedTracking(result) {
   retailerViewedObserver.observe(finderRetailerBlock);
 }
 
-function getReminderMonths(schedule) {
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const count = schedule === "Every 30-60 days" ? 6 : 4;
-  const interval = schedule === "Every 30-60 days" ? 2 : 3;
-  const startMonth = new Date().getMonth();
+function getReminderMonths(intervalDays, count) {
+  const formatter = new Intl.DateTimeFormat("en-US", { month: "short" });
+  const months = [];
+  const date = new Date();
 
-  return Array.from({ length: count }, (_, index) => monthNames[(startMonth + index * interval) % 12]);
+  for (let index = 1; index <= count; index += 1) {
+    const reminderDate = new Date(date);
+    reminderDate.setDate(reminderDate.getDate() + intervalDays * index);
+    const label = formatter.format(reminderDate);
+
+    if (months[months.length - 1] !== label) {
+      months.push(label);
+    }
+  }
+
+  return months;
 }
 
 function renderFinderReport(result) {
-  const hasValidSize = Boolean(parseFilterSize(result.filterSize));
+  const hasValidSize = hasConfirmedFilterSize(result);
   const confidence = getSizeConfidence(result);
+  const showRetailers = hasValidSize;
 
   if (finderResultHeading) {
     finderResultHeading.textContent = hasValidSize
@@ -757,9 +822,11 @@ function renderFinderReport(result) {
       : "Your filter type is ready";
   }
   if (finderResultSubheading) {
-    finderResultSubheading.textContent = hasValidSize
-      ? "We found your best match."
-      : "Confirm the printed size before ordering.";
+    finderResultSubheading.textContent = result.recommendedFilterType === "MERV 13"
+      ? "We found a filtration option worth considering."
+      : hasValidSize
+        ? "We found your best match."
+        : "Confirm the printed size before ordering.";
   }
   if (finderConfidencePill) {
     finderConfidencePill.textContent = confidence.label;
@@ -778,15 +845,24 @@ function renderFinderReport(result) {
   if (finderResultSchedule) finderResultSchedule.textContent = result.recommendedSchedule;
   if (finderNextChange) finderNextChange.textContent = result.nextSuggestedChange;
   if (finderYearlyCost) finderYearlyCost.textContent = result.productYearlyCost;
-  if (finderMerv) finderMerv.textContent = result.recommendedFilterType;
+  if (finderMerv) finderMerv.textContent = result.recommendedFilterDisplayLabel || result.recommendedFilterType;
   if (finderMervCopy) finderMervCopy.textContent = result.recommendedFilterCopy;
   if (finderMervBenefit) finderMervBenefit.textContent = result.recommendedFilterBenefit;
   if (finderMervCaution) finderMervCaution.textContent = result.recommendedFilterCaution;
-  if (finderWhyTitle) finderWhyTitle.textContent = `Why we chose ${result.recommendedFilterType}`;
+  if (finderWhyTitle) {
+    finderWhyTitle.textContent = result.recommendedFilterType === "MERV 13"
+      ? "Why we suggest considering MERV 13"
+      : `Why we chose ${result.recommendedFilterType}`;
+  }
   if (finderInsightTitle) finderInsightTitle.textContent = result.insightTitle;
   if (finderInsightCopy) finderInsightCopy.textContent = result.insightCopy;
   if (finderSizeGuidance) finderSizeGuidance.hidden = hasValidSize;
   if (finderSizeGuidanceCopy) finderSizeGuidanceCopy.textContent = result.sizeGuidance || "";
+  if (finderConfirmSizeInput) finderConfirmSizeInput.value = "";
+  if (finderConfirmSizeError) {
+    finderConfirmSizeError.textContent = "";
+    finderConfirmSizeError.hidden = true;
+  }
   if (finderAnswerPills) {
     finderAnswerPills.innerHTML = "";
     const answers = [
@@ -821,6 +897,16 @@ function renderFinderReport(result) {
       : "Confirm size";
     finderRetailerSummary.textContent = `${sizeLabel} • ${result.productMerv}`;
   }
+  if (finderProductCta) {
+    finderProductCta.textContent = showRetailers ? "View Buying Options" : "Help Me Confirm My Size";
+    finderProductCta.dataset.finderProductCtaMode = showRetailers ? "retailers" : "size-guidance";
+  }
+  if (finderSkipToRetailers) {
+    finderSkipToRetailers.textContent = showRetailers ? "Save this result instead" : "Save this recommendation";
+  }
+  if (finderContinueToRetailers) {
+    finderContinueToRetailers.hidden = !showRetailers;
+  }
   if (finderProductImage) {
     const imageUrl = result.productImage;
 
@@ -843,60 +929,81 @@ function renderFinderReport(result) {
 
     testImage.src = imageUrl;
   }
+  if (finderRetailerBlock) {
+    finderRetailerBlock.hidden = !showRetailers;
+  }
   if (finderRetailerOptions) {
     finderRetailerOptions.innerHTML = "";
-    const searchQuery = buildRetailerSearchQuery(result);
-    getRetailerLinks(result).forEach((retailer) => {
-      const card = document.createElement("article");
-      card.className = "finder-retailer-card";
+    if (showRetailers) {
+      const searchQuery = buildRetailerSearchQuery(result);
+      getRetailerLinks(result).forEach((retailer) => {
+        const card = document.createElement("article");
+        card.className = "finder-retailer-card";
 
-      const title = document.createElement("strong");
-      title.textContent = retailer.name;
+        const title = document.createElement("strong");
+        title.textContent = retailer.name;
 
-      const copy = document.createElement("p");
-      copy.textContent = retailer.subtext;
+        const copy = document.createElement("p");
+        copy.textContent = retailer.subtext;
 
-      const link = document.createElement("a");
-      link.className = "btn btn-secondary";
-      link.href = retailer.url;
-      link.target = "_blank";
-      link.rel = "noopener sponsored nofollow";
-      link.textContent = "View Options";
-      link.dataset.retailerName = retailer.name;
-      link.dataset.retailerUrl = retailer.url;
-      link.addEventListener("click", () => {
-        trackEvent("filter_finder_retailer_clicked", {
-          retailer: retailer.name,
-          product_size: result.productSize,
-          product_merv: result.productMerv,
-          search_query: searchQuery,
-          recommended_schedule: result.recommendedSchedule
+        const link = document.createElement("a");
+        link.className = "btn btn-secondary";
+        link.href = retailer.url;
+        link.target = "_blank";
+        link.rel = "noopener sponsored nofollow";
+        link.textContent = "View Options";
+        link.dataset.retailerName = retailer.name;
+        link.dataset.retailerUrl = retailer.url;
+        link.addEventListener("click", () => {
+          trackEvent("filter_finder_retailer_clicked", {
+            retailer: retailer.name,
+            product_size: result.productSize,
+            product_merv: result.productMerv,
+            search_query: searchQuery,
+            recommended_schedule: result.recommendedSchedule,
+            replacement_interval_days: result.replacementIntervalDays,
+            replacements_per_year: result.replacementsPerYear,
+            size_confidence_level: result.sizeConfidenceLevel
+          });
         });
-      });
 
-      card.append(title, copy, link);
-      finderRetailerOptions.appendChild(card);
-    });
+        card.append(title, copy, link);
+        finderRetailerOptions.appendChild(card);
+      });
+    }
   }
   trackEvent("filter_finder_product_recommendation_viewed", {
     product_merv: result.productMerv,
     product_size: result.productSize,
     product_price: result.productPrice,
     recommended_schedule: result.recommendedSchedule,
+    replacement_interval_days: result.replacementIntervalDays,
+    replacements_per_year: result.replacementsPerYear,
+    recommended_filter_display_label: result.recommendedFilterDisplayLabel || result.recommendedFilterType,
     normalized_filter_size: result.normalizedFilterSize,
     size_confidence_level: result.sizeConfidenceLevel,
-    size_selected_from_suggestion: result.sizeSelectedFromSuggestion
+    size_selected_from_suggestion: result.sizeSelectedFromSuggestion,
+    has_confirmed_size: hasValidSize
   });
   trackEvent("filter_finder_result_summary_viewed", {
     filter_size: result.filterSize,
     recommended_filter_type: result.recommendedFilterType,
+    recommended_filter_display_label: result.recommendedFilterDisplayLabel || result.recommendedFilterType,
     recommended_schedule: result.recommendedSchedule,
+    replacement_interval_days: result.replacementIntervalDays,
+    replacements_per_year: result.replacementsPerYear,
     next_suggested_change: result.nextSuggestedChange,
     estimated_yearly_cost: result.productYearlyCost,
     confidence_status: confidence.label,
-    size_confidence_level: confidence.level
+    size_confidence_level: confidence.level,
+    has_confirmed_size: hasValidSize
   });
-  setupRetailerViewedTracking(result);
+  if (showRetailers) {
+    setupRetailerViewedTracking(result);
+  } else {
+    retailerViewedObserver?.disconnect();
+    retailerViewedTracked = false;
+  }
 }
 
 function getFinderCopyText(result) {
@@ -906,7 +1013,10 @@ function getFinderCopyText(result) {
     `Filter size: ${result.filterSize}`,
     `Size confidence: ${result.sizeConfidenceLabel}`,
     result.sizeGuidance ? `Size confirmation guidance: ${result.sizeGuidance}` : "",
-    `MERV: ${result.recommendedFilterType}`,
+    `Recommended rating: ${result.recommendedFilterDisplayLabel || result.recommendedFilterType}`,
+    `Actual filter rating: ${result.recommendedFilterType}`,
+    `Replacement interval: ${result.replacementIntervalDays} days`,
+    `Estimated replacements per year: ${result.replacementsPerYear}`,
     `Schedule: ${result.recommendedSchedule}`,
     `Estimated price range: ${result.productPrice}`,
     `Estimated yearly cost: ${result.productYearlyCost}`,
@@ -917,7 +1027,7 @@ function getFinderCopyText(result) {
     `Filter type note: ${result.recommendedFilterCaution}`,
     `Insight: ${result.insightTitle} - ${result.insightCopy}`,
     `Reminder months: ${result.reminderMonths.join(", ")}`,
-    `Buying search: ${buildRetailerSearchQuery(result)}`
+    hasConfirmedFilterSize(result) ? `Buying search: ${buildRetailerSearchQuery(result)}` : ""
   ].filter(Boolean).join("\n");
 }
 
@@ -952,9 +1062,13 @@ function addResultFields(formData, result) {
   formData.set("filterLocation", result.location);
   formData.set("homeConditions", result.homeConditions.join(", ") || "Not specified");
   formData.set("recommendedSchedule", result.recommendedSchedule);
+  formData.set("replacementIntervalDays", String(result.replacementIntervalDays || ""));
+  formData.set("replacementsPerYear", String(result.replacementsPerYear || ""));
   formData.set("recommendedFilterType", result.recommendedFilterType);
+  formData.set("recommendedFilterDisplayLabel", result.recommendedFilterDisplayLabel || result.recommendedFilterType || "");
   formData.set("recommendedFilterBenefit", result.recommendedFilterBenefit || "");
   formData.set("recommendedFilterCaution", result.recommendedFilterCaution || "");
+  formData.set("hasConfirmedSize", String(hasConfirmedFilterSize(result)));
   formData.set("estimatedReminderMonths", result.reminderMonths.join(", "));
   formData.set("nextSuggestedChange", result.nextSuggestedChange || "");
   formData.set("filterInsightTitle", result.insightTitle || "");
@@ -963,8 +1077,13 @@ function addResultFields(formData, result) {
   formData.set("recommendedFilterBestFor", result.productBestFor || "");
   formData.set("estimatedFilterPrice", result.productPrice || "");
   formData.set("estimatedYearlyCost", result.productYearlyCost || "");
-  formData.set("buyingSearchQuery", buildRetailerSearchQuery(result));
-  formData.set("buyingSearchLinks", getRetailerLinks(result).map((retailer) => `${retailer.name}: ${retailer.url}`).join("\n"));
+  formData.set("buyingSearchQuery", hasConfirmedFilterSize(result) ? buildRetailerSearchQuery(result) : "");
+  formData.set(
+    "buyingSearchLinks",
+    hasConfirmedFilterSize(result)
+      ? getRetailerLinks(result).map((retailer) => `${retailer.name}: ${retailer.url}`).join("\n")
+      : ""
+  );
   formData.set("productImage", result.productImage || "");
 }
 
@@ -979,8 +1098,9 @@ async function completeFilterFinder() {
     : null;
   const foundSize = parsedSize?.normalized || "";
   const filterType = getRecommendedFilterType();
+  const replacementPlan = getReplacementPlan(finderState.conditions);
   finderState.email = "";
-  finderState.recommendedSchedule = getRecommendedSchedule();
+  finderState.recommendedSchedule = replacementPlan.scheduleLabel;
   finderState.normalizedSize = foundSize;
 
   if (finderEmailNote) finderEmailNote.hidden = true;
@@ -992,11 +1112,13 @@ async function completeFilterFinder() {
     filterSize: foundSize || "Check before ordering",
     homeConditions: [...finderState.conditions],
     recommendedSchedule: finderState.recommendedSchedule,
+    replacementIntervalDays: replacementPlan.intervalDays,
+    replacementsPerYear: replacementPlan.replacementsPerYear,
     recommendedFilterType: filterType.type,
+    recommendedFilterDisplayLabel: filterType.displayLabel,
     recommendedFilterCopy: filterType.copy,
     recommendedFilterBenefit: filterType.benefit,
     recommendedFilterCaution: filterType.caution,
-    reminderMonths: getReminderMonths(finderState.recommendedSchedule),
     normalizedFilterSize: foundSize || "",
     sizeSelectedFromSuggestion: finderState.sizeSelectedFromSuggestion,
     sizeGuidance: foundSize ? "" : getLocationGuidance(finderState.location || "I'm not sure"),
@@ -1005,7 +1127,9 @@ async function completeFilterFinder() {
   };
   const confidence = getSizeConfidence(result);
   const insight = getFinderInsight(result);
-  const nextSuggestedChange = getNextSuggestedChange(result.recommendedSchedule);
+  const reminderCount = Math.min(result.replacementsPerYear, 8);
+  const nextSuggestedChange = getNextSuggestedChange(result.replacementIntervalDays);
+  result.reminderMonths = getReminderMonths(result.replacementIntervalDays, reminderCount);
   const product = getProductRecommendation(result);
   Object.assign(result, {
     sizeConfidenceLevel: confidence.level,
@@ -1059,14 +1183,18 @@ async function completeFilterFinder() {
     if (finderCompleteButton) finderCompleteButton.disabled = false;
 
     renderFinderReport(result);
-    saveToLocalStorage(finderStorageKey, result);
+    saveLatestToLocalStorage(finderStorageKey, result);
     finderCompleted = true;
 
     trackEvent("filter_finder_analysis_completed", {
       recommended_filter_type: result.recommendedFilterType,
+      recommended_filter_display_label: result.recommendedFilterDisplayLabel,
       recommended_schedule: result.recommendedSchedule,
+      replacement_interval_days: result.replacementIntervalDays,
+      replacements_per_year: result.replacementsPerYear,
       normalized_filter_size: result.normalizedFilterSize,
-      size_confidence_level: result.sizeConfidenceLevel
+      size_confidence_level: result.sizeConfidenceLevel,
+      has_confirmed_size: hasConfirmedFilterSize(result)
     });
     trackEvent("filter_finder_completed", {
       knows_size: result.knowsSize,
@@ -1075,9 +1203,13 @@ async function completeFilterFinder() {
       has_email: Boolean(result.email),
       recommended_schedule: result.recommendedSchedule,
       recommended_filter_type: result.recommendedFilterType,
+      recommended_filter_display_label: result.recommendedFilterDisplayLabel,
+      replacement_interval_days: result.replacementIntervalDays,
+      replacements_per_year: result.replacementsPerYear,
       size_confidence_level: result.sizeConfidenceLevel,
       size_selected_from_suggestion: result.sizeSelectedFromSuggestion,
-      has_valid_size: Boolean(parsedSize)
+      has_valid_size: Boolean(parsedSize),
+      has_confirmed_size: hasConfirmedFilterSize(result)
     });
     trackEvent("filter_finder_result_viewed", {
       knows_size: result.knowsSize,
@@ -1085,15 +1217,20 @@ async function completeFilterFinder() {
       location: result.location,
       recommended_schedule: result.recommendedSchedule,
       recommended_filter_type: result.recommendedFilterType,
+      recommended_filter_display_label: result.recommendedFilterDisplayLabel,
+      replacement_interval_days: result.replacementIntervalDays,
+      replacements_per_year: result.replacementsPerYear,
       has_email: false,
       completed: true,
       size_confidence_level: result.sizeConfidenceLevel,
       size_selected_from_suggestion: result.sizeSelectedFromSuggestion,
-      has_valid_size: Boolean(parsedSize)
+      has_valid_size: Boolean(parsedSize),
+      has_confirmed_size: hasConfirmedFilterSize(result)
     });
     trackEvent("filter_finder_email_prompt_viewed", {
       recommended_schedule: result.recommendedSchedule,
-      recommended_filter_type: result.recommendedFilterType
+      recommended_filter_type: result.recommendedFilterType,
+      recommended_filter_display_label: result.recommendedFilterDisplayLabel
     });
   
     if (finderResult) {
@@ -1142,32 +1279,40 @@ async function handleEmailFormSubmit(event, eventName, successElement) {
       source: String(formData.get("source") || "Email Form"),
       submittedAt
     };
-    saveToLocalStorage(emailStorageKey, signup);
+    saveLatestToLocalStorage(emailStorageKey, signup);
     trackEvent(eventName, {
       form_location: String(formData.get("source") || "Email Form"),
       has_finder_result: Boolean(latestFinderReport),
       normalized_filter_size: latestFinderReport?.normalizedFilterSize || "",
       recommended_schedule: latestFinderReport?.recommendedSchedule || "",
+      replacement_interval_days: latestFinderReport?.replacementIntervalDays || "",
+      replacements_per_year: latestFinderReport?.replacementsPerYear || "",
       recommended_filter_type: latestFinderReport?.recommendedFilterType || "",
+      recommended_filter_display_label: latestFinderReport?.recommendedFilterDisplayLabel || "",
       recommended_filter_benefit: latestFinderReport?.recommendedFilterBenefit || "",
       next_suggested_change: latestFinderReport?.nextSuggestedChange || "",
       size_confidence_level: latestFinderReport?.sizeConfidenceLevel || "",
       size_selected_from_suggestion: Boolean(latestFinderReport?.sizeSelectedFromSuggestion),
       recommended_filter_product: latestFinderReport?.productTitle || "",
       estimated_filter_price: latestFinderReport?.productPrice || "",
+      has_confirmed_size: latestFinderReport ? hasConfirmedFilterSize(latestFinderReport) : false,
       has_email: Boolean(email)
     });
     trackEvent("generate_lead", {
       form_location: String(formData.get("source") || "Email Form"),
       normalized_filter_size: latestFinderReport?.normalizedFilterSize || "",
       recommended_schedule: latestFinderReport?.recommendedSchedule || "",
+      replacement_interval_days: latestFinderReport?.replacementIntervalDays || "",
+      replacements_per_year: latestFinderReport?.replacementsPerYear || "",
       recommended_filter_type: latestFinderReport?.recommendedFilterType || "",
+      recommended_filter_display_label: latestFinderReport?.recommendedFilterDisplayLabel || "",
       recommended_filter_benefit: latestFinderReport?.recommendedFilterBenefit || "",
       next_suggested_change: latestFinderReport?.nextSuggestedChange || "",
       size_confidence_level: latestFinderReport?.sizeConfidenceLevel || "",
       size_selected_from_suggestion: Boolean(latestFinderReport?.sizeSelectedFromSuggestion),
       recommended_filter_product: latestFinderReport?.productTitle || "",
-      estimated_filter_price: latestFinderReport?.productPrice || ""
+      estimated_filter_price: latestFinderReport?.productPrice || "",
+      has_confirmed_size: latestFinderReport ? hasConfirmedFilterSize(latestFinderReport) : false
     });
     form.reset();
     form.hidden = true;
@@ -1352,6 +1497,13 @@ resultEmailInput?.addEventListener("input", () => {
   }
 });
 
+finderConfirmSizeInput?.addEventListener("input", () => {
+  if (finderConfirmSizeError) {
+    finderConfirmSizeError.textContent = "";
+    finderConfirmSizeError.hidden = true;
+  }
+});
+
 finderNextButton?.addEventListener("click", () => {
   if (!validateFinderStep(finderCurrentStep)) return;
   trackFinderStepCompleted(finderCurrentStep);
@@ -1386,11 +1538,23 @@ finderCopyButton?.addEventListener("click", async () => {
 });
 
 finderProductCta?.addEventListener("click", () => {
+  if (finderProductCta.dataset.finderProductCtaMode === "size-guidance") {
+    trackEvent("filter_finder_confirm_size_help_clicked", {
+      recommended_filter_type: latestFinderReport?.recommendedFilterType || "",
+      location: latestFinderReport?.location || ""
+    });
+    finderSizeGuidance?.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => finderConfirmSizeInput?.focus({ preventScroll: true }), 260);
+    return;
+  }
+
   trackEvent("filter_finder_view_buying_options_clicked", {
     product_merv: latestFinderReport?.productMerv || "",
     product_size: latestFinderReport?.productSize || "",
     product_price: latestFinderReport?.productPrice || "",
     recommended_schedule: latestFinderReport?.recommendedSchedule || "",
+    replacement_interval_days: latestFinderReport?.replacementIntervalDays || "",
+    replacements_per_year: latestFinderReport?.replacementsPerYear || "",
     normalized_filter_size: latestFinderReport?.normalizedFilterSize || "",
     size_confidence_level: latestFinderReport?.sizeConfidenceLevel || ""
   });
@@ -1413,6 +1577,54 @@ finderContinueToRetailers?.addEventListener("click", () => {
     product_merv: latestFinderReport?.productMerv || "",
     product_size: latestFinderReport?.productSize || "",
     recommended_schedule: latestFinderReport?.recommendedSchedule || ""
+  });
+  finderRetailerBlock?.scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+finderConfirmSizeButton?.addEventListener("click", () => {
+  if (!latestFinderReport || !finderConfirmSizeInput) return;
+
+  const parsedSize = parseFilterSize(finderConfirmSizeInput.value);
+  if (!parsedSize) {
+    if (finderConfirmSizeError) {
+      finderConfirmSizeError.textContent = "Enter a size in width x height x depth format, such as 20x25x1.";
+      finderConfirmSizeError.hidden = false;
+    }
+    finderConfirmSizeInput.focus({ preventScroll: true });
+    return;
+  }
+
+  const normalized = parsedSize.normalized;
+  latestFinderReport.filterSize = normalized;
+  latestFinderReport.normalizedFilterSize = normalized;
+  latestFinderReport.productSize = normalized;
+  latestFinderReport.productSizeTitle = normalized;
+  latestFinderReport.productTitle = `${normalized} ${latestFinderReport.recommendedFilterType} Pleated Air Filter`;
+  latestFinderReport.sizeSelectedFromSuggestion = false;
+  latestFinderReport.sizeGuidance = "";
+  latestFinderReport.sizeConfidenceLevel = "format-confirmed";
+  latestFinderReport.sizeConfidenceLabel = "✓ Size format confirmed";
+
+  const product = getProductRecommendation(latestFinderReport);
+  Object.assign(latestFinderReport, {
+    productTitle: product.title,
+    productSizeTitle: product.sizeTitle,
+    productTypeTitle: product.typeTitle,
+    productImage: product.image,
+    productSize: product.size,
+    productMerv: product.merv,
+    productBestFor: product.bestFor,
+    productPrice: product.priceRange,
+    productYearlyCost: product.yearlyCost,
+    productSchedule: product.schedule
+  });
+
+  renderFinderReport(latestFinderReport);
+  saveLatestToLocalStorage(finderStorageKey, latestFinderReport);
+  trackEvent("filter_finder_size_confirmed_after_result", {
+    normalized_filter_size: normalized,
+    recommended_filter_type: latestFinderReport.recommendedFilterType,
+    location: latestFinderReport.location
   });
   finderRetailerBlock?.scrollIntoView({ behavior: "smooth", block: "center" });
 });
