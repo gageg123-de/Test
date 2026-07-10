@@ -1639,12 +1639,6 @@ input:focus-visible {
   font-weight: 950;
 }
 
-.finder-product-yearly-cost {
-  color: var(--blue-dark);
-  font-size: 0.88rem;
-  font-weight: 850;
-}
-
 .finder-product-cta {
   width: 100%;
   margin-top: 2px;
@@ -2156,20 +2150,6 @@ input:focus-visible {
 .finder-copy-button:hover {
   color: var(--blue-dark);
   background: transparent;
-}
-
-.finder-skip-email {
-  min-height: 42px;
-  border: 0;
-  color: var(--blue-dark);
-  background: transparent;
-  font-size: 0.9rem;
-  font-weight: 850;
-  cursor: pointer;
-}
-
-.finder-skip-email:hover {
-  text-decoration: underline;
 }
 
 .finder-copy-row span {
@@ -3229,7 +3209,7 @@ input:focus {
 
   .finder-product-image-wrap,
   .finder-product-placeholder {
-    max-height: 170px;
+    max-height: 140px;
     padding: 6px;
   }
 
@@ -3360,11 +3340,6 @@ input:focus {
 
   .result-email-form input {
     min-height: 46px;
-  }
-
-  .finder-skip-email {
-    min-height: 30px;
-    font-size: 0.82rem;
   }
 
   .finder-result-next + .finder-result-next {

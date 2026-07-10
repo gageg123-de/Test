@@ -42,15 +42,12 @@ const finderInsightTitle = document.querySelector("[data-finder-insight-title]")
 const finderInsightCopy = document.querySelector("[data-finder-insight-copy]");
 const finderSizeGuidance = document.querySelector("[data-finder-size-guidance]");
 const finderSizeGuidanceCopy = document.querySelector("[data-finder-size-guidance-copy]");
-const finderEmailSkipButton = document.querySelector("[data-finder-email-skip]");
-const finderEmailSkipped = document.querySelector("[data-finder-email-skipped]");
 const finderProductImage = document.querySelector("[data-finder-product-image]");
 const finderProductPlaceholder = document.querySelector("[data-finder-product-placeholder]");
 const finderProductSizeTitle = document.querySelector("[data-finder-product-size-title]");
 const finderProductTypeTitle = document.querySelector("[data-finder-product-type-title]");
 const finderProductBestFor = document.querySelector("[data-finder-product-best-for]");
 const finderProductPrice = document.querySelector("[data-finder-product-price]");
-const finderProductYearlyCost = document.querySelector("[data-finder-product-yearly-cost]");
 const finderProductCta = document.querySelector("[data-finder-product-cta]");
 const finderSkipToRetailers = document.querySelector("[data-finder-skip-to-retailers]");
 const finderContinueToRetailers = document.querySelector("[data-finder-continue-to-retailers]");
@@ -253,7 +250,6 @@ function resetFinderForModal() {
   if (resultEmailInput) resultEmailInput.value = "";
   if (resultEmailForm) resultEmailForm.hidden = false;
   if (resultEmailSuccess) resultEmailSuccess.hidden = true;
-  if (finderEmailSkipped) finderEmailSkipped.hidden = true;
   if (finderEmailNote) finderEmailNote.hidden = true;
   if (finderCopyStatus) finderCopyStatus.hidden = true;
   if (finderAnalyzing) finderAnalyzing.hidden = true;
@@ -819,7 +815,6 @@ function renderFinderReport(result) {
   if (finderProductTypeTitle) finderProductTypeTitle.textContent = result.productTypeTitle;
   if (finderProductBestFor) finderProductBestFor.textContent = result.productBestFor;
   if (finderProductPrice) finderProductPrice.textContent = result.productPrice;
-  if (finderProductYearlyCost) finderProductYearlyCost.textContent = `Estimated yearly cost: ${result.productYearlyCost}`;
   if (finderRetailerSummary) {
     const sizeLabel = result.productSize && result.productSize !== "Check before ordering"
       ? result.productSize
@@ -892,7 +887,7 @@ function renderFinderReport(result) {
     size_confidence_level: result.sizeConfidenceLevel,
     size_selected_from_suggestion: result.sizeSelectedFromSuggestion
   });
-  trackEvent("filter_finder_profile_viewed", {
+  trackEvent("filter_finder_result_summary_viewed", {
     filter_size: result.filterSize,
     recommended_filter_type: result.recommendedFilterType,
     recommended_schedule: result.recommendedSchedule,
@@ -971,34 +966,6 @@ function addResultFields(formData, result) {
   formData.set("buyingSearchQuery", buildRetailerSearchQuery(result));
   formData.set("buyingSearchLinks", getRetailerLinks(result).map((retailer) => `${retailer.name}: ${retailer.url}`).join("\n"));
   formData.set("productImage", result.productImage || "");
-}
-
-async function submitFinderEmail(result) {
-  if (!result.email) return true;
-
-  const formData = new FormData();
-  formData.set("_subject", "New Filter Wizard filter finder result");
-  formData.set("source", "Filter Finder");
-  formData.set("email", result.email);
-  formData.set("submittedAt", result.submittedAt);
-  addResultFields(formData, result);
-
-  try {
-    await postToFormspree(resultEmailForm || earlyAccessForm, formData);
-    trackEvent("filter_finder_email_submitted", {
-      recommended_schedule: result.recommendedSchedule,
-      recommended_filter_type: result.recommendedFilterType,
-      recommended_filter_benefit: result.recommendedFilterBenefit,
-      next_suggested_change: result.nextSuggestedChange,
-      size_confidence_level: result.sizeConfidenceLevel,
-      size_selected_from_suggestion: result.sizeSelectedFromSuggestion,
-      location: result.location
-    });
-    return true;
-  } catch (error) {
-    console.error("Filter Wizard finder email submission error:", error);
-    return false;
-  }
 }
 
 async function completeFilterFinder() {
@@ -1416,16 +1383,6 @@ finderCopyButton?.addEventListener("click", async () => {
     console.warn("Filter Wizard recommendation could not be copied.", error);
     setFinderCopyStatus("Copy not available on this browser.");
   }
-});
-
-finderEmailSkipButton?.addEventListener("click", () => {
-  if (resultEmailForm) resultEmailForm.hidden = true;
-  if (finderEmailSkipped) finderEmailSkipped.hidden = false;
-  trackEvent("filter_finder_email_skipped", {
-    recommended_schedule: latestFinderReport?.recommendedSchedule,
-    recommended_filter_type: latestFinderReport?.recommendedFilterType,
-    has_email: false
-  });
 });
 
 finderProductCta?.addEventListener("click", () => {
