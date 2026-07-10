@@ -20,28 +20,28 @@ const knownSizeOptions = document.querySelector("[data-known-size-options]");
 const finderKnownSizeInput = document.querySelector("[data-finder-size-known]");
 const finderResult = document.querySelector("[data-finder-result]");
 const finderResultSizeItems = document.querySelectorAll("[data-finder-result-size]");
-const finderLocationGuidance = document.querySelector("[data-finder-location-guidance]");
 const finderResultSchedule = document.querySelector("[data-finder-result-schedule]");
 const finderEmailNote = document.querySelector("[data-finder-email-note]");
-const finderSizeStatus = document.querySelector("[data-finder-size-status]");
 const finderMerv = document.querySelector("[data-finder-merv]");
 const finderMervCopy = document.querySelector("[data-finder-merv-copy]");
+const finderWhyTitle = document.querySelector("[data-finder-why-title]");
 const finderMonths = document.querySelector("[data-finder-months]");
 const finderCopyButton = document.querySelector("[data-finder-copy]");
 const finderCopyStatus = document.querySelector("[data-finder-copy-status]");
-const finderSizeTitle = document.querySelector("[data-finder-size-title]");
+const finderConfidencePill = document.querySelector("[data-finder-confidence-pill]");
 const finderAnswerPills = document.querySelector("[data-finder-answer-pills]");
 const finderEmailSkipButton = document.querySelector("[data-finder-email-skip]");
 const finderEmailSkipped = document.querySelector("[data-finder-email-skipped]");
 const finderProductImage = document.querySelector("[data-finder-product-image]");
 const finderProductPlaceholder = document.querySelector("[data-finder-product-placeholder]");
-const finderProductTitle = document.querySelector("[data-finder-product-title]");
-const finderProductSize = document.querySelector("[data-finder-product-size]");
-const finderProductMerv = document.querySelector("[data-finder-product-merv]");
+const finderProductSizeTitle = document.querySelector("[data-finder-product-size-title]");
+const finderProductTypeTitle = document.querySelector("[data-finder-product-type-title]");
 const finderProductBestFor = document.querySelector("[data-finder-product-best-for]");
 const finderProductPrice = document.querySelector("[data-finder-product-price]");
-const finderProductSchedule = document.querySelector("[data-finder-product-schedule]");
+const finderProductYearlyCost = document.querySelector("[data-finder-product-yearly-cost]");
 const finderProductCta = document.querySelector("[data-finder-product-cta]");
+const finderRetailerBlock = document.querySelector("[data-finder-retailer-block]");
+const finderRetailerOptions = document.querySelector("[data-finder-retailer-options]");
 const sizeAutocompleteInputs = document.querySelectorAll("[data-size-autocomplete]");
 const resultEmailForm = document.querySelector("[data-result-email-form]");
 const resultEmailInput = document.querySelector("[data-result-email]");
@@ -444,19 +444,29 @@ function getRecommendedFilterType() {
   if (conditions.includes("Allergies")) {
     return {
       type: "MERV 13",
-      copy: "MERV 13: Best for allergy-sensitive homes."
+      copy: "Best fit for allergy-sensitive homes and finer particle filtration."
     };
   }
   if (conditions.some((condition) => ["Pets", "Heavy dust"].includes(condition))) {
     return {
       type: "MERV 11",
-      copy: "MERV 11: Better for pets, dust, and higher filtration needs."
+      copy: "Better fit for pets, dust, and higher everyday filtration needs."
     };
   }
   return {
     type: "MERV 8",
-    copy: "MERV 8: Best for most standard homes."
+    copy: "Good fit for standard homes with normal dust levels."
   };
+}
+
+function getEstimatedYearlyCost(schedule, merv) {
+  if (merv === "MERV 13") {
+    return schedule === "Every 30-60 days" ? "$96-$150/year" : "$64-$100/year";
+  }
+  if (merv === "MERV 11") {
+    return schedule === "Every 30-60 days" ? "$72-$108/year" : "$48-$72/year";
+  }
+  return schedule === "Every 30-60 days" ? "$48-$84/year" : "$32-$56/year";
 }
 
 function getProductRecommendation(result) {
@@ -467,17 +477,17 @@ function getProductRecommendation(result) {
   const productDetails = {
     "MERV 13": {
       image: "assets/images/filter-product-merv-13.webp",
-      bestFor: "allergies, fine particles, and stronger filtration",
+      bestFor: "Allergies • Fine particles • Stronger filtration",
       priceRange: "Estimated $16-$25 each"
     },
     "MERV 11": {
       image: "assets/images/filter-product-merv-11.webp",
-      bestFor: "pets, dust, and improved everyday filtration",
+      bestFor: "Pets • Dust • Everyday filtration",
       priceRange: "Estimated $12-$18 each"
     },
     "MERV 8": {
       image: "assets/images/filter-product-merv-8.webp",
-      bestFor: "standard homes and everyday dust control",
+      bestFor: "Standard homes • Normal dust",
       priceRange: "Estimated $8-$14 each"
     }
   };
@@ -487,13 +497,59 @@ function getProductRecommendation(result) {
     title: size === "Check before ordering"
       ? `Confirm Size Before Ordering ${merv} Pleated Air Filter`
       : `${size} ${merv} Pleated Air Filter`,
+    sizeTitle: size === "Check before ordering" ? "Check before ordering" : size,
+    typeTitle: `${merv} Pleated Filter`,
     image: details.image,
     size,
     merv,
     bestFor: details.bestFor,
     priceRange: details.priceRange,
+    yearlyCost: getEstimatedYearlyCost(result.recommendedSchedule, merv),
     schedule: result.recommendedSchedule
   };
+}
+
+function buildRetailerSearchQuery(result) {
+  const size = result.productSize && result.productSize !== "Check before ordering"
+    ? result.productSize
+    : "";
+  return [size, result.productMerv || result.recommendedFilterType, "air filter"]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getRetailerLinks(result) {
+  const searchQuery = buildRetailerSearchQuery(result);
+  const encodedSearchQuery = encodeURIComponent(searchQuery);
+
+  return [
+    {
+      name: "Amazon",
+      subtext: "Fast shipping and multi-pack options",
+      // TODO: Replace YOUR-AFFILIATE-TAG with the real Amazon Associates tag before launch.
+      url: `https://www.amazon.com/s?k=${encodedSearchQuery}&tag=YOUR-AFFILIATE-TAG`
+    },
+    {
+      name: "Home Depot",
+      subtext: "Good for local pickup and common sizes",
+      // TODO: Replace with a final affiliate/deep link if available.
+      url: `https://www.homedepot.com/s/${encodedSearchQuery}`
+    },
+    {
+      name: "Lowe's",
+      subtext: "Useful for pickup or delivery",
+      // TODO: Replace with a final affiliate/deep link if available.
+      url: `https://www.lowes.com/search?searchTerm=${encodedSearchQuery}`
+    },
+    {
+      name: "Filterbuy",
+      subtext: "Bulk packs and specialty sizes",
+      // TODO: Replace with a final affiliate/deep link if available.
+      url: `https://filterbuy.com/air-filters/${encodedSearchQuery}`
+    }
+  ];
 }
 
 function getReminderMonths(schedule) {
@@ -509,28 +565,24 @@ function renderFinderReport(result) {
   const hasSize = result.filterSize !== "Check before ordering";
   const confirmedSize = result.knowsSize === "Yes, I know it" && hasSize;
 
-  if (finderSizeTitle) finderSizeTitle.textContent = confirmedSize ? "✓ Filter Size Confirmed" : "Estimated Filter Size";
+  if (finderConfidencePill) {
+    finderConfidencePill.textContent = confirmedSize ? "\u2713 High confidence" : "Confirm size before ordering";
+    finderConfidencePill.classList.toggle("is-confirmed", confirmedSize);
+  }
   finderResultSizeItems.forEach((item) => {
     item.textContent = result.filterSize;
   });
-  if (finderSizeStatus) finderSizeStatus.textContent = confirmedSize
-    ? "We recognized this as a standard residential filter size."
-    : "Size confirmation needed";
-  if (finderLocationGuidance) {
-    finderLocationGuidance.textContent = confirmedSize
-      ? ""
-      : "Use the guidance below to confirm the printed size on your current filter's cardboard edge. " + getLocationGuidance(result.location);
-  }
   if (finderResultSchedule) finderResultSchedule.textContent = result.recommendedSchedule;
   if (finderMerv) finderMerv.textContent = result.recommendedFilterType;
   if (finderMervCopy) finderMervCopy.textContent = result.recommendedFilterCopy;
+  if (finderWhyTitle) finderWhyTitle.textContent = `Why we chose ${result.recommendedFilterType}`;
   if (finderAnswerPills) {
     finderAnswerPills.innerHTML = "";
     const answers = [
       result.knowsSize,
       result.location,
       ...(result.homeConditions.length ? result.homeConditions : ["Standard home conditions"])
-    ].filter(Boolean);
+    ].filter(Boolean).slice(0, 3);
     answers.forEach((answer) => {
       const pill = document.createElement("span");
       pill.textContent = `✓ ${answer}`;
@@ -548,12 +600,11 @@ function renderFinderReport(result) {
   if (resultEmailInput && result.email) {
     resultEmailInput.value = result.email;
   }
-  if (finderProductTitle) finderProductTitle.textContent = result.productTitle;
-  if (finderProductSize) finderProductSize.textContent = result.productSize;
-  if (finderProductMerv) finderProductMerv.textContent = result.productMerv;
-  if (finderProductBestFor) finderProductBestFor.textContent = `Best for ${result.productBestFor}.`;
+  if (finderProductSizeTitle) finderProductSizeTitle.textContent = result.productSizeTitle;
+  if (finderProductTypeTitle) finderProductTypeTitle.textContent = result.productTypeTitle;
+  if (finderProductBestFor) finderProductBestFor.textContent = result.productBestFor;
   if (finderProductPrice) finderProductPrice.textContent = result.productPrice;
-  if (finderProductSchedule) finderProductSchedule.textContent = `Recommended replacement: ${result.productSchedule}`;
+  if (finderProductYearlyCost) finderProductYearlyCost.textContent = `Estimated yearly cost: ${result.productYearlyCost}`;
   if (finderProductImage) {
     const imageUrl = result.productImage;
 
@@ -576,6 +627,41 @@ function renderFinderReport(result) {
 
     testImage.src = imageUrl;
   }
+  if (finderRetailerOptions) {
+    finderRetailerOptions.innerHTML = "";
+    const searchQuery = buildRetailerSearchQuery(result);
+    getRetailerLinks(result).forEach((retailer) => {
+      const card = document.createElement("article");
+      card.className = "finder-retailer-card";
+
+      const title = document.createElement("strong");
+      title.textContent = retailer.name;
+
+      const copy = document.createElement("p");
+      copy.textContent = retailer.subtext;
+
+      const link = document.createElement("a");
+      link.className = "btn btn-secondary";
+      link.href = retailer.url;
+      link.target = "_blank";
+      link.rel = "noopener sponsored nofollow";
+      link.textContent = "View Options";
+      link.dataset.retailerName = retailer.name;
+      link.dataset.retailerUrl = retailer.url;
+      link.addEventListener("click", () => {
+        trackEvent("filter_finder_retailer_clicked", {
+          retailer: retailer.name,
+          product_size: result.productSize,
+          product_merv: result.productMerv,
+          search_query: searchQuery,
+          recommended_schedule: result.recommendedSchedule
+        });
+      });
+
+      card.append(title, copy, link);
+      finderRetailerOptions.appendChild(card);
+    });
+  }
   trackEvent("filter_finder_product_recommendation_viewed", {
     product_merv: result.productMerv,
     product_size: result.productSize,
@@ -590,12 +676,14 @@ function getFinderCopyText(result) {
     "Filter Wizard Recommendation",
     `Recommended filter: ${result.productTitle}`,
     `Estimated price range: ${result.productPrice}`,
+    `Estimated yearly cost: ${result.productYearlyCost}`,
     `Best for: ${result.productBestFor}`,
     `Filter size: ${result.filterSize}`,
     `Location: ${result.location}`,
     `Recommended schedule: ${result.recommendedSchedule}`,
     `Recommended filter type: ${result.recommendedFilterType}`,
-    `Reminder months: ${result.reminderMonths.join(", ")}`
+    `Reminder months: ${result.reminderMonths.join(", ")}`,
+    `Buying search: ${buildRetailerSearchQuery(result)}`
   ].join("\n");
 }
 
@@ -631,6 +719,9 @@ function addResultFields(formData, result) {
   formData.set("recommendedFilterProduct", result.productTitle || "");
   formData.set("recommendedFilterBestFor", result.productBestFor || "");
   formData.set("estimatedFilterPrice", result.productPrice || "");
+  formData.set("estimatedYearlyCost", result.productYearlyCost || "");
+  formData.set("buyingSearchQuery", buildRetailerSearchQuery(result));
+  formData.set("buyingSearchLinks", getRetailerLinks(result).map((retailer) => `${retailer.name}: ${retailer.url}`).join("\n"));
   formData.set("productImage", result.productImage || "");
 }
 
@@ -688,11 +779,14 @@ async function completeFilterFinder() {
   const product = getProductRecommendation(result);
   Object.assign(result, {
     productTitle: product.title,
+    productSizeTitle: product.sizeTitle,
+    productTypeTitle: product.typeTitle,
     productImage: product.image,
     productSize: product.size,
     productMerv: product.merv,
     productBestFor: product.bestFor,
     productPrice: product.priceRange,
+    productYearlyCost: product.yearlyCost,
     productSchedule: product.schedule
   });
 
@@ -1013,17 +1107,15 @@ finderEmailSkipButton?.addEventListener("click", () => {
 });
 
 finderProductCta?.addEventListener("click", () => {
-  trackEvent("filter_finder_product_plan_clicked", {
+  trackEvent("filter_finder_compare_options_clicked", {
     product_merv: latestFinderReport?.productMerv || "",
     product_size: latestFinderReport?.productSize || "",
     product_price: latestFinderReport?.productPrice || "",
     recommended_schedule: latestFinderReport?.recommendedSchedule || "",
     normalized_filter_size: latestFinderReport?.normalizedFilterSize || ""
   });
-  if (resultEmailForm) {
-    resultEmailForm.hidden = false;
-    resultEmailForm.scrollIntoView({ behavior: "smooth", block: "center" });
-    window.setTimeout(() => resultEmailInput?.focus({ preventScroll: true }), 260);
+  if (finderRetailerBlock) {
+    finderRetailerBlock.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 });
 
