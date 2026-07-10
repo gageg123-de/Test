@@ -22,8 +22,11 @@ const finderAnalyzing = document.querySelector("[data-finder-analyzing]");
 const finderAnalyzingSteps = document.querySelectorAll("[data-analyzing-step]");
 const finderResult = document.querySelector("[data-finder-result]");
 const finderResultHeading = document.querySelector("[data-finder-result-heading]");
+const finderResultSubheading = document.querySelector("[data-finder-result-subheading]");
 const finderResultSizeItems = document.querySelectorAll("[data-finder-result-size]");
 const finderResultSchedule = document.querySelector("[data-finder-result-schedule]");
+const finderNextChange = document.querySelector("[data-finder-next-change]");
+const finderYearlyCost = document.querySelector("[data-finder-yearly-cost]");
 const finderEmailNote = document.querySelector("[data-finder-email-note]");
 const finderMerv = document.querySelector("[data-finder-merv]");
 const finderMervCopy = document.querySelector("[data-finder-merv-copy]");
@@ -39,9 +42,6 @@ const finderInsightTitle = document.querySelector("[data-finder-insight-title]")
 const finderInsightCopy = document.querySelector("[data-finder-insight-copy]");
 const finderSizeGuidance = document.querySelector("[data-finder-size-guidance]");
 const finderSizeGuidanceCopy = document.querySelector("[data-finder-size-guidance-copy]");
-const finderProfileNextChange = document.querySelector("[data-finder-profile-next-change]");
-const finderProfileYearlyCost = document.querySelector("[data-finder-profile-yearly-cost]");
-const finderProfileBestFor = document.querySelector("[data-finder-profile-best-for]");
 const finderEmailSkipButton = document.querySelector("[data-finder-email-skip]");
 const finderEmailSkipped = document.querySelector("[data-finder-email-skipped]");
 const finderProductImage = document.querySelector("[data-finder-product-image]");
@@ -56,6 +56,7 @@ const finderSkipToRetailers = document.querySelector("[data-finder-skip-to-retai
 const finderContinueToRetailers = document.querySelector("[data-finder-continue-to-retailers]");
 const finderRetailerBlock = document.querySelector("[data-finder-retailer-block]");
 const finderRetailerOptions = document.querySelector("[data-finder-retailer-options]");
+const finderRetailerSummary = document.querySelector("[data-finder-retailer-summary]");
 const sizeAutocompleteInputs = document.querySelectorAll("[data-size-autocomplete]");
 const resultEmailForm = document.querySelector("[data-result-email-form]");
 const resultEmailInput = document.querySelector("[data-result-email]");
@@ -74,6 +75,8 @@ let finderModalOpener = null;
 let finderCompleted = false;
 let finderAnalyzingTimer = null;
 let finderAnalysisStepTimer = null;
+let retailerViewedObserver = null;
+let retailerViewedTracked = false;
 
 const finderState = {
   knowsSize: "",
@@ -182,6 +185,9 @@ function closeFinderModal(reason = "closed") {
   window.clearInterval(finderAnalysisStepTimer);
   finderAnalyzingTimer = null;
   finderAnalysisStepTimer = null;
+  retailerViewedObserver?.disconnect();
+  retailerViewedObserver = null;
+  retailerViewedTracked = false;
   finderModal.hidden = true;
   finderModal.style.display = "none";
   document.body.classList.remove("modal-open");
@@ -711,6 +717,31 @@ function getRetailerLinks(result) {
   ];
 }
 
+function setupRetailerViewedTracking(result) {
+  if (!finderRetailerBlock || typeof IntersectionObserver !== "function") return;
+
+  retailerViewedTracked = false;
+  retailerViewedObserver?.disconnect();
+  retailerViewedObserver = new IntersectionObserver((entries) => {
+    const isVisible = entries.some((entry) => entry.isIntersecting);
+    if (!isVisible || retailerViewedTracked) return;
+
+    retailerViewedTracked = true;
+    trackEvent("filter_finder_buying_options_viewed", {
+      product_size: result.productSize,
+      product_merv: result.productMerv,
+      recommended_schedule: result.recommendedSchedule,
+      size_confidence_level: result.sizeConfidenceLevel
+    });
+    retailerViewedObserver?.disconnect();
+  }, {
+    root: finderModalCard?.querySelector(".finder-modal-scroll") || null,
+    threshold: 0.35
+  });
+
+  retailerViewedObserver.observe(finderRetailerBlock);
+}
+
 function getReminderMonths(schedule) {
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const count = schedule === "Every 30-60 days" ? 6 : 4;
@@ -726,8 +757,13 @@ function renderFinderReport(result) {
 
   if (finderResultHeading) {
     finderResultHeading.textContent = hasValidSize
-      ? "We Found Your Best Match"
-      : "We Found Your Recommended Filter Type";
+      ? "You're all set"
+      : "Your filter type is ready";
+  }
+  if (finderResultSubheading) {
+    finderResultSubheading.textContent = hasValidSize
+      ? "We found your best match."
+      : "Confirm the printed size before ordering.";
   }
   if (finderConfidencePill) {
     finderConfidencePill.textContent = confidence.label;
@@ -744,6 +780,8 @@ function renderFinderReport(result) {
     item.textContent = result.filterSize;
   });
   if (finderResultSchedule) finderResultSchedule.textContent = result.recommendedSchedule;
+  if (finderNextChange) finderNextChange.textContent = result.nextSuggestedChange;
+  if (finderYearlyCost) finderYearlyCost.textContent = result.productYearlyCost;
   if (finderMerv) finderMerv.textContent = result.recommendedFilterType;
   if (finderMervCopy) finderMervCopy.textContent = result.recommendedFilterCopy;
   if (finderMervBenefit) finderMervBenefit.textContent = result.recommendedFilterBenefit;
@@ -753,9 +791,6 @@ function renderFinderReport(result) {
   if (finderInsightCopy) finderInsightCopy.textContent = result.insightCopy;
   if (finderSizeGuidance) finderSizeGuidance.hidden = hasValidSize;
   if (finderSizeGuidanceCopy) finderSizeGuidanceCopy.textContent = result.sizeGuidance || "";
-  if (finderProfileNextChange) finderProfileNextChange.textContent = result.profileNextChange;
-  if (finderProfileYearlyCost) finderProfileYearlyCost.textContent = result.profileYearlyCost;
-  if (finderProfileBestFor) finderProfileBestFor.textContent = result.profileBestFor;
   if (finderAnswerPills) {
     finderAnswerPills.innerHTML = "";
     const answers = [
@@ -785,6 +820,12 @@ function renderFinderReport(result) {
   if (finderProductBestFor) finderProductBestFor.textContent = result.productBestFor;
   if (finderProductPrice) finderProductPrice.textContent = result.productPrice;
   if (finderProductYearlyCost) finderProductYearlyCost.textContent = `Estimated yearly cost: ${result.productYearlyCost}`;
+  if (finderRetailerSummary) {
+    const sizeLabel = result.productSize && result.productSize !== "Check before ordering"
+      ? result.productSize
+      : "Confirm size";
+    finderRetailerSummary.textContent = `${sizeLabel} • ${result.productMerv}`;
+  }
   if (finderProductImage) {
     const imageUrl = result.productImage;
 
@@ -860,6 +901,7 @@ function renderFinderReport(result) {
     confidence_status: confidence.label,
     size_confidence_level: confidence.level
   });
+  setupRetailerViewedTracking(result);
 }
 
 function getFinderCopyText(result) {
@@ -920,9 +962,6 @@ function addResultFields(formData, result) {
   formData.set("recommendedFilterCaution", result.recommendedFilterCaution || "");
   formData.set("estimatedReminderMonths", result.reminderMonths.join(", "));
   formData.set("nextSuggestedChange", result.nextSuggestedChange || "");
-  formData.set("filterProfileNextChange", result.profileNextChange || "");
-  formData.set("filterProfileYearlyCost", result.profileYearlyCost || "");
-  formData.set("filterProfileBestFor", result.profileBestFor || "");
   formData.set("filterInsightTitle", result.insightTitle || "");
   formData.set("filterInsightCopy", result.insightCopy || "");
   formData.set("recommendedFilterProduct", result.productTitle || "");
@@ -1016,10 +1055,7 @@ async function completeFilterFinder() {
     productBestFor: product.bestFor,
     productPrice: product.priceRange,
     productYearlyCost: product.yearlyCost,
-    productSchedule: product.schedule,
-    profileNextChange: nextSuggestedChange,
-    profileYearlyCost: product.yearlyCost,
-    profileBestFor: product.bestFor
+    productSchedule: product.schedule
   });
 
   latestFinderReport = result;
@@ -1393,26 +1429,26 @@ finderEmailSkipButton?.addEventListener("click", () => {
 });
 
 finderProductCta?.addEventListener("click", () => {
-  trackEvent("filter_finder_compare_options_clicked", {
+  trackEvent("filter_finder_view_buying_options_clicked", {
     product_merv: latestFinderReport?.productMerv || "",
     product_size: latestFinderReport?.productSize || "",
     product_price: latestFinderReport?.productPrice || "",
     recommended_schedule: latestFinderReport?.recommendedSchedule || "",
-    normalized_filter_size: latestFinderReport?.normalizedFilterSize || ""
+    normalized_filter_size: latestFinderReport?.normalizedFilterSize || "",
+    size_confidence_level: latestFinderReport?.sizeConfidenceLevel || ""
   });
-  if (resultEmailForm) {
-    resultEmailForm.scrollIntoView({ behavior: "smooth", block: "center" });
-    window.setTimeout(() => resultEmailInput?.focus({ preventScroll: true }), 260);
-  }
+  finderRetailerBlock?.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 
 finderSkipToRetailers?.addEventListener("click", () => {
-  trackEvent("filter_finder_skip_to_retailers_clicked", {
+  trackEvent("filter_finder_save_result_link_clicked", {
     product_merv: latestFinderReport?.productMerv || "",
     product_size: latestFinderReport?.productSize || "",
-    recommended_schedule: latestFinderReport?.recommendedSchedule || ""
+    recommended_schedule: latestFinderReport?.recommendedSchedule || "",
+    size_confidence_level: latestFinderReport?.sizeConfidenceLevel || ""
   });
-  finderRetailerBlock?.scrollIntoView({ behavior: "smooth", block: "center" });
+  resultEmailForm?.scrollIntoView({ behavior: "smooth", block: "center" });
+  window.setTimeout(() => resultEmailInput?.focus({ preventScroll: true }), 260);
 });
 
 finderContinueToRetailers?.addEventListener("click", () => {
