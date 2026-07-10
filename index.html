@@ -63,7 +63,7 @@
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "xbqsjc3yut");
   </script>
-  <link rel="stylesheet" href="style.css?v=result-intelligence-1">
+  <link rel="stylesheet" href="style.css?v=finder-trust-fix-1">
 </head>
 <body>
   <header class="site-header" data-header>
@@ -233,7 +233,7 @@
 
           <div class="finder-result" data-finder-result hidden>
           <div class="recommendation-banner">
-            <strong><span aria-hidden="true">&#10003;</span> We Found Your Filter</strong>
+            <strong><span aria-hidden="true">&#10003;</span> <span data-finder-result-heading>We Found Your Best Match</span></strong>
             <span class="recommendation-size" data-finder-result-size>Check before ordering</span>
             <div class="finder-result-status-row">
               <span>Personalized</span>
@@ -258,24 +258,17 @@
             <p data-finder-insight-copy></p>
           </div>
 
+          <div class="finder-result-block finder-size-guidance" data-finder-size-guidance hidden>
+            <strong>How to confirm your size</strong>
+            <p data-finder-size-guidance-copy></p>
+          </div>
+
           <div class="finder-result-block finder-profile" data-finder-profile>
             <div class="finder-profile-header">
               <strong>Your Filter Profile</strong>
               <span>Updated today</span>
             </div>
             <div class="finder-profile-grid">
-              <div>
-                <small>Filter Size</small>
-                <strong data-finder-profile-size>Check before ordering</strong>
-              </div>
-              <div>
-                <small>Recommended Rating</small>
-                <strong data-finder-profile-merv>MERV 8</strong>
-              </div>
-              <div>
-                <small>Replacement Timing</small>
-                <strong data-finder-profile-schedule>Every 60-90 days</strong>
-              </div>
               <div>
                 <small>Next Suggested Change</small>
                 <strong data-finder-profile-next-change>Next season</strong>
@@ -312,17 +305,17 @@
             </div>
           </div>
           <p class="finder-email-note" data-finder-email-note hidden>We could not email your report, but your recommendation is shown above.</p>
-          <div class="finder-result-block finder-filter-type">
-            <strong data-finder-why-title>Why we chose MERV 8</strong>
+          <details class="finder-result-block finder-disclosure finder-filter-type">
+            <summary data-finder-why-title>Why we chose MERV 8</summary>
             <div class="finder-answer-pills" data-finder-answer-pills></div>
             <p data-finder-merv-copy>Good fit for standard homes with normal dust levels.</p>
             <ul class="finder-merv-details">
               <li data-finder-merv-benefit>Captures common household dust, pollen, and larger airborne particles.</li>
               <li data-finder-merv-caution>A practical default when pets, heavy dust, or allergy concerns are not major factors.</li>
             </ul>
-          </div>
-          <div class="finder-result-block finder-comparison" data-finder-comparison>
-            <strong>Why this beats a basic fiberglass filter</strong>
+          </details>
+          <details class="finder-result-block finder-disclosure finder-comparison" data-finder-comparison>
+            <summary>Compare with a basic fiberglass filter</summary>
             <div class="finder-comparison-grid">
               <div class="finder-comparison-basic">
                 <span>Basic Fiberglass Filter</span>
@@ -342,7 +335,7 @@
               </div>
             </div>
             <p>Actual performance varies by product, HVAC system, and replacement timing.</p>
-          </div>
+          </details>
           <div class="finder-result-block finder-next-step finder-result-next">
             <strong>Save This Filter for Later</strong>
             <p>We'll email your filter size, recommended MERV rating, estimated replacement timing, and buying search links so you can find it again later.</p>
@@ -462,6 +455,6 @@
     </div>
   </footer>
 
-  <script src="script.js?v=result-intelligence-1"></script>
+  <script src="script.js?v=finder-trust-fix-1"></script>
 </body>
 </html>

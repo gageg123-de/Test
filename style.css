@@ -1139,10 +1139,22 @@ input:focus-visible {
   font-weight: 900;
 }
 
-.finder-confidence-pill.is-confirmed {
+.finder-confidence-pill.is-high-confidence {
   color: var(--green-dark);
   border-color: rgba(47, 179, 109, 0.24);
   background: #e8f8ef;
+}
+
+.finder-confidence-pill.is-format-confirmed {
+  color: var(--blue-dark);
+  border-color: rgba(36, 119, 212, 0.24);
+  background: var(--blue-soft);
+}
+
+.finder-confidence-pill.needs-confirmation {
+  color: #76520c;
+  border-color: rgba(242, 139, 46, 0.32);
+  background: #fff8ed;
 }
 
 .recommendation-banner strong {
@@ -1238,6 +1250,24 @@ input:focus-visible {
   font-weight: 900;
 }
 
+.finder-result-status-row .finder-confidence-pill.is-high-confidence {
+  color: var(--green-dark);
+  border-color: rgba(47, 179, 109, 0.24);
+  background: #e8f8ef;
+}
+
+.finder-result-status-row .finder-confidence-pill.is-format-confirmed {
+  color: var(--blue-dark);
+  border-color: rgba(36, 119, 212, 0.24);
+  background: var(--blue-soft);
+}
+
+.finder-result-status-row .finder-confidence-pill.needs-confirmation {
+  color: #76520c;
+  border-color: rgba(242, 139, 46, 0.32);
+  background: #fff8ed;
+}
+
 .finder-result.report-visible .recommendation-banner {
   animation: reportBlockIn 360ms ease both;
 }
@@ -1269,14 +1299,6 @@ input:focus-visible {
 
 .finder-options-multi {
   grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.finder-options.knows-size-selected {
-  grid-template-columns: 1fr;
-}
-
-.finder-options.knows-size-selected .finder-option:not(.selected) {
-  display: none;
 }
 
 .finder-option {
@@ -1627,6 +1649,11 @@ input:focus-visible {
   line-height: 1.45;
 }
 
+.finder-size-guidance {
+  border-color: rgba(242, 139, 46, 0.28);
+  background: linear-gradient(180deg, #fff8ed, #ffffff);
+}
+
 .finder-profile {
   border-color: rgba(36, 119, 212, 0.2);
   background: linear-gradient(180deg, #ffffff, #f7fbff);
@@ -1768,6 +1795,55 @@ input:focus-visible {
 
 .finder-result-disclaimer {
   font-size: 0.8rem;
+}
+
+.finder-disclosure {
+  padding: 0;
+  overflow: hidden;
+}
+
+.finder-disclosure summary {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 13px 15px;
+  color: var(--blue-dark);
+  font-weight: 950;
+  cursor: pointer;
+  list-style: none;
+}
+
+.finder-disclosure summary::-webkit-details-marker {
+  display: none;
+}
+
+.finder-disclosure summary::after {
+  content: "+";
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  color: var(--blue-dark);
+  background: var(--blue-soft);
+  font-weight: 950;
+}
+
+.finder-disclosure[open] summary::after {
+  content: "-";
+}
+
+.finder-disclosure > :not(summary) {
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+.finder-disclosure > :last-child {
+  margin-bottom: 15px;
 }
 
 .finder-result-next {
@@ -3108,7 +3184,7 @@ input:focus {
   }
 
   .finder-profile-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 6px;
     margin-top: 8px;
   }
