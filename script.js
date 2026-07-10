@@ -1,4 +1,4 @@
-const header = document.querySelector("[data-header]");
+﻿const header = document.querySelector("[data-header]");
 const navToggle = document.querySelector("[data-nav-toggle]");
 const navMenu = document.querySelector("[data-nav-menu]");
 const navLinks = document.querySelectorAll(".nav-links a, .footer-links a");
@@ -18,18 +18,30 @@ const finderProgressBar = document.querySelector("[data-finder-progress-bar]");
 const knownSizeField = document.querySelector("[data-known-size-field]");
 const knownSizeOptions = document.querySelector("[data-known-size-options]");
 const finderKnownSizeInput = document.querySelector("[data-finder-size-known]");
+const finderAnalyzing = document.querySelector("[data-finder-analyzing]");
+const finderAnalyzingSteps = document.querySelectorAll("[data-analyzing-step]");
 const finderResult = document.querySelector("[data-finder-result]");
 const finderResultSizeItems = document.querySelectorAll("[data-finder-result-size]");
 const finderResultSchedule = document.querySelector("[data-finder-result-schedule]");
 const finderEmailNote = document.querySelector("[data-finder-email-note]");
 const finderMerv = document.querySelector("[data-finder-merv]");
 const finderMervCopy = document.querySelector("[data-finder-merv-copy]");
+const finderMervBenefit = document.querySelector("[data-finder-merv-benefit]");
+const finderMervCaution = document.querySelector("[data-finder-merv-caution]");
 const finderWhyTitle = document.querySelector("[data-finder-why-title]");
 const finderMonths = document.querySelector("[data-finder-months]");
 const finderCopyButton = document.querySelector("[data-finder-copy]");
 const finderCopyStatus = document.querySelector("[data-finder-copy-status]");
 const finderConfidencePill = document.querySelector("[data-finder-confidence-pill]");
 const finderAnswerPills = document.querySelector("[data-finder-answer-pills]");
+const finderInsightTitle = document.querySelector("[data-finder-insight-title]");
+const finderInsightCopy = document.querySelector("[data-finder-insight-copy]");
+const finderProfileSize = document.querySelector("[data-finder-profile-size]");
+const finderProfileMerv = document.querySelector("[data-finder-profile-merv]");
+const finderProfileSchedule = document.querySelector("[data-finder-profile-schedule]");
+const finderProfileNextChange = document.querySelector("[data-finder-profile-next-change]");
+const finderProfileYearlyCost = document.querySelector("[data-finder-profile-yearly-cost]");
+const finderProfileBestFor = document.querySelector("[data-finder-profile-best-for]");
 const finderEmailSkipButton = document.querySelector("[data-finder-email-skip]");
 const finderEmailSkipped = document.querySelector("[data-finder-email-skipped]");
 const finderProductImage = document.querySelector("[data-finder-product-image]");
@@ -40,6 +52,8 @@ const finderProductBestFor = document.querySelector("[data-finder-product-best-f
 const finderProductPrice = document.querySelector("[data-finder-product-price]");
 const finderProductYearlyCost = document.querySelector("[data-finder-product-yearly-cost]");
 const finderProductCta = document.querySelector("[data-finder-product-cta]");
+const finderSkipToRetailers = document.querySelector("[data-finder-skip-to-retailers]");
+const finderContinueToRetailers = document.querySelector("[data-finder-continue-to-retailers]");
 const finderRetailerBlock = document.querySelector("[data-finder-retailer-block]");
 const finderRetailerOptions = document.querySelector("[data-finder-retailer-options]");
 const sizeAutocompleteInputs = document.querySelectorAll("[data-size-autocomplete]");
@@ -57,6 +71,8 @@ let finderEmailEnteredTracked = false;
 let latestFinderReport = null;
 let finderModalOpener = null;
 let finderCompleted = false;
+let finderAnalyzingTimer = null;
+let finderAnalysisStepTimer = null;
 
 const finderState = {
   knowsSize: "",
@@ -160,6 +176,10 @@ function closeFinderModal(reason = "closed") {
   if (!finderModal || finderModal.hidden) return;
 
   const wasCompleted = finderCompleted;
+  window.clearTimeout(finderAnalyzingTimer);
+  window.clearInterval(finderAnalysisStepTimer);
+  finderAnalyzingTimer = null;
+  finderAnalysisStepTimer = null;
   finderModal.hidden = true;
   finderModal.style.display = "none";
   document.body.classList.remove("modal-open");
@@ -202,6 +222,10 @@ function openFinderModal(opener = finderStartButton) {
 }
 
 function resetFinderForModal() {
+  window.clearTimeout(finderAnalyzingTimer);
+  window.clearInterval(finderAnalysisStepTimer);
+  finderAnalyzingTimer = null;
+  finderAnalysisStepTimer = null;
   finderState.knowsSize = "";
   finderState.location = "";
   finderState.conditions = [];
@@ -224,6 +248,9 @@ function resetFinderForModal() {
   if (finderEmailSkipped) finderEmailSkipped.hidden = true;
   if (finderEmailNote) finderEmailNote.hidden = true;
   if (finderCopyStatus) finderCopyStatus.hidden = true;
+  if (finderAnalyzing) finderAnalyzing.hidden = true;
+  finderAnalyzingSteps.forEach((step) => step.classList.remove("is-active"));
+  if (finderCompleteButton) finderCompleteButton.disabled = false;
 }
 
 function saveToLocalStorage(key, value) {
@@ -330,6 +357,7 @@ function startFilterFinder() {
   if (!finderQuiz) return;
 
   finderQuiz.hidden = false;
+  if (finderAnalyzing) finderAnalyzing.hidden = true;
   if (finderResult) finderResult.hidden = true;
   finderResult?.classList.remove("report-visible");
   showFinderStep(1);
@@ -444,19 +472,73 @@ function getRecommendedFilterType() {
   if (conditions.includes("Allergies")) {
     return {
       type: "MERV 13",
-      copy: "Best fit for allergy-sensitive homes and finer particle filtration."
+      copy: "Best fit for allergy-sensitive homes and finer particle filtration.",
+      benefit: "Designed to capture finer airborne particles than lower-rated filters.",
+      caution: "Higher filtration can create more airflow resistance, so check your HVAC manufacturer's guidance before upgrading."
     };
   }
   if (conditions.some((condition) => ["Pets", "Heavy dust"].includes(condition))) {
     return {
       type: "MERV 11",
-      copy: "Better fit for pets, dust, and higher everyday filtration needs."
+      copy: "Better fit for pets, dust, and higher everyday filtration needs.",
+      benefit: "Provides stronger particle capture than a basic household filter while remaining practical for many residential systems.",
+      caution: "Confirm that your HVAC equipment supports the filter rating recommended by its manufacturer."
     };
   }
   return {
     type: "MERV 8",
-    copy: "Good fit for standard homes with normal dust levels."
+    copy: "Good fit for standard homes with normal dust levels.",
+    benefit: "Captures common household dust, pollen, and larger airborne particles.",
+    caution: "A practical default when pets, heavy dust, or allergy concerns are not major factors."
   };
+}
+
+function getFinderInsight(result) {
+  const conditions = result.homeConditions || [];
+  const sizeNeedsConfirmation = result.filterSize === "Check before ordering";
+  let insight = {
+    title: "You probably do not need to over-filter",
+    copy: "A standard pleated filter should provide practical everyday filtration without unnecessary restriction."
+  };
+
+  if (conditions.includes("Allergies")) {
+    insight = {
+      title: "Stronger filtration makes sense here",
+      copy: "Because allergies were selected, we recommend finer filtration than a basic household filter."
+    };
+  } else if (conditions.includes("Pets")) {
+    insight = {
+      title: "Pets can load filters faster",
+      copy: "Pet hair and dander can shorten filter life, which is why your replacement timing is more frequent."
+    };
+  } else if (conditions.includes("Heavy dust")) {
+    insight = {
+      title: "Your filter may fill faster than average",
+      copy: "Heavy dust increases particle load, so a shorter replacement interval is the safer recommendation."
+    };
+  } else if (conditions.length === 1 && conditions.includes("Kids at home")) {
+    insight = {
+      title: "A balanced filter is likely enough",
+      copy: "Your home may benefit from dependable everyday filtration without jumping to the highest MERV rating."
+    };
+  }
+
+  if (sizeNeedsConfirmation) {
+    insight.copy = `${insight.copy} Confirm the printed size before ordering.`;
+  }
+
+  return insight;
+}
+
+function getNextSuggestedChange(schedule) {
+  const daysToAdd = schedule === "Every 30-60 days"
+    ? 45
+    : schedule === "Every 60-90 days"
+      ? 75
+      : 90;
+  const date = new Date();
+  date.setDate(date.getDate() + daysToAdd);
+  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 }
 
 function getEstimatedYearlyCost(schedule, merv) {
@@ -564,9 +646,10 @@ function getReminderMonths(schedule) {
 function renderFinderReport(result) {
   const hasSize = result.filterSize !== "Check before ordering";
   const confirmedSize = result.knowsSize === "Yes, I know it" && hasSize;
+  const confidenceStatus = confirmedSize ? "High confidence" : "Confirm size before ordering";
 
   if (finderConfidencePill) {
-    finderConfidencePill.textContent = confirmedSize ? "\u2713 High confidence" : "Confirm size before ordering";
+    finderConfidencePill.textContent = confirmedSize ? "✓ High confidence" : "Confirm size before ordering";
     finderConfidencePill.classList.toggle("is-confirmed", confirmedSize);
   }
   finderResultSizeItems.forEach((item) => {
@@ -575,7 +658,17 @@ function renderFinderReport(result) {
   if (finderResultSchedule) finderResultSchedule.textContent = result.recommendedSchedule;
   if (finderMerv) finderMerv.textContent = result.recommendedFilterType;
   if (finderMervCopy) finderMervCopy.textContent = result.recommendedFilterCopy;
+  if (finderMervBenefit) finderMervBenefit.textContent = result.recommendedFilterBenefit;
+  if (finderMervCaution) finderMervCaution.textContent = result.recommendedFilterCaution;
   if (finderWhyTitle) finderWhyTitle.textContent = `Why we chose ${result.recommendedFilterType}`;
+  if (finderInsightTitle) finderInsightTitle.textContent = result.insightTitle;
+  if (finderInsightCopy) finderInsightCopy.textContent = result.insightCopy;
+  if (finderProfileSize) finderProfileSize.textContent = result.profileSize;
+  if (finderProfileMerv) finderProfileMerv.textContent = result.profileMerv;
+  if (finderProfileSchedule) finderProfileSchedule.textContent = result.profileSchedule;
+  if (finderProfileNextChange) finderProfileNextChange.textContent = result.profileNextChange;
+  if (finderProfileYearlyCost) finderProfileYearlyCost.textContent = result.profileYearlyCost;
+  if (finderProfileBestFor) finderProfileBestFor.textContent = result.profileBestFor;
   if (finderAnswerPills) {
     finderAnswerPills.innerHTML = "";
     const answers = [
@@ -669,19 +762,32 @@ function renderFinderReport(result) {
     recommended_schedule: result.recommendedSchedule,
     normalized_filter_size: result.normalizedFilterSize
   });
+  trackEvent("filter_finder_profile_viewed", {
+    filter_size: result.profileSize,
+    recommended_filter_type: result.recommendedFilterType,
+    recommended_schedule: result.recommendedSchedule,
+    next_suggested_change: result.nextSuggestedChange,
+    estimated_yearly_cost: result.productYearlyCost,
+    confidence_status: confidenceStatus
+  });
 }
 
 function getFinderCopyText(result) {
   return [
     "Filter Wizard Recommendation",
     `Recommended filter: ${result.productTitle}`,
+    `Filter profile: ${result.profileSize} / ${result.profileMerv} / ${result.profileSchedule}`,
     `Estimated price range: ${result.productPrice}`,
     `Estimated yearly cost: ${result.productYearlyCost}`,
+    `Next suggested change: ${result.nextSuggestedChange}`,
     `Best for: ${result.productBestFor}`,
     `Filter size: ${result.filterSize}`,
     `Location: ${result.location}`,
     `Recommended schedule: ${result.recommendedSchedule}`,
     `Recommended filter type: ${result.recommendedFilterType}`,
+    `Filter type benefit: ${result.recommendedFilterBenefit}`,
+    `Filter type note: ${result.recommendedFilterCaution}`,
+    `Insight: ${result.insightTitle} - ${result.insightCopy}`,
     `Reminder months: ${result.reminderMonths.join(", ")}`,
     `Buying search: ${buildRetailerSearchQuery(result)}`
   ].join("\n");
@@ -715,7 +821,18 @@ function addResultFields(formData, result) {
   formData.set("homeConditions", result.homeConditions.join(", ") || "Not specified");
   formData.set("recommendedSchedule", result.recommendedSchedule);
   formData.set("recommendedFilterType", result.recommendedFilterType);
+  formData.set("recommendedFilterBenefit", result.recommendedFilterBenefit || "");
+  formData.set("recommendedFilterCaution", result.recommendedFilterCaution || "");
   formData.set("estimatedReminderMonths", result.reminderMonths.join(", "));
+  formData.set("nextSuggestedChange", result.nextSuggestedChange || "");
+  formData.set("filterProfileSize", result.profileSize || "");
+  formData.set("filterProfileMerv", result.profileMerv || "");
+  formData.set("filterProfileSchedule", result.profileSchedule || "");
+  formData.set("filterProfileNextChange", result.profileNextChange || "");
+  formData.set("filterProfileYearlyCost", result.profileYearlyCost || "");
+  formData.set("filterProfileBestFor", result.profileBestFor || "");
+  formData.set("filterInsightTitle", result.insightTitle || "");
+  formData.set("filterInsightCopy", result.insightCopy || "");
   formData.set("recommendedFilterProduct", result.productTitle || "");
   formData.set("recommendedFilterBestFor", result.productBestFor || "");
   formData.set("estimatedFilterPrice", result.productPrice || "");
@@ -740,6 +857,8 @@ async function submitFinderEmail(result) {
     trackEvent("filter_finder_email_submitted", {
       recommended_schedule: result.recommendedSchedule,
       recommended_filter_type: result.recommendedFilterType,
+      recommended_filter_benefit: result.recommendedFilterBenefit,
+      next_suggested_change: result.nextSuggestedChange,
       location: result.location
     });
     return true;
@@ -750,6 +869,7 @@ async function submitFinderEmail(result) {
 }
 
 async function completeFilterFinder() {
+  if (finderAnalyzingTimer) return;
   if (!validateFinderStep(finderCurrentStep)) return;
 
   trackFinderStepCompleted(finderCurrentStep);
@@ -771,13 +891,20 @@ async function completeFilterFinder() {
     recommendedSchedule: finderState.recommendedSchedule,
     recommendedFilterType: filterType.type,
     recommendedFilterCopy: filterType.copy,
+    recommendedFilterBenefit: filterType.benefit,
+    recommendedFilterCaution: filterType.caution,
     reminderMonths: getReminderMonths(finderState.recommendedSchedule),
     normalizedFilterSize: foundSize || "",
     email: finderState.email || "",
     submittedAt: new Date().toISOString()
   };
+  const insight = getFinderInsight(result);
+  const nextSuggestedChange = getNextSuggestedChange(result.recommendedSchedule);
   const product = getProductRecommendation(result);
   Object.assign(result, {
+    insightTitle: insight.title,
+    insightCopy: insight.copy,
+    nextSuggestedChange,
     productTitle: product.title,
     productSizeTitle: product.sizeTitle,
     productTypeTitle: product.typeTitle,
@@ -787,42 +914,84 @@ async function completeFilterFinder() {
     productBestFor: product.bestFor,
     productPrice: product.priceRange,
     productYearlyCost: product.yearlyCost,
-    productSchedule: product.schedule
+    productSchedule: product.schedule,
+    profileSize: result.filterSize,
+    profileMerv: filterType.type,
+    profileSchedule: result.recommendedSchedule,
+    profileNextChange: nextSuggestedChange,
+    profileYearlyCost: product.yearlyCost,
+    profileBestFor: product.bestFor
   });
 
   latestFinderReport = result;
-  renderFinderReport(result);
-  saveToLocalStorage(finderStorageKey, result);
-  finderCompleted = true;
-
-  trackEvent("filter_finder_completed", {
-    knows_size: result.knowsSize,
-    normalized_filter_size: result.normalizedFilterSize,
-    location: result.location,
-    has_email: Boolean(result.email),
-    recommended_schedule: result.recommendedSchedule,
-    recommended_filter_type: result.recommendedFilterType
-  });
-  trackEvent("filter_finder_result_viewed", {
-    knows_size: result.knowsSize,
-    normalized_filter_size: result.normalizedFilterSize,
-    location: result.location,
-    recommended_schedule: result.recommendedSchedule,
-    recommended_filter_type: result.recommendedFilterType,
-    has_email: false,
-    completed: true
-  });
-  trackEvent("filter_finder_email_prompt_viewed", {
-    recommended_schedule: result.recommendedSchedule,
-    recommended_filter_type: result.recommendedFilterType
-  });
-
   if (finderQuiz) finderQuiz.hidden = true;
-  if (finderResult) {
-    finderResult.hidden = false;
-    window.requestAnimationFrame(() => finderResult.classList.add("report-visible"));
-  }
-  finderModalCard?.querySelector(".finder-modal-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
+  if (finderResult) finderResult.hidden = true;
+  finderResult?.classList.remove("report-visible");
+  if (finderAnalyzing) finderAnalyzing.hidden = false;
+  if (finderCompleteButton) finderCompleteButton.disabled = true;
+
+  let activeAnalysisStep = 0;
+  finderAnalyzingSteps.forEach((step, index) => {
+    step.classList.toggle("is-active", index === activeAnalysisStep);
+  });
+  window.clearInterval(finderAnalysisStepTimer);
+  finderAnalysisStepTimer = window.setInterval(() => {
+    activeAnalysisStep = (activeAnalysisStep + 1) % Math.max(finderAnalyzingSteps.length, 1);
+    finderAnalyzingSteps.forEach((step, index) => {
+      step.classList.toggle("is-active", index === activeAnalysisStep);
+    });
+  }, 430);
+
+  trackEvent("filter_finder_analysis_started", {
+    knows_size: result.knowsSize,
+    location: result.location,
+    home_conditions: result.homeConditions.join(", ") || "Not specified",
+    normalized_filter_size: result.normalizedFilterSize
+  });
+
+  finderAnalyzingTimer = window.setTimeout(() => {
+    window.clearInterval(finderAnalysisStepTimer);
+    finderAnalysisStepTimer = null;
+    if (finderAnalyzing) finderAnalyzing.hidden = true;
+    if (finderCompleteButton) finderCompleteButton.disabled = false;
+
+    renderFinderReport(result);
+    saveToLocalStorage(finderStorageKey, result);
+    finderCompleted = true;
+
+    trackEvent("filter_finder_analysis_completed", {
+      recommended_filter_type: result.recommendedFilterType,
+      recommended_schedule: result.recommendedSchedule,
+      normalized_filter_size: result.normalizedFilterSize
+    });
+    trackEvent("filter_finder_completed", {
+      knows_size: result.knowsSize,
+      normalized_filter_size: result.normalizedFilterSize,
+      location: result.location,
+      has_email: Boolean(result.email),
+      recommended_schedule: result.recommendedSchedule,
+      recommended_filter_type: result.recommendedFilterType
+    });
+    trackEvent("filter_finder_result_viewed", {
+      knows_size: result.knowsSize,
+      normalized_filter_size: result.normalizedFilterSize,
+      location: result.location,
+      recommended_schedule: result.recommendedSchedule,
+      recommended_filter_type: result.recommendedFilterType,
+      has_email: false,
+      completed: true
+    });
+    trackEvent("filter_finder_email_prompt_viewed", {
+      recommended_schedule: result.recommendedSchedule,
+      recommended_filter_type: result.recommendedFilterType
+    });
+  
+    if (finderResult) {
+      finderResult.hidden = false;
+      window.requestAnimationFrame(() => finderResult.classList.add("report-visible"));
+    }
+    finderModalCard?.querySelector(".finder-modal-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
+  }, 1500);
 }
 
 function setFormMessage(form, message = "") {
@@ -870,6 +1039,8 @@ async function handleEmailFormSubmit(event, eventName, successElement) {
       normalized_filter_size: latestFinderReport?.normalizedFilterSize || "",
       recommended_schedule: latestFinderReport?.recommendedSchedule || "",
       recommended_filter_type: latestFinderReport?.recommendedFilterType || "",
+      recommended_filter_benefit: latestFinderReport?.recommendedFilterBenefit || "",
+      next_suggested_change: latestFinderReport?.nextSuggestedChange || "",
       recommended_filter_product: latestFinderReport?.productTitle || "",
       estimated_filter_price: latestFinderReport?.productPrice || "",
       has_email: Boolean(email)
@@ -879,6 +1050,8 @@ async function handleEmailFormSubmit(event, eventName, successElement) {
       normalized_filter_size: latestFinderReport?.normalizedFilterSize || "",
       recommended_schedule: latestFinderReport?.recommendedSchedule || "",
       recommended_filter_type: latestFinderReport?.recommendedFilterType || "",
+      recommended_filter_benefit: latestFinderReport?.recommendedFilterBenefit || "",
+      next_suggested_change: latestFinderReport?.nextSuggestedChange || "",
       recommended_filter_product: latestFinderReport?.productTitle || "",
       estimated_filter_price: latestFinderReport?.productPrice || ""
     });
@@ -1114,9 +1287,28 @@ finderProductCta?.addEventListener("click", () => {
     recommended_schedule: latestFinderReport?.recommendedSchedule || "",
     normalized_filter_size: latestFinderReport?.normalizedFilterSize || ""
   });
-  if (finderRetailerBlock) {
-    finderRetailerBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+  if (resultEmailForm) {
+    resultEmailForm.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => resultEmailInput?.focus({ preventScroll: true }), 260);
   }
+});
+
+finderSkipToRetailers?.addEventListener("click", () => {
+  trackEvent("filter_finder_skip_to_retailers_clicked", {
+    product_merv: latestFinderReport?.productMerv || "",
+    product_size: latestFinderReport?.productSize || "",
+    recommended_schedule: latestFinderReport?.recommendedSchedule || ""
+  });
+  finderRetailerBlock?.scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+finderContinueToRetailers?.addEventListener("click", () => {
+  trackEvent("filter_finder_continue_to_retailers_clicked", {
+    product_merv: latestFinderReport?.productMerv || "",
+    product_size: latestFinderReport?.productSize || "",
+    recommended_schedule: latestFinderReport?.recommendedSchedule || ""
+  });
+  finderRetailerBlock?.scrollIntoView({ behavior: "smooth", block: "center" });
 });
 
 resultEmailForm?.addEventListener("submit", (event) => {
@@ -1126,3 +1318,4 @@ resultEmailForm?.addEventListener("submit", (event) => {
 earlyAccessForm?.addEventListener("submit", (event) => {
   handleEmailFormSubmit(event, "early_access_submitted", earlyAccessSuccess);
 });
+

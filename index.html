@@ -63,7 +63,7 @@
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "xbqsjc3yut");
   </script>
-  <link rel="stylesheet" href="style.css?v=affiliate-funnel-1">
+  <link rel="stylesheet" href="style.css?v=result-intelligence-1">
 </head>
 <body>
   <header class="site-header" data-header>
@@ -220,11 +220,26 @@
           </div>
         </div>
 
+          <div class="finder-analyzing" data-finder-analyzing hidden aria-live="polite">
+            <div class="finder-analyzing-spinner" aria-hidden="true"></div>
+            <strong data-finder-analyzing-title>Building your filter recommendation...</strong>
+            <p data-finder-analyzing-copy>Reviewing your size, home conditions, and filtration needs.</p>
+            <div class="finder-analyzing-steps">
+              <span data-analyzing-step="1">Checking filter size</span>
+              <span data-analyzing-step="2">Matching MERV rating</span>
+              <span data-analyzing-step="3">Building replacement plan</span>
+            </div>
+          </div>
+
           <div class="finder-result" data-finder-result hidden>
           <div class="recommendation-banner">
             <strong><span aria-hidden="true">&#10003;</span> We Found Your Filter</strong>
             <span class="recommendation-size" data-finder-result-size>Check before ordering</span>
-            <span class="finder-confidence-pill" data-finder-confidence-pill>Confirm size before ordering</span>
+            <div class="finder-result-status-row">
+              <span>Personalized</span>
+              <span>Updated today</span>
+              <span class="finder-confidence-pill" data-finder-confidence-pill>Confirm size before ordering</span>
+            </div>
             <div class="recommendation-summary">
               <div>
                 <small>MERV Type</small>
@@ -237,6 +252,45 @@
             </div>
             <div class="finder-months recommendation-months" data-finder-months></div>
           </div>
+
+          <div class="finder-insight" data-finder-insight>
+            <strong data-finder-insight-title>Your filter insight</strong>
+            <p data-finder-insight-copy></p>
+          </div>
+
+          <div class="finder-result-block finder-profile" data-finder-profile>
+            <div class="finder-profile-header">
+              <strong>Your Filter Profile</strong>
+              <span>Updated today</span>
+            </div>
+            <div class="finder-profile-grid">
+              <div>
+                <small>Filter Size</small>
+                <strong data-finder-profile-size>Check before ordering</strong>
+              </div>
+              <div>
+                <small>Recommended Rating</small>
+                <strong data-finder-profile-merv>MERV 8</strong>
+              </div>
+              <div>
+                <small>Replacement Timing</small>
+                <strong data-finder-profile-schedule>Every 60-90 days</strong>
+              </div>
+              <div>
+                <small>Next Suggested Change</small>
+                <strong data-finder-profile-next-change>Next season</strong>
+              </div>
+              <div>
+                <small>Estimated Yearly Cost</small>
+                <strong data-finder-profile-yearly-cost>$32-$56/year</strong>
+              </div>
+              <div>
+                <small>Best For</small>
+                <strong data-finder-profile-best-for>Standard homes</strong>
+              </div>
+            </div>
+          </div>
+
           <div class="finder-result-block finder-product-card">
             <div class="finder-product-layout">
               <div class="finder-product-image-wrap">
@@ -252,21 +306,42 @@
                 <p class="finder-product-best-for"><span>Best for:</span> <span data-finder-product-best-for>Standard homes • Normal dust</span></p>
                 <p class="finder-product-price" data-finder-product-price>Estimated $8-$14 each</p>
                 <p class="finder-product-yearly-cost" data-finder-product-yearly-cost>Estimated yearly cost: $32-$56/year</p>
-                <button class="btn btn-primary finder-product-cta" type="button" data-finder-product-cta>Compare Buying Options</button>
+                <button class="btn btn-primary finder-product-cta" type="button" data-finder-product-cta>Save or Compare This Filter</button>
+                <button class="finder-inline-link" type="button" data-finder-skip-to-retailers>Skip to buying options</button>
               </div>
             </div>
-          </div>
-          <div class="finder-result-block finder-retailer-block" data-finder-retailer-block>
-            <strong>Compare Buying Options</strong>
-            <p>Use your recommendation to compare current buying options. Always confirm your exact filter size before ordering.</p>
-            <!-- TODO: Replace placeholder retailer search links with real affiliate/deep links before monetized launch. -->
-            <div class="finder-retailer-grid" data-finder-retailer-options></div>
           </div>
           <p class="finder-email-note" data-finder-email-note hidden>We could not email your report, but your recommendation is shown above.</p>
           <div class="finder-result-block finder-filter-type">
             <strong data-finder-why-title>Why we chose MERV 8</strong>
             <div class="finder-answer-pills" data-finder-answer-pills></div>
             <p data-finder-merv-copy>Good fit for standard homes with normal dust levels.</p>
+            <ul class="finder-merv-details">
+              <li data-finder-merv-benefit>Captures common household dust, pollen, and larger airborne particles.</li>
+              <li data-finder-merv-caution>A practical default when pets, heavy dust, or allergy concerns are not major factors.</li>
+            </ul>
+          </div>
+          <div class="finder-result-block finder-comparison" data-finder-comparison>
+            <strong>Why this beats a basic fiberglass filter</strong>
+            <div class="finder-comparison-grid">
+              <div class="finder-comparison-basic">
+                <span>Basic Fiberglass Filter</span>
+                <ul>
+                  <li>Lowest upfront cost</li>
+                  <li>Limited particle capture</li>
+                  <li>Often replaced more frequently</li>
+                </ul>
+              </div>
+              <div class="finder-comparison-recommended">
+                <span>Your Recommended Pleated Filter</span>
+                <ul>
+                  <li>Better everyday particle capture</li>
+                  <li>More useful for pets, dust, or allergies</li>
+                  <li>Better fit for the answers you selected</li>
+                </ul>
+              </div>
+            </div>
+            <p>Actual performance varies by product, HVAC system, and replacement timing.</p>
           </div>
           <div class="finder-result-block finder-next-step finder-result-next">
             <strong>Save This Filter for Later</strong>
@@ -283,6 +358,14 @@
             </form>
             <p class="finder-email-note" data-result-email-success hidden>Report sent. Check your inbox when convenient.</p>
             <p class="finder-email-note" data-finder-email-skipped hidden>Your report will stay visible here.</p>
+            <button class="finder-inline-link" type="button" data-finder-continue-to-retailers>Continue to buying options</button>
+          </div>
+          <div class="finder-result-block finder-retailer-block" data-finder-retailer-block>
+            <strong>Compare Buying Options</strong>
+            <p>Use your recommendation to compare current buying options. Always confirm your exact filter size before ordering.</p>
+            <!-- TODO: Replace placeholder retailer search links with real affiliate/deep links before monetized launch. -->
+            <div class="finder-retailer-grid" data-finder-retailer-options></div>
+            <p class="finder-result-disclaimer">Filter Wizard provides general guidance. Confirm your exact size and HVAC manufacturer recommendations before ordering.</p>
           </div>
           <div class="finder-copy-row">
             <button class="finder-copy-button" type="button" data-finder-copy>Copy My Recommendation</button>
@@ -379,6 +462,6 @@
     </div>
   </footer>
 
-  <script src="script.js?v=affiliate-funnel-1"></script>
+  <script src="script.js?v=result-intelligence-1"></script>
 </body>
 </html>

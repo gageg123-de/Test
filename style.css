@@ -979,10 +979,78 @@ input:focus-visible {
 }
 
 .finder-quiz[hidden],
+.finder-analyzing[hidden],
 .finder-result[hidden],
 .finder-step[hidden],
 .finder-actions [hidden] {
   display: none !important;
+}
+
+.finder-analyzing {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 34px 22px;
+  border: 1px solid rgba(217, 231, 238, 0.95);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff, #f7fbff);
+  box-shadow: 0 18px 44px rgba(11, 31, 53, 0.08);
+  text-align: center;
+}
+
+.finder-analyzing-spinner {
+  width: 42px;
+  height: 42px;
+  border: 4px solid #dbe9f3;
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: finderSpin 900ms linear infinite;
+}
+
+.finder-analyzing strong {
+  color: var(--blue-dark);
+  font-size: 1.08rem;
+}
+
+.finder-analyzing p {
+  max-width: 420px;
+  margin: 0;
+  color: var(--muted);
+}
+
+.finder-analyzing-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.finder-analyzing-steps span {
+  padding: 7px 10px;
+  border: 1px solid rgba(36, 119, 212, 0.12);
+  border-radius: 999px;
+  color: var(--muted);
+  background: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.finder-analyzing-steps span.is-active {
+  color: var(--blue-dark);
+  border-color: rgba(36, 119, 212, 0.24);
+  background: var(--blue-soft);
+}
+
+@keyframes finderSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .finder-progress {
@@ -1145,6 +1213,29 @@ input:focus-visible {
 
 .recommendation-months {
   margin-top: 6px;
+}
+
+.finder-result-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.finder-result-status-row span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 27px;
+  max-width: 100%;
+  padding: 5px 9px;
+  border: 1px solid rgba(36, 119, 212, 0.12);
+  border-radius: 999px;
+  color: var(--blue-dark);
+  background: rgba(255, 255, 255, 0.75);
+  font-size: 0.76rem;
+  font-weight: 900;
 }
 
 .finder-result.report-visible .recommendation-banner {
@@ -1491,6 +1582,109 @@ input:focus-visible {
   margin-top: 2px;
 }
 
+.finder-inline-link {
+  width: max-content;
+  max-width: 100%;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  color: var(--blue-dark);
+  background: transparent;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 900;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.finder-inline-link:hover,
+.finder-inline-link:focus {
+  color: var(--blue);
+}
+
+.finder-insight {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 13px 15px;
+  border: 1px solid rgba(36, 119, 212, 0.18);
+  border-radius: 15px;
+  background: linear-gradient(180deg, #f3f9ff, #ffffff);
+}
+
+.finder-insight strong {
+  display: block;
+  color: var(--blue-dark);
+  font-size: 0.98rem;
+}
+
+.finder-insight p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.finder-profile {
+  border-color: rgba(36, 119, 212, 0.2);
+  background: linear-gradient(180deg, #ffffff, #f7fbff);
+}
+
+.finder-profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.finder-profile-header strong {
+  color: var(--blue-dark);
+}
+
+.finder-profile-header span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.finder-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 12px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.finder-profile-grid div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(217, 231, 238, 0.86);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.finder-profile-grid small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.finder-profile-grid strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--blue-dark);
+  font-size: 0.92rem;
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+
 .finder-match-score {
   border-color: rgba(36, 119, 212, 0.24);
   background: linear-gradient(180deg, #f3f9ff, #ffffff);
@@ -1506,6 +1700,74 @@ input:focus-visible {
 .finder-reminder-schedule {
   border-color: rgba(36, 119, 212, 0.18);
   background: linear-gradient(180deg, #f8fbfe, #ffffff);
+}
+
+.finder-merv-details,
+.finder-comparison ul {
+  display: grid;
+  gap: 7px;
+  padding: 0;
+  margin: 10px 0 0;
+  list-style: none;
+}
+
+.finder-merv-details li,
+.finder-comparison li {
+  position: relative;
+  padding-left: 18px;
+  color: #334351;
+  font-size: 0.86rem;
+  line-height: 1.42;
+}
+
+.finder-merv-details li::before,
+.finder-comparison li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.58em;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--green);
+}
+
+.finder-comparison {
+  border-color: rgba(36, 119, 212, 0.18);
+  background: linear-gradient(180deg, #ffffff, #f8fbfe);
+}
+
+.finder-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.finder-comparison-grid > div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(217, 231, 238, 0.95);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.finder-comparison-grid span {
+  display: block;
+  color: var(--blue-dark);
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
+.finder-comparison-recommended {
+  border-color: rgba(47, 179, 109, 0.26) !important;
+  background: #f3fff8 !important;
+}
+
+.finder-result-disclaimer {
+  font-size: 0.8rem;
 }
 
 .finder-result-next {
@@ -2749,9 +3011,20 @@ input:focus {
   }
 
   .finder-quiz,
-  .finder-result {
+  .finder-result,
+  .finder-analyzing {
     gap: 8px;
     padding: 12px;
+  }
+
+  .finder-analyzing {
+    padding: 24px 12px;
+  }
+
+  .finder-analyzing-steps {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   .recommendation-summary {
@@ -2764,6 +3037,18 @@ input:focus {
     gap: 5px;
     padding: 11px 12px;
     border-radius: 14px;
+  }
+
+  .finder-result-status-row {
+    gap: 5px;
+    margin-top: 4px;
+  }
+
+  .finder-result-status-row span,
+  .finder-confidence-pill {
+    min-height: 24px;
+    padding: 4px 7px;
+    font-size: 0.7rem;
   }
 
   .recommendation-banner strong {
@@ -2803,6 +3088,42 @@ input:focus {
   .finder-result-block {
     padding: 10px 11px;
     border-radius: 12px;
+  }
+
+  .finder-insight {
+    padding: 10px 11px;
+    border-radius: 12px;
+  }
+
+  .finder-insight strong {
+    font-size: 0.92rem;
+  }
+
+  .finder-insight p {
+    font-size: 0.82rem;
+  }
+
+  .finder-profile-header {
+    align-items: flex-start;
+  }
+
+  .finder-profile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .finder-profile-grid div {
+    padding: 8px;
+    border-radius: 10px;
+  }
+
+  .finder-profile-grid small {
+    font-size: 0.62rem;
+  }
+
+  .finder-profile-grid strong {
+    font-size: 0.8rem;
   }
 
   .finder-product-layout {
@@ -2850,6 +3171,28 @@ input:focus {
     grid-template-columns: 1fr;
     gap: 7px;
     margin-top: 8px;
+  }
+
+  .finder-comparison-grid {
+    grid-template-columns: 1fr;
+    gap: 7px;
+    margin-top: 8px;
+  }
+
+  .finder-comparison-grid > div {
+    padding: 9px;
+    border-radius: 11px;
+  }
+
+  .finder-merv-details,
+  .finder-comparison ul {
+    gap: 5px;
+    margin-top: 7px;
+  }
+
+  .finder-merv-details li,
+  .finder-comparison li {
+    font-size: 0.8rem;
   }
 
   .finder-retailer-card {
@@ -2966,6 +3309,10 @@ input:focus {
   }
 
   .finder-result.report-visible .finder-result-block {
+    animation: none;
+  }
+
+  .finder-analyzing-spinner {
     animation: none;
   }
 }
