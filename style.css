@@ -1532,7 +1532,7 @@ input:focus-visible {
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 1 / 1;
   min-height: unset;
   max-height: 220px;
   overflow: hidden;
@@ -1540,6 +1540,20 @@ input:focus-visible {
   border: 1px solid rgba(217, 231, 238, 0.95);
   border-radius: 14px;
   background: linear-gradient(180deg, #ffffff, #eef7fb);
+}
+
+.finder-product-visual {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.finder-product-image-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .finder-product-image {

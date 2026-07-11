@@ -65,6 +65,8 @@ const finderStorageKey = "filterWizardFinderResults";
 const emailStorageKey = "filterWizardEmailSignups";
 const finderTotalSteps = 4;
 const amazonAffiliateTag = "";
+const genericProductImage = "assets/images/filter-product-generic.webp";
+const confirmSizeProductImage = "assets/images/filter-product-confirm-size.webp";
 const filterPriceRanges = {
   "MERV 8": {
     min: 8,
@@ -683,6 +685,7 @@ function getEstimatedYearlyCost(merv, replacementsPerYear) {
 
 function getProductRecommendation(result) {
   const merv = result.recommendedFilterType || "MERV 8";
+  const hasConfirmedSize = Boolean(parseFilterSize(result.filterSize));
   const size = result.filterSize && result.filterSize !== "Check before ordering"
     ? result.filterSize
     : "Check before ordering";
@@ -701,7 +704,20 @@ function getProductRecommendation(result) {
     }
   };
   const details = productDetails[merv] || productDetails["MERV 8"];
+  const hasKnownMervImage = Boolean(productDetails[merv]);
   const range = filterPriceRanges[merv] || filterPriceRanges["MERV 8"];
+  const image = hasConfirmedSize
+    ? hasKnownMervImage
+      ? details.image
+      : genericProductImage
+    : confirmSizeProductImage;
+  const imageAlt = hasConfirmedSize
+    ? merv === "MERV 13"
+      ? "Representative Filter Wizard MERV 13 pleated air filter"
+      : merv === "MERV 11"
+        ? "Representative Filter Wizard MERV 11 pleated air filter"
+        : "Representative Filter Wizard MERV 8 pleated air filter"
+    : "Filter Wizard illustration reminding the user to confirm their filter size";
 
   return {
     title: size === "Check before ordering"
@@ -709,7 +725,8 @@ function getProductRecommendation(result) {
       : `${size} ${merv} Pleated Air Filter`,
     sizeTitle: size === "Check before ordering" ? "Check before ordering" : size,
     typeTitle: `${merv} Pleated Filter`,
-    image: details.image,
+    image,
+    imageAlt,
     size,
     merv,
     bestFor: details.bestFor,
@@ -811,6 +828,60 @@ function getReminderMonths(intervalDays, count) {
   return months;
 }
 
+function loadFinderProductImage(imageUrl, altText) {
+  if (!finderProductImage) return;
+
+  const fallbackUrl = genericProductImage;
+  finderProductImage.alt = altText || "Representative Filter Wizard pleated air filter";
+  finderProductImage.hidden = true;
+
+  if (finderProductPlaceholder) {
+    finderProductPlaceholder.hidden = false;
+  }
+
+  const showImage = (url, finalAltText = altText) => {
+    finderProductImage.src = url;
+    finderProductImage.alt = finalAltText || "Representative Filter Wizard pleated air filter";
+    finderProductImage.hidden = false;
+
+    if (finderProductPlaceholder) {
+      finderProductPlaceholder.hidden = true;
+    }
+  };
+
+  const primaryImage = new Image();
+
+  primaryImage.onload = () => {
+    showImage(imageUrl, altText);
+  };
+
+  primaryImage.onerror = () => {
+    const fallbackImage = new Image();
+
+    fallbackImage.onload = () => {
+      showImage(fallbackUrl, "Representative Filter Wizard pleated air filter");
+    };
+
+    fallbackImage.onerror = () => {
+      finderProductImage.hidden = true;
+
+      if (finderProductPlaceholder) {
+        finderProductPlaceholder.hidden = false;
+      }
+
+      trackEvent("filter_finder_product_image_failed", {
+        requested_image: imageUrl,
+        recommended_filter_type: latestFinderReport?.recommendedFilterType || "",
+        has_confirmed_size: Boolean(parseFilterSize(latestFinderReport?.filterSize))
+      });
+    };
+
+    fallbackImage.src = fallbackUrl;
+  };
+
+  primaryImage.src = imageUrl;
+}
+
 function renderFinderReport(result) {
   const hasValidSize = hasConfirmedFilterSize(result);
   const confidence = getSizeConfidence(result);
@@ -907,28 +978,7 @@ function renderFinderReport(result) {
   if (finderContinueToRetailers) {
     finderContinueToRetailers.hidden = !showRetailers;
   }
-  if (finderProductImage) {
-    const imageUrl = result.productImage;
-
-    finderProductImage.alt = result.productTitle || "Recommended air filter";
-    finderProductImage.hidden = true;
-    if (finderProductPlaceholder) finderProductPlaceholder.hidden = false;
-
-    const testImage = new Image();
-
-    testImage.onload = () => {
-      finderProductImage.src = imageUrl;
-      finderProductImage.hidden = false;
-      if (finderProductPlaceholder) finderProductPlaceholder.hidden = true;
-    };
-
-    testImage.onerror = () => {
-      finderProductImage.hidden = true;
-      if (finderProductPlaceholder) finderProductPlaceholder.hidden = false;
-    };
-
-    testImage.src = imageUrl;
-  }
+  loadFinderProductImage(result.productImage, result.productImageAlt);
   if (finderRetailerBlock) {
     finderRetailerBlock.hidden = !showRetailers;
   }
@@ -1141,6 +1191,7 @@ async function completeFilterFinder() {
     productSizeTitle: product.sizeTitle,
     productTypeTitle: product.typeTitle,
     productImage: product.image,
+    productImageAlt: product.imageAlt,
     productSize: product.size,
     productMerv: product.merv,
     productBestFor: product.bestFor,
@@ -1611,6 +1662,7 @@ finderConfirmSizeButton?.addEventListener("click", () => {
     productSizeTitle: product.sizeTitle,
     productTypeTitle: product.typeTitle,
     productImage: product.image,
+    productImageAlt: product.imageAlt,
     productSize: product.size,
     productMerv: product.merv,
     productBestFor: product.bestFor,
